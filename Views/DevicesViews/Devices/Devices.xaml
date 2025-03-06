@@ -17,10 +17,10 @@
         </Grid.RowDefinitions>
 
         <!-- (A) Port Seçim Alanı -->
-        <devicesCV:AvailablePorts Grid.Row="0" DataContext="{Binding}" Margin="0,0,0,10"/>
+        <devicesCV:PortsConnection Grid.Row="0" DataContext="{Binding}" Margin="0,0,0,10"/>
 
         <!-- (B) Port Listesi -->
-        <devicesCV:DevicesStatuses Grid.Row="1" DataContext="{Binding}" Margin="0,0,0,10"/>
+        <devicesCV:DevicesList Grid.Row="1" DataContext="{Binding}" Margin="0,0,0,10"/>
 
         <!-- (C) Bağlı Cihazlar -->
         <devicesCV:ConnectedDevices Grid.Row="2" DataContext="{Binding}" />

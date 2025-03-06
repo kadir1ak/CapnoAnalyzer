@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Navigation;
 using CapnoAnalyzer.ViewModels.MainViewModels;
+using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
 using CapnoAnalyzer.Views.Pages;
 
 namespace CapnoAnalyzer.Views.MainViews
@@ -13,6 +15,8 @@ namespace CapnoAnalyzer.Views.MainViews
         {
 
             InitializeComponent();
+
+            //this.Loaded += MainWindow_Loaded;
 
             // Tasarım modunda çalışıyorsak, hiçbir işlem yapmadan çık
             if (DesignerProperties.GetIsInDesignMode(this))
@@ -34,6 +38,19 @@ namespace CapnoAnalyzer.Views.MainViews
                 // Sayfanın DataContext'ini MainViewModel olarak ayarla
                 page.DataContext = this.DataContext;
             }
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Normal;
+            this.WindowStyle = WindowStyle.None;
+
+            // Get screen working area excluding the taskbar
+            var screen = System.Windows.SystemParameters.WorkArea;
+            this.Left = screen.Left;
+            this.Top = screen.Top;
+            this.Width = screen.Width;
+            this.Height = screen.Height;
         }
     }
 }

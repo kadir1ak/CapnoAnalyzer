@@ -6,10 +6,8 @@
         xmlns:views="clr-namespace:CapnoAnalyzer.Views.DevicesViews.Devices" 
         Title="Kapnografi Test Ortamı"
         Width="1280" Height="720"
-        WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
-        ShowInTaskbar="False"
-        Background="#F8F9FB">
+        WindowStyle="SingleBorderWindow"
+        WindowState="Normal">
 
     <Window.DataContext>
         <!-- Ana pencerede MainViewModel kullanıyoruz -->

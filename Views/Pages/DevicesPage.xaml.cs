@@ -8,12 +8,6 @@ namespace CapnoAnalyzer.Views.Pages
         public DevicesPage()
         {
             InitializeComponent();
-
-            // MainViewModel'in içindeki DevicesVM'yi al
-            if (App.Current.MainWindow?.DataContext is MainViewModel mainViewModel)
-            {
-                this.DataContext = mainViewModel.DevicesVM;
-            }
         }
     }
 }

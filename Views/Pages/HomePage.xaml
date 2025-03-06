@@ -4,6 +4,8 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:CapnoAnalyzer.Views.Pages"
+      xmlns:devicesCV="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
+      xmlns:views="clr-namespace:CapnoAnalyzer.Views.DevicesViews.Devices"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="HomePage">
@@ -12,6 +14,11 @@
         <TextBlock Text="🏠 Home Page" FontSize="24" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         <ScrollViewer>
             <WrapPanel Margin="20">
+
+
+                <views:IdentifiedDevices Grid.Row="1" DataContext="{Binding DevicesVM}" />
+         
+
                 <!-- Referans Sensör -->
                 <Border Background="#F1F3FA" Width="300" Height="150" Margin="10" CornerRadius="10">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">

@@ -22,6 +22,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 
         // -- 1) Bağlı Cihazların Listesi --
         public ObservableCollection<Device> ConnectedDevices { get; } = new ObservableCollection<Device>();
+        public ObservableCollection<Device> IdentifiedDevices { get; } = new ObservableCollection<Device>();
 
         // -- 2) Manager'dan gelen port listeleri --
         public ObservableCollection<SerialPort> ConnectedPorts => _manager.ConnectedPorts;
@@ -215,6 +216,8 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             device.Properties.ProductId = parts[4];
             device.Properties.FirmwareVersion = parts[5];
             device.DeviceStatus = DeviceStatus.Identified;
+            IdentifiedDevices.Add(device);
+            RaisePropertyChanged(nameof(IdentifiedDevices));
         }
         // ========== CONNECT ==========
         private void ExecuteConnect()
@@ -272,12 +275,14 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             if (devToRemove != null)
             {
                 ConnectedDevices.Remove(devToRemove);
+                IdentifiedDevices.Remove(devToRemove);
             }
 
             // Seçili cihazi null'la (UI'da buton vs. güncellenecek)
             Device = null;
             // UI'yi yeniden tetikle
             RaisePropertyChanged(nameof(ConnectedDevices));
+            RaisePropertyChanged(nameof(IdentifiedDevices));
             RaisePropertyChanged(nameof(ConnectedPorts));
         }
 

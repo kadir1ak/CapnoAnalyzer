@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace CapnoAnalyzer.Views.DevicesViews.DevicesControl
 {
     /// <summary>
-    /// AvailablePorts.xaml etkileşim mantığı
+    /// DeviceCard.xaml etkileşim mantığı
     /// </summary>
-    public partial class AvailablePorts : UserControl
+    public partial class DeviceCard : UserControl
     {
-        public AvailablePorts()
+        public DeviceCard()
         {
             InitializeComponent();
         }

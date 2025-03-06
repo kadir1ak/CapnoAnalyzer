@@ -9,6 +9,7 @@ using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Models.Device;
 using CapnoAnalyzer.Services;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 {
     public class DevicesViewModel : BindableBase
@@ -59,11 +60,11 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         // -- 6) Yapıcı Metot --
         public DevicesViewModel()
         {
-            _manager = new SerialPortsManager();
+             _manager = new SerialPortsManager();
             _manager.MessageReceived += OnMessageReceived;
 
-            ConnectCommand = new RelayCommand(ExecuteConnect, CanExecuteConnect);
-            DisconnectCommand = new RelayCommand(ExecuteDisconnect, CanExecuteDisconnect);
+            ConnectCommand = new DeviceRelayCommand(ExecuteConnect, CanExecuteConnect);
+            DisconnectCommand = new DeviceRelayCommand(ExecuteDisconnect, CanExecuteDisconnect);
 
             // UI Güncelleme Döngüsünü Başlat
             StartUpdateInterfaceDataLoop();
@@ -92,6 +93,10 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                                     IncomingMessage = device.Messages.LastOrDefault()?.IncomingMessage
                                 };
                                 device.Interface.Messages.Add(newMessage);
+                                while (device.Interface.Messages.Count > 10)
+                                {
+                                    device.Interface.Messages.RemoveAt(0); 
+                                }
                                 DeviceIdentification(device);
                             }
                         }
@@ -294,6 +299,17 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         public bool IsPortConnected(string portName)
         {
             return _manager.ConnectedPorts.Any(sp => sp.PortName == portName);
+        }
+        public void CloseAllPorts()
+        {
+            foreach (var device in ConnectedDevices)
+            {
+                device.StopAutoSend(); // Otomatik veri göndermeyi durdur
+                _manager.DisconnectFromPort(device.PortName); // Tüm portları kapat
+            }
+
+            // Portları yönetim nesnesinden de temizle
+            _manager.ConnectedPorts.Clear();
         }
     }
 }

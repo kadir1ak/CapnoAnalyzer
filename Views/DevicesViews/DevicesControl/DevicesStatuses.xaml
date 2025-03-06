@@ -1,0 +1,44 @@
+﻿<UserControl x:Class="CapnoAnalyzer.Views.DevicesViews.DevicesControl.DevicesStatuses"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
+             xmlns:helpers="clr-namespace:CapnoAnalyzer.Helpers"
+             mc:Ignorable="d">
+
+    <!-- 1) Converter Kaydı (opsiyonel) -->
+    <UserControl.Resources>
+        <helpers:PortConnectedToBrushMultiConverter
+            x:Key="PortConnectedToBrushMultiConverter"
+            ConnectedBrush="Green"
+            DisconnectedBrush="Gray" />
+    </UserControl.Resources>
+
+    <Grid>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding AvailablePorts}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderThickness="3" Margin="5" Padding="10">
+                            <Border.BorderBrush>
+                                <MultiBinding Converter="{StaticResource PortConnectedToBrushMultiConverter}">
+                                    <Binding Path="." />
+                                    <Binding Path="DataContext" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                    <Binding Path="DataContext.ConnectedPorts.Count" 
+                                             RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                </MultiBinding>
+                            </Border.BorderBrush>
+                            <TextBlock Text="{Binding}" FontWeight="Bold" />
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

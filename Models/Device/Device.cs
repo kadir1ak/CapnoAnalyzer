@@ -20,8 +20,8 @@ namespace CapnoAnalyzer.Models.Device
             _manager = manager;
             PortName = portName;
             DeviceStatus = deviceStatus;
-            SendMessageCommand = new RelayCommand(SendMessage, CanSendMessage);
-            AutoSendMessageCommand = new RelayCommand(AutoSend);
+            SendMessageCommand = new DeviceRelayCommand(SendMessage, CanSendMessage);
+            AutoSendMessageCommand = new DeviceRelayCommand(AutoSend);
         }
 
         // === NORMAL MESAJ GÖNDERME ===

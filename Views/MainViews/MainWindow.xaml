@@ -1,12 +1,67 @@
 ﻿<Window x:Class="CapnoAnalyzer.Views.MainViews.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CapnoAnalyzer.Views.MainViews"
-        mc:Ignorable="d"
-        Title="CapnoAnalyzer" Height="720" Width="1680" Background="LightSeaGreen">
-    <Grid>
-        
-    </Grid>
+        xmlns:buttons="clr-namespace:CapnoAnalyzer.Views.Components.Buttons"
+        Title="Kapnografi Test Ortamı"
+        Height="720" Width="1280"
+        MinHeight="600" MinWidth="800"
+        MaxHeight="1080" MaxWidth="1920"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8F9FB">
+    <DockPanel>
+        <!-- Üst Menü (Header) -->
+        <Border DockPanel.Dock="Top" Background="#2E3B4E" Height="60">
+            <Grid>
+                <TextBlock Text="Kapnografi Test Ortamı" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="18" FontWeight="Bold" />
+            </Grid>
+        </Border>
+
+        <!-- Alt Menü (Footer) -->
+        <Border DockPanel.Dock="Bottom" Background="#2E3B4E" Height="40">
+            <TextBlock Text="© 2025 - Kapnografi Cihazı AR-GE Ortamı" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="12" />
+        </Border>
+
+        <!-- Sol Yan Menü (Sidebar) -->
+        <Border DockPanel.Dock="Left" Background="#3E4A5E" Width="240">
+            <StackPanel Margin="10">
+
+                <buttons:PageButton ButtonContent="Ana Sayfa" 
+                            ButtonIcon="Home"
+                            ButtonBackground="#5C6D8C" 
+                            ButtonForeground="White"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Home"/>
+
+                <buttons:PageButton ButtonContent="Ayarlar" 
+                            ButtonIcon="Cogs"
+                            ButtonBackground="#5C6D8C" 
+                            ButtonForeground="White"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Settings"/>
+
+                <buttons:PageButton ButtonContent="Hakkında" 
+                            ButtonIcon="InfoCircle"
+                            ButtonBackground="#5C6D8C" 
+                            ButtonForeground="White"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="About"/>
+
+                <buttons:PageButton ButtonContent="Çıkış" 
+                            ButtonIcon="Close"
+                            ButtonBackground="#E63946" 
+                            ButtonForeground="White"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Close"/>
+            </StackPanel>
+        </Border>
+
+
+        <!-- Main Content Area -->
+        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden" />
+
+    </DockPanel>
 </Window>

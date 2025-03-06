@@ -1,14 +1,12 @@
-﻿using System.Configuration;
-using System.Data;
+﻿using System;
+using System.IO;
 using System.Windows;
+using System.Windows.Input;
 
 namespace CapnoAnalyzer
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
+       
     }
-
 }

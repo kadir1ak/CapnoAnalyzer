@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.IO.Ports;
@@ -79,8 +80,9 @@ namespace CapnoAnalyzer.Services
                 if (serialPort == null) return;
 
                 StopProcessingPortData(portName);
+                serialPort.DataReceived -= (s, e) => OnDataReceived(serialPort);
                 serialPort.Close();
-                ConnectedPorts.Remove(serialPort);
+                ConnectedPorts.Remove(serialPort);         
             }
             catch (Exception ex)
             {
@@ -220,13 +222,11 @@ namespace CapnoAnalyzer.Services
         private void OnSerialPortRemoved(object sender, EventArrivedEventArgs e)
         {
             Application.Current.Dispatcher.BeginInvoke((Action)ScanSerialPorts);
-
         }
 
         private void OnSerialPortAdded(object sender, EventArrivedEventArgs e)
         {
-            Application.Current.Dispatcher.BeginInvoke((Action)ScanSerialPorts);
-
+            Application.Current.Dispatcher.BeginInvoke((Action)ScanSerialPorts);            
         }
 
         public void ScanSerialPorts()

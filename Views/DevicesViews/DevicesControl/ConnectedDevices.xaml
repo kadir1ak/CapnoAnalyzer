@@ -52,7 +52,7 @@
 
                                 <!-- Gelen mesajlar -->
                                 <ListBox Grid.Row="1"
-                                         ItemsSource="{Binding Interface.Messages}"
+                                         ItemsSource="{Binding Interface.IncomingMessage}"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                          ScrollViewer.VerticalScrollBarVisibility="Auto"
                                          VirtualizingStackPanel.IsVirtualizing="True"
@@ -62,9 +62,7 @@
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" Height="16">
-                                                <TextBlock Text="{Binding IncomingMessageIndex}" FontWeight="Bold" TextWrapping="Wrap"/>
-                                                <TextBlock Text=": " />
-                                                <TextBlock Text="{Binding IncomingMessage}" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>

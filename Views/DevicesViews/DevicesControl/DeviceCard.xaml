@@ -6,11 +6,9 @@
              xmlns:local="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
              mc:Ignorable="d">
 
-
-
-    <Grid>                
+    <Grid Width="200">                
         <!-- Cihaz Kimliği -->
-        <Border Background="#F1F3FA" Margin="10 CornerRadius="10">
+        <Border Background="#F1F3FA" Margin="10" CornerRadius="10">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="{Binding PortName}" Foreground="#2E3B4E" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
                 <TextBlock Text="{Binding Properties.ProductId}" Foreground="#4CAF50" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>

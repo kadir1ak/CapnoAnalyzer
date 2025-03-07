@@ -11,11 +11,11 @@ namespace CapnoAnalyzer.Models.Device
     public class DeviceInterface : BindableBase
     {
         // Gelen mesajları tutacağımız koleksiyon
-        private ObservableCollection<DeviceMessage> _messages = new ObservableCollection<DeviceMessage>();
-        public ObservableCollection<DeviceMessage> Messages
+        private ObservableCollection<string> _incomingMessage = new ObservableCollection<string>();
+        public ObservableCollection<string> IncomingMessage
         {
-            get => _messages;
-            set => SetProperty(ref _messages, value);
+            get => _incomingMessage;
+            set => SetProperty(ref _incomingMessage, value);
         }
 
         // Kullanıcının UI'da yazıp göndereceği geçici metin

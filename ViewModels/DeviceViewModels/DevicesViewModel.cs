@@ -24,10 +24,6 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         private readonly object _IdentifiedDevicesInterfaceDataLock = new();
         private int IdentifiedDevicesUpdateTimeMillisecond = 100;  // 10 Hz (100ms)
 
-        private BlockingCollection<string> dataQueue = new BlockingCollection<string>();
-        private CancellationTokenSource cancellationTokenSource;
-        private Task processingTask;
-
         // -- 1) Bağlı Cihazların Listesi --
         public ObservableCollection<Device> ConnectedDevices { get; } = new ObservableCollection<Device>();
         public ObservableCollection<Device> IdentifiedDevices { get; } = new ObservableCollection<Device>();
@@ -91,22 +87,16 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     {
                         foreach (var device in ConnectedDevices)
                         {
-                            if (device.Messages.LastOrDefault()?.IncomingMessage == null)
+                            if (device.IncomingMessage.LastOrDefault() == null)
                             {
                                 continue;
                             }
                             if (device != null)
-                            {
-
-                                var newMessage = new DeviceMessage
+                            {       
+                                device.Interface.IncomingMessage.Add(device.IncomingMessage.LastOrDefault());
+                                while (device.Interface.IncomingMessage.Count > 10)
                                 {
-                                    IncomingMessageIndex = device.Messages.Count,
-                                    IncomingMessage = device.Messages.LastOrDefault()?.IncomingMessage
-                                };
-                                device.Interface.Messages.Add(newMessage);
-                                while (device.Interface.Messages.Count > 10)
-                                {
-                                    device.Interface.Messages.RemoveAt(0); 
+                                    device.Interface.IncomingMessage.RemoveAt(0); 
                                 }
                                 DeviceIdentification(device);
                             }
@@ -154,7 +144,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     {
                         foreach (var device in IdentifiedDevices)
                         {
-                            if (device.Messages.LastOrDefault()?.IncomingMessage == null)
+                            if (device.IncomingMessage.LastOrDefault() == null)
                             {
                                 continue;
                             }
@@ -172,7 +162,6 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                                     device.Interface.Sensor.Temperature = device.Sensor.Temperature;
                                     device.Interface.Sensor.Humidity = device.Sensor.Humidity;
                                 }
-                                DeviceIdentification(device);
                             }
                         }
 
@@ -213,13 +202,13 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 var device = ConnectedDevices.FirstOrDefault(d => d.PortName == portName);
                 if (device != null)
                 {
-                    var newMessage = new DeviceMessage
+                    device.IncomingMessage.Add(data);
+                    while (device.IncomingMessage.Count > 10)
                     {
-                        IncomingMessageIndex = device.Messages.Count,
-                        IncomingMessage = data
-                    };
-                    device.Messages.Add(newMessage);
-                    ProcessDataQueue(device, data);
+                        device.IncomingMessage.RemoveAt(0);
+                    }
+
+                    SensorDataParsing(device, data);
                     CalculateSampleRate(device);
                 }
             });
@@ -245,11 +234,11 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     return;
 
                 // Null kontrolü
-                var lastMessage = device.Messages.LastOrDefault();
-                if (lastMessage == null || string.IsNullOrWhiteSpace(lastMessage.IncomingMessage))
+                var lastMessage = device.IncomingMessage.LastOrDefault();
+                if (lastMessage == null || string.IsNullOrWhiteSpace(lastMessage))
                     return; // Mesaj yoksa işlemi sonlandır
 
-                string deviceInfo = lastMessage.IncomingMessage;
+                string deviceInfo = lastMessage;
                 Console.WriteLine(deviceInfo);
                 string[] parts = deviceInfo.Split(';');
                 if (parts.Length == 6 &&
@@ -279,17 +268,37 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 Console.WriteLine($"Error parsing device info: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private void AssignDeviceProperties(Device device, string[] parts)
         {
-            device.Properties.CompanyName = parts[0];
-            device.Properties.ProductName = parts[1];
-            device.Properties.ProductModel = parts[2];
-            device.Properties.ManufactureDate = parts[3];
-            device.Properties.ProductId = parts[4];
-            device.Properties.FirmwareVersion = parts[5];
-            device.DeviceStatus = DeviceStatus.Identified;
-            IdentifiedDevices.Add(device);
+            // Mevcut cihazı IdentifiedDevices koleksiyonunda kontrol et
+            var existingDevice = IdentifiedDevices.FirstOrDefault(d => d.PortName == device.PortName);
+
+            if (existingDevice != null)
+            {
+                // Cihaz zaten varsa, özelliklerini güncelle
+                existingDevice.Properties.CompanyName = parts[0];
+                existingDevice.Properties.ProductName = parts[1];
+                existingDevice.Properties.ProductModel = parts[2];
+                existingDevice.Properties.ManufactureDate = parts[3];
+                existingDevice.Properties.ProductId = parts[4];
+                existingDevice.Properties.FirmwareVersion = parts[5];
+                existingDevice.DeviceStatus = DeviceStatus.Identified;
+            }
+            else
+            {
+                // Cihaz yoksa, özelliklerini ata ve koleksiyona ekle
+                device.Properties.CompanyName = parts[0];
+                device.Properties.ProductName = parts[1];
+                device.Properties.ProductModel = parts[2];
+                device.Properties.ManufactureDate = parts[3];
+                device.Properties.ProductId = parts[4];
+                device.Properties.FirmwareVersion = parts[5];
+                device.DeviceStatus = DeviceStatus.Identified;
+
+                IdentifiedDevices.Add(device);
+            }
+
+            // UI güncellemesi
             RaisePropertyChanged(nameof(IdentifiedDevices));
         }
         // ========== CONNECT ==========
@@ -328,35 +337,52 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         // ========== DISCONNECT ==========
         private async void ExecuteDisconnect()
         {
-            // Seçili bir Device yoksa çık
-            Device = ConnectedDevices.FirstOrDefault(d => d.PortName == SelectedPortName);
-            if (Device == null)
-                return;
-
-            // PortName boşsa çık
-            if (string.IsNullOrEmpty(Device.PortName))
-                return;
-
-            // Manager'dan portu kapat (ağır iş ise arka planda)
-            await Task.Run(() => _manager.DisconnectFromPort(Device.PortName));
-
-            // Device'i işaretle
-            Device.DeviceStatus = DeviceStatus.Disconnected;
-            Device.StopAutoSend();
-
-            // ConnectedDevices'tan çıkar
-            var devToRemove = ConnectedDevices.FirstOrDefault(d => d.PortName == Device.PortName);
-            if (devToRemove != null)
+            // İlk olarak IdentifiedDevices içerisindeki cihazı kontrol et
+            var identifiedDevice = IdentifiedDevices.FirstOrDefault(d => d.PortName == SelectedPortName);
+            if (identifiedDevice != null)
             {
-                ConnectedDevices.Remove(devToRemove);
-                IdentifiedDevices.Remove(devToRemove);
+                // PortName boşsa işlem yapma
+                if (!string.IsNullOrEmpty(identifiedDevice.PortName))
+                {
+                    // Manager'dan portu kapat (arka planda çalıştır)
+                    await Task.Run(() => _manager.DisconnectFromPort(identifiedDevice.PortName));
+
+                    // Cihazın durumunu güncelle
+                    identifiedDevice.DeviceStatus = DeviceStatus.Disconnected;
+                    identifiedDevice.StopAutoSend();
+
+                    // IdentifiedDevices'tan cihazı çıkar
+                    IdentifiedDevices.Remove(identifiedDevice);
+
+                    // UI'yi güncelle
+                    RaisePropertyChanged(nameof(IdentifiedDevices));
+                }
             }
 
-            // Seçili cihazi null'la (UI'da buton vs. güncellenecek)
+            // Daha sonra ConnectedDevices içerisindeki cihazı kontrol et
+            var connectedDevice = ConnectedDevices.FirstOrDefault(d => d.PortName == SelectedPortName);
+            if (connectedDevice != null)
+            {
+                // PortName boşsa işlem yapma
+                if (!string.IsNullOrEmpty(connectedDevice.PortName))
+                {
+                    // Manager'dan portu kapat (arka planda çalıştır)
+                    await Task.Run(() => _manager.DisconnectFromPort(connectedDevice.PortName));
+
+                    // Cihazın durumunu güncelle
+                    connectedDevice.DeviceStatus = DeviceStatus.Disconnected;
+                    connectedDevice.StopAutoSend();
+
+                    // ConnectedDevices'tan cihazı çıkar
+                    ConnectedDevices.Remove(connectedDevice);
+
+                    // UI'yi güncelle
+                    RaisePropertyChanged(nameof(ConnectedDevices));
+                }
+            }
+
+            // Seçili cihazı sıfırla (UI'da buton vs. güncellenecek)
             Device = null;
-            // UI'yi yeniden tetikle
-            RaisePropertyChanged(nameof(ConnectedDevices));
-            RaisePropertyChanged(nameof(IdentifiedDevices));
             RaisePropertyChanged(nameof(ConnectedPorts));
         }
 
@@ -391,7 +417,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             _manager.ConnectedPorts.Clear();
         }
 
-        private void ProcessDataQueue(Device device, string data)
+        private void SensorDataParsing(Device device, string data)
         {
             try
             {

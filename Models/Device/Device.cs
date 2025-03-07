@@ -83,11 +83,11 @@ namespace CapnoAnalyzer.Models.Device
         }
 
         // Gelen mesajları tutacağımız koleksiyon
-        private ObservableCollection<DeviceMessage> _messages = new ObservableCollection<DeviceMessage>();
-        public ObservableCollection<DeviceMessage> Messages
+        private ObservableCollection<string> _incomingMessage = new ObservableCollection<string>();
+        public ObservableCollection<string> IncomingMessage
         {
-            get => _messages;
-            set => SetProperty(ref _messages, value);
+            get => _incomingMessage;
+            set => SetProperty(ref _incomingMessage, value);
         }
 
         private DeviceInterface _interface = new DeviceInterface();
@@ -188,11 +188,5 @@ namespace CapnoAnalyzer.Models.Device
         public string ManufactureDate { get; set; }
         public string ProductId { get; set; }
         public string FirmwareVersion { get; set; }
-    }
-
-    public class DeviceMessage
-    {
-        public int IncomingMessageIndex { get; set; }
-        public string IncomingMessage { get; set; }
     }
 }

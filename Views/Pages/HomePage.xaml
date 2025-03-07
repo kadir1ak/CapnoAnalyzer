@@ -15,55 +15,8 @@
         <ScrollViewer>
             <WrapPanel Margin="20">
 
+                <views:IdentifiedDevices Grid.Row="1" DataContext="{Binding DevicesVM}" />       
 
-                <views:IdentifiedDevices Grid.Row="1" DataContext="{Binding DevicesVM}" />
-         
-
-                <!-- Referans Sensör -->
-                <Border Background="#F1F3FA" Width="300" Height="150" Margin="10" CornerRadius="10">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Referans Sensör" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" />
-                        <TextBlock Text="87" Foreground="#4CAF50" FontSize="36" FontWeight="Bold" />
-                        <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
-                    </StackPanel>
-                </Border>
-
-                <!-- Gaz Sensörü -->
-                <Border Background="#F1F3FA" Width="300" Height="150" Margin="10" CornerRadius="10">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Gaz Sensörü" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" />
-                        <TextBlock Text="74" Foreground="#FFC107" FontSize="36" FontWeight="Bold" />
-                        <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
-                    </StackPanel>
-                </Border>
-
-                <!-- Referans Sapması -->
-                <Border Background="#F1F3FA" Width="300" Height="150" Margin="10" CornerRadius="10">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Referans Sapması" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" />
-                        <TextBlock Text="%4.5" Foreground="#FF5722" FontSize="14" FontWeight="Bold" />
-                        <TextBlock Text="Oran" Foreground="#5C6D8C" FontSize="12" />
-                    </StackPanel>
-                </Border>
-
-                <!-- Ölçülen Gaz -->
-                <Border Background="#F1F3FA" Width="300" Height="150" Margin="10" CornerRadius="10">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Ölçülen Gaz" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" />
-                        <TextBlock Text="%12.5" Foreground="#FF5722" FontSize="14" FontWeight="Bold" />
-                        <TextBlock Text="Değer" Foreground="#5C6D8C" FontSize="12" />
-                    </StackPanel>
-                </Border>
-
-                <!-- Sonuçlar -->
-                <Border Background="#F1F3FA" Width="300" Height="150" Margin="10" CornerRadius="10">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Sonuçlar" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" />
-                        <TextBlock Text="Ch1: 87" Foreground="#5C6D8C" FontSize="12" />
-                        <TextBlock Text="Ch2: 76" Foreground="#5C6D8C" FontSize="12" />
-                        <TextBlock Text="Ch3: 64" Foreground="#5C6D8C" FontSize="12" />
-                    </StackPanel>
-                </Border>
             </WrapPanel>
         </ScrollViewer>
     </Grid>

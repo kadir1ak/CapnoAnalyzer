@@ -25,5 +25,12 @@ namespace CapnoAnalyzer.Models.Device
             get => _outgoingMessage;
             set => SetProperty(ref _outgoingMessage, value);
         }
+
+        private Sensor _sensor = new Sensor();
+        public Sensor Sensor
+        {
+            get => _sensor;
+            set => SetProperty(ref _sensor, value);
+        }
     }
 }

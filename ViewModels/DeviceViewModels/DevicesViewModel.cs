@@ -16,9 +16,17 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
     {
         private readonly SerialPortsManager _manager;
 
-        private CancellationTokenSource _updateInterfaceLoopCancellationTokenSource;
-        private readonly object _InterfaceDataLock = new();
-        private int UpdateTimeMillisecond = 100;  // 10 Hz (100ms)
+        private CancellationTokenSource _updateConnectedDevicesInterfaceLoopCancellationTokenSource;
+        private readonly object _ConnectedDevicesInterfaceDataLock = new();
+        private int ConnectedDevicesUpdateTimeMillisecond = 100;  // 10 Hz (100ms)
+
+        private CancellationTokenSource _updateIdentifiedDevicesInterfaceLoopCancellationTokenSource;
+        private readonly object _IdentifiedDevicesInterfaceDataLock = new();
+        private int IdentifiedDevicesUpdateTimeMillisecond = 100;  // 10 Hz (100ms)
+
+        private BlockingCollection<string> dataQueue = new BlockingCollection<string>();
+        private CancellationTokenSource cancellationTokenSource;
+        private Task processingTask;
 
         // -- 1) Bağlı Cihazların Listesi --
         public ObservableCollection<Device> ConnectedDevices { get; } = new ObservableCollection<Device>();
@@ -68,15 +76,16 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             DisconnectCommand = new DeviceRelayCommand(ExecuteDisconnect, CanExecuteDisconnect);
 
             // UI Güncelleme Döngüsünü Başlat
-            StartUpdateInterfaceDataLoop();
+            StartConnectedDevicesUpdateInterfaceDataLoop();
+            StartIdentifiedDevicesUpdateInterfaceDataLoop();
         }
-        private async Task UpdateInterfaceDataLoop(CancellationToken token)
+        private async Task UpdateConnectedDevicesInterfaceDataLoop(CancellationToken token)
         {
             try
             {
                 while (!token.IsCancellationRequested)
                 {
-                    await Task.Delay(UpdateTimeMillisecond, token);
+                    await Task.Delay(ConnectedDevicesUpdateTimeMillisecond, token);
 
                     Application.Current.Dispatcher.Invoke(() =>
                     {
@@ -88,6 +97,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                             }
                             if (device != null)
                             {
+
                                 var newMessage = new DeviceMessage
                                 {
                                     IncomingMessageIndex = device.Messages.Count,
@@ -114,24 +124,86 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             }
         }
 
-        public void StartUpdateInterfaceDataLoop()
+        public void StartConnectedDevicesUpdateInterfaceDataLoop()
         {
-            StopUpdateInterfaceDataLoop(); // Eski döngüyü durdur
-            _updateInterfaceLoopCancellationTokenSource = new CancellationTokenSource();
-            var token = _updateInterfaceLoopCancellationTokenSource.Token;
-            _ = UpdateInterfaceDataLoop(token);
+            StopConnectedDevicesUpdateInterfaceDataLoop(); // Eski döngüyü durdur
+            _updateConnectedDevicesInterfaceLoopCancellationTokenSource = new CancellationTokenSource();
+            var token = _updateConnectedDevicesInterfaceLoopCancellationTokenSource.Token;
+            _ = UpdateConnectedDevicesInterfaceDataLoop(token);
         }
 
-        public void StopUpdateInterfaceDataLoop()
+        public void StopConnectedDevicesUpdateInterfaceDataLoop()
         {
-            if (_updateInterfaceLoopCancellationTokenSource != null && !_updateInterfaceLoopCancellationTokenSource.IsCancellationRequested)
+            if (_updateConnectedDevicesInterfaceLoopCancellationTokenSource != null && !_updateConnectedDevicesInterfaceLoopCancellationTokenSource.IsCancellationRequested)
             {
-                _updateInterfaceLoopCancellationTokenSource.Cancel();
-                _updateInterfaceLoopCancellationTokenSource.Dispose();
-                _updateInterfaceLoopCancellationTokenSource = null;
+                _updateConnectedDevicesInterfaceLoopCancellationTokenSource.Cancel();
+                _updateConnectedDevicesInterfaceLoopCancellationTokenSource.Dispose();
+                _updateConnectedDevicesInterfaceLoopCancellationTokenSource = null;
             }
         }
 
+        private async Task UpdateIdentifiedDevicesInterfaceDataLoop(CancellationToken token)
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    await Task.Delay(IdentifiedDevicesUpdateTimeMillisecond, token);
+
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        foreach (var device in IdentifiedDevices)
+                        {
+                            if (device.Messages.LastOrDefault()?.IncomingMessage == null)
+                            {
+                                continue;
+                            }
+                            if (device != null)
+                            {
+
+                                if (device.Interface.Sensor.GasSensor != device.Sensor.GasSensor ||
+                                    device.Interface.Sensor.ReferenceSensor != device.Sensor.ReferenceSensor ||
+                                    device.Interface.Sensor.Temperature != device.Sensor.Temperature ||
+                                    device.Interface.Sensor.Humidity != device.Sensor.Humidity)
+                                {
+                                    device.Interface.Sensor.Time = device.Sensor.Time;
+                                    device.Interface.Sensor.GasSensor = device.Sensor.GasSensor;
+                                    device.Interface.Sensor.ReferenceSensor = device.Sensor.ReferenceSensor;
+                                    device.Interface.Sensor.Temperature = device.Sensor.Temperature;
+                                    device.Interface.Sensor.Humidity = device.Sensor.Humidity;
+                                }
+                                DeviceIdentification(device);
+                            }
+                        }
+
+                        // UI'yi yeniden tetikle
+                        RaisePropertyChanged(nameof(IdentifiedDevices));
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Interface update loop error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public void StartIdentifiedDevicesUpdateInterfaceDataLoop()
+        {
+            StopIdentifiedDevicesUpdateInterfaceDataLoop(); // Eski döngüyü durdur
+            _updateIdentifiedDevicesInterfaceLoopCancellationTokenSource = new CancellationTokenSource();
+            var token = _updateIdentifiedDevicesInterfaceLoopCancellationTokenSource.Token;
+            _ = UpdateIdentifiedDevicesInterfaceDataLoop(token);
+        }
+
+        public void StopIdentifiedDevicesUpdateInterfaceDataLoop()
+        {
+            if (_updateIdentifiedDevicesInterfaceLoopCancellationTokenSource != null && !_updateIdentifiedDevicesInterfaceLoopCancellationTokenSource.IsCancellationRequested)
+            {
+                _updateIdentifiedDevicesInterfaceLoopCancellationTokenSource.Cancel();
+                _updateIdentifiedDevicesInterfaceLoopCancellationTokenSource.Dispose();
+                _updateIdentifiedDevicesInterfaceLoopCancellationTokenSource = null;
+            }
+        }
         // ========== Gelen Veri Yakalama (Event) ==========
         private void OnMessageReceived(string portName, string data)
         {
@@ -147,6 +219,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         IncomingMessage = data
                     };
                     device.Messages.Add(newMessage);
+                    ProcessDataQueue(device, data);
                     CalculateSampleRate(device);
                 }
             });
@@ -243,6 +316,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 existingDevice.DeviceStatus = DeviceStatus.Connected;
                 Device = existingDevice;
             }
+
             // UI'yi yeniden tetikle
             RaisePropertyChanged(nameof(ConnectedDevices));
             RaisePropertyChanged(nameof(ConnectedPorts));
@@ -316,5 +390,53 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             // Portları yönetim nesnesinden de temizle
             _manager.ConnectedPorts.Clear();
         }
+
+        private void ProcessDataQueue(Device device, string data)
+        {
+            try
+            {
+                // Veriyi ayrıştır ve UI güncellemesini yap
+                string[] dataParts = data.Split(',');
+                if (dataParts.Length == 5 &&
+                    double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
+                    double.TryParse(dataParts[1].Replace('.', ','), out double ch1) &&
+                    double.TryParse(dataParts[2].Replace('.', ','), out double ch2) &&
+                    double.TryParse(dataParts[3].Replace('.', ','), out double temp) &&
+                    double.TryParse(dataParts[4].Replace('.', ','), out double hum))
+                {
+                    if (Application.Current?.Dispatcher.CheckAccess() == true)
+                    {
+                        // UI iş parçacığında isek doğrudan çalıştır
+                        UpdateSensorData(device, time, ch1, ch2, temp, hum);
+                    }
+                    else
+                    {
+                        // UI iş parçacığında değilsek Dispatcher kullan
+                        Application.Current?.Dispatcher.Invoke(() =>
+                        {
+                            UpdateSensorData(device, time, ch1, ch2, temp, hum);
+                        });
+                    }
+                }               
+            }
+            catch (OperationCanceledException)
+            {
+                // İşlem iptal edildiğinde hata fırlatmayı önle
+            }
+            catch (Exception ex)
+            {
+               // MessageBox.Show($"Unexpected Error in Data Processing: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void UpdateSensorData(Device device, double time, double ch1, double ch2, double temp, double hum)
+        {
+            device.Sensor.Time = time;
+            device.Sensor.GasSensor = ch1;
+            device.Sensor.ReferenceSensor = ch2;
+            device.Sensor.Temperature = temp;
+            device.Sensor.Humidity = hum;
+        }
+
     }
 }

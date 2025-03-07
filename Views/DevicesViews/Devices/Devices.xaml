@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CapnoAnalyzer.Views.DevicesViews.Devices"            
              xmlns:helpers="clr-namespace:CapnoAnalyzer.Helpers"              
-             xmlns:devicesCV="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
+             xmlns:devicesDC="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
              mc:Ignorable="d" 
              BorderBrush="#FF87CC59" BorderThickness="3">
 
@@ -17,12 +17,12 @@
         </Grid.RowDefinitions>
 
         <!-- (A) Port Seçim Alanı -->
-        <devicesCV:PortsConnection Grid.Row="0" DataContext="{Binding}" Margin="0,0,0,10"/>
+        <devicesDC:PortsConnection Grid.Row="0" DataContext="{Binding}" Margin="0,0,0,10"/>
 
         <!-- (B) Port Listesi -->
-        <devicesCV:DevicesList Grid.Row="1" DataContext="{Binding}" Margin="0,0,0,10"/>
+        <devicesDC:DevicesList Grid.Row="1" DataContext="{Binding}" Margin="0,0,0,10"/>
 
         <!-- (C) Bağlı Cihazlar -->
-        <devicesCV:ConnectedDevices Grid.Row="2" DataContext="{Binding}" />
+        <devicesDC:ConnectedDevices Grid.Row="2" DataContext="{Binding}" />
     </Grid>
 </UserControl>

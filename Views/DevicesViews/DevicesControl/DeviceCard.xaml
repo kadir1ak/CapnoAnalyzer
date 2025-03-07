@@ -4,13 +4,36 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Border Background="#F1F3FA" Width="300" Height="150" Margin="10" CornerRadius="10">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-            <TextBlock Text="{Binding PortName}" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" />
-            <TextBlock Text="{Binding Properties.ProductId}" Foreground="#4CAF50" FontSize="36" FontWeight="Bold" />
-            <TextBlock Text="{Binding DeviceStatus}" Foreground="#5C6D8C" FontSize="12" />
-        </StackPanel>
-    </Border>
+             mc:Ignorable="d">
+
+
+
+    <Grid>                
+        <!-- Cihaz Kimliği -->
+        <Border Background="#F1F3FA" Margin="10 CornerRadius="10">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="{Binding PortName}" Foreground="#2E3B4E" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Properties.ProductId}" Foreground="#4CAF50" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding DeviceStatus}" Foreground="#5C6D8C" FontSize="18" HorizontalAlignment="Center"/>
+
+                <!-- Gaz Sensörü -->
+                <Border Background="#F1F3FA" Height="60" Margin="5" CornerRadius="10">
+                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBlock Text="Gaz Sensörü" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
+                        <TextBlock Text="{Binding Interface.Sensor.GasSensor}" Foreground="#FFC107" FontSize="18" FontWeight="Bold" />
+                        <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Referans Sensörü -->
+                <Border Background="#F1F3FA" Height="60" Margin="5" CornerRadius="10">
+                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBlock Text="Referans Sensör" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
+                        <TextBlock Text="{Binding Interface.Sensor.ReferenceSensor}" Foreground="#FF5722" FontSize="18" FontWeight="Bold" />
+                        <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border> 
+    </Grid>
 </UserControl>

@@ -97,6 +97,13 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _interface, value);
         }
 
+        private Sensor _sensor = new Sensor();
+        public Sensor Sensor
+        {
+            get => _sensor;
+            set => SetProperty(ref _sensor, value);
+        }
+
         private string _id;
         public string ID
         {

@@ -30,7 +30,7 @@ namespace CapnoAnalyzer.Models.Device
             Properties = new DeviceProperties
             {
                 PortName = portName,
-                DeviceStatus = deviceStatus
+                Status = deviceStatus
             };
 
             SendMessageCommand = new DeviceRelayCommand(SendMessage, CanSendMessage);
@@ -49,7 +49,7 @@ namespace CapnoAnalyzer.Models.Device
 
         private bool CanSendMessage()
         {
-            return (Properties.DeviceStatus == DeviceStatus.Connected || Properties.DeviceStatus == DeviceStatus.Identified) &&
+            return (Properties.Status == DeviceStatus.Connected || Properties.Status == DeviceStatus.Identified) &&
                    !string.IsNullOrWhiteSpace(Interface.OutgoingMessage);
         }
         #endregion
@@ -110,7 +110,7 @@ namespace CapnoAnalyzer.Models.Device
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    Properties.DeviceStatus = DeviceStatus.Disconnected;
+                    Properties.Status = DeviceStatus.Disconnected;
                     NotifyUIForRemoval();
                 });
             }
@@ -166,14 +166,26 @@ namespace CapnoAnalyzer.Models.Device
 
         public DeviceProperties()
         {
-            DeviceStatus = DeviceStatus.Disconnected;
+            Status = DeviceStatus.Disconnected;
             BaudRate = 9600;
             SampleCount = 0;
+            DataSamplingFrequency = 0;
         }
 
-        public DeviceStatus DeviceStatus { get; set; }
-        public int BaudRate { get; set; }
-        public int DataSamplingFrequency { get; set; }
+        private DeviceStatus _status = new();
+        public DeviceStatus Status
+        {
+            get => _status;
+            set => SetProperty(ref _status, value);
+        }
+
+        private int _dataSamplingFrequency = new();
+        public int DataSamplingFrequency
+        {
+            get => _dataSamplingFrequency;
+            set => SetProperty(ref _dataSamplingFrequency, value);
+        }
+
         public string ID { get; set; } = string.Empty;
         public string PortName { get; set; } = string.Empty;
         public string CompanyName { get; set; } = string.Empty;
@@ -182,6 +194,7 @@ namespace CapnoAnalyzer.Models.Device
         public string ManufactureDate { get; set; } = string.Empty;
         public string ProductId { get; set; } = string.Empty;
         public string FirmwareVersion { get; set; } = string.Empty;
+        public int BaudRate { get; set; }
     }
     #endregion
 

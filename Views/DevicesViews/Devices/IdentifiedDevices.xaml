@@ -9,8 +9,6 @@
              mc:Ignorable="d">
 
     <Grid Margin="10">
-        <TextBlock Text="{Binding IdentifiedDevices.Count}" Foreground="Red" FontSize="20"/>
-
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding IdentifiedDevices}">
                 <ItemsControl.ItemsPanel>

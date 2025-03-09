@@ -24,7 +24,7 @@
                 <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 5">
                     <TextBlock Text="{Binding Properties.PortName}" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" Margin="0" />
                     <TextBlock Text="{Binding Properties.ProductId}" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" Margin="5 0 0 0" />
-                    <TextBlock Text="{Binding Properties.DeviceStatus}" Foreground="#5C6D8C" FontSize="16" Margin="5 0 0 0" />
+                    <TextBlock Text="{Binding Properties.Status}" Foreground="#5C6D8C" FontSize="16" Margin="5 0 0 0" />
                 </StackPanel>
 
                 <!-- Sol Panel (Sensör Verileri) -->

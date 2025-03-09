@@ -246,7 +246,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         {
             try
             {
-                if (device.Properties.DeviceStatus == DeviceStatus.Identified)
+                if (device.Properties.Status == DeviceStatus.Identified)
                     return;
 
                 // Null kontrolü
@@ -298,7 +298,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 existingDevice.Properties.ManufactureDate = parts[3];
                 existingDevice.Properties.ProductId = parts[4];
                 existingDevice.Properties.FirmwareVersion = parts[5];
-                existingDevice.Properties.DeviceStatus = DeviceStatus.Identified;
+                existingDevice.Properties.Status = DeviceStatus.Identified;
             }
             else
             {
@@ -309,13 +309,14 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 device.Properties.ManufactureDate = parts[3];
                 device.Properties.ProductId = parts[4];
                 device.Properties.FirmwareVersion = parts[5];
-                device.Properties.DeviceStatus = DeviceStatus.Identified;
+                device.Properties.Status = DeviceStatus.Identified;
 
                 IdentifiedDevices.Add(device);
             }
             Debug.WriteLine($"Device Identified: {device.Properties.PortName}");
             // UI güncellemesi
             OnPropertyChanged(nameof(IdentifiedDevices));
+            OnPropertyChanged(nameof(ConnectedDevices));
         }
         // ========== CONNECT ==========
         private void ExecuteConnect()
@@ -338,7 +339,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             else
             {
                 // Varsa yalnızca IsConnected durumunu güncelle
-                existingDevice.Properties.DeviceStatus = DeviceStatus.Connected;
+                existingDevice.Properties.Status = DeviceStatus.Connected;
                 Device = existingDevice;
             }
             Debug.WriteLine($"ConnectedDevices: {Device.Properties.PortName}");
@@ -365,7 +366,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     await Task.Run(() => PortManager.DisconnectFromPort(identifiedDevice.Properties.PortName));
 
                     // Cihazın durumunu güncelle
-                    identifiedDevice.Properties.DeviceStatus = DeviceStatus.Disconnected;
+                    identifiedDevice.Properties.Status = DeviceStatus.Disconnected;
                     identifiedDevice.StopAutoSend();
 
                     // IdentifiedDevices'tan cihazı çıkar
@@ -387,7 +388,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     await Task.Run(() => PortManager.DisconnectFromPort(connectedDevice.Properties.PortName));
 
                     // Cihazın durumunu güncelle
-                    connectedDevice.Properties.DeviceStatus = DeviceStatus.Disconnected;
+                    connectedDevice.Properties.Status = DeviceStatus.Disconnected;
                     connectedDevice.StopAutoSend();
 
                     // ConnectedDevices'tan cihazı çıkar
@@ -407,14 +408,14 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         private bool CanExecuteDisconnect()
         {
             // Seçili port adına sahip, IsConnected=true durumda bir Device var mı?
-            return !string.IsNullOrEmpty(SelectedPortName) && ConnectedDevices.Any(d => d.Properties.PortName == SelectedPortName && (d.Properties.DeviceStatus == DeviceStatus.Connected || d.Properties.DeviceStatus == DeviceStatus.Identified));
+            return !string.IsNullOrEmpty(SelectedPortName) && ConnectedDevices.Any(d => d.Properties.PortName == SelectedPortName && (d.Properties.Status == DeviceStatus.Connected || d.Properties.Status == DeviceStatus.Identified));
         }
 
         // ========== Cihazın Durumunu Bildir ==========
         public DeviceStatus? IsDeviceStatus(string portName)
         {
             var device = ConnectedDevices.FirstOrDefault(d => d.Properties.PortName == portName);
-            return device?.Properties.DeviceStatus;
+            return device?.Properties.Status;
         }
 
         // ========== Port Bağlı mı Kontrol ==========

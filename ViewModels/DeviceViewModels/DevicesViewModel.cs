@@ -136,7 +136,6 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 _updateConnectedDevicesInterfaceLoopCancellationTokenSource = null;
             }
         }
-
         private async Task UpdateIdentifiedDevicesInterfaceDataLoop(CancellationToken token)
         {
             try
@@ -149,26 +148,33 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     {
                         foreach (var device in IdentifiedDevices)
                         {
-                            if (device != null)
+                            if (device == null) continue;
+
+                            bool hasSensorChanged =
+                                device.Interface.Sensor.GasSensor != device.Sensor.GasSensor ||
+                                device.Interface.Sensor.ReferenceSensor != device.Sensor.ReferenceSensor ||
+                                device.Interface.Sensor.Temperature != device.Sensor.Temperature ||
+                                device.Interface.Sensor.Humidity != device.Sensor.Humidity;
+
+                            if (hasSensorChanged)
                             {
-
-                                if (device.Interface.Sensor.GasSensor != device.Sensor.GasSensor ||
-                                    device.Interface.Sensor.ReferenceSensor != device.Sensor.ReferenceSensor ||
-                                    device.Interface.Sensor.Temperature != device.Sensor.Temperature ||
-                                    device.Interface.Sensor.Humidity != device.Sensor.Humidity)
+                                device.Interface.Sensor = new Sensor
                                 {
-                                    device.Interface.Sensor.Time = device.Sensor.Time;
-                                    device.Interface.Sensor.GasSensor = device.Sensor.GasSensor;
-                                    device.Interface.Sensor.ReferenceSensor = device.Sensor.ReferenceSensor;
-                                    device.Interface.Sensor.Temperature = device.Sensor.Temperature;
-                                    device.Interface.Sensor.Humidity = device.Sensor.Humidity;
+                                    Time = device.Sensor.Time,
+                                    GasSensor = device.Sensor.GasSensor,
+                                    ReferenceSensor = device.Sensor.ReferenceSensor,
+                                    Temperature = device.Sensor.Temperature,
+                                    Humidity = device.Sensor.Humidity
+                                };
 
-                                    device.Interface.MyPlot.AddDataPoint(device.Sensor.Time, device.Sensor.GasSensor, device.Sensor.ReferenceSensor);
-                                }
+                                // **Grafik verisini güncelle (Her cihazın kendi PlotModel'i olduğundan emin ol)**
+                                device.Interface.MyPlot.AddDataPoint(
+                                    device.Interface.Sensor.Time,
+                                    device.Interface.Sensor.GasSensor,
+                                    device.Interface.Sensor.ReferenceSensor);
                             }
                         }
 
-                        // UI'yi yeniden tetikle
                         OnPropertyChanged(nameof(IdentifiedDevices));
                     });
                 }

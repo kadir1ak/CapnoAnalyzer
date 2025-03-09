@@ -184,11 +184,19 @@ namespace CapnoAnalyzer.Services
 
         private void ProcessData(string portName, string data)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            try
             {
-                // Olayı tetikleyelim
-                MessageReceived?.Invoke(portName, data);
-            });
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    // Olayı tetikleyelim
+                    MessageReceived?.Invoke(portName, data);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error processing data for port {portName}: {ex.Message}",
+                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void InitializeEventWatchers()

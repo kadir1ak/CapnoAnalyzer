@@ -12,6 +12,8 @@ namespace CapnoAnalyzer.Models.PlotModels
     public class DevicePlot : BindableBase
     {
         private PlotModel _plotModel;
+        private LineSeries _gasSeries;
+        private LineSeries _referenceSeries;
 
         /// <summary>
         /// Grafik modeli (PlotModel) özelliği.
@@ -21,8 +23,11 @@ namespace CapnoAnalyzer.Models.PlotModels
             get => _plotModel;
             set
             {
-                _plotModel = value;
-                OnPropertyChanged();
+                if (_plotModel != value)
+                {
+                    _plotModel = value;
+                    OnPropertyChanged();
+                }
             }
         }
 
@@ -39,10 +44,11 @@ namespace CapnoAnalyzer.Models.PlotModels
         /// </summary>
         public void InitializePlotModel()
         {
+            // **Her cihaz için ayrı PlotModel nesnesi oluşturuluyor**
             PlotModel = new PlotModel { Title = "Sensör Verileri" };
             PlotModel.Series.Clear();
 
-            // X Ekseni (Zaman)
+            // **X Ekseni (Zaman)**
             PlotModel.Axes.Add(new LinearAxis
             {
                 Position = AxisPosition.Bottom,
@@ -51,7 +57,7 @@ namespace CapnoAnalyzer.Models.PlotModels
                 MinorGridlineStyle = LineStyle.Dot
             });
 
-            // Y Ekseni (Sensör Değerleri)
+            // **Y Ekseni (Sensör Değerleri)**
             PlotModel.Axes.Add(new LinearAxis
             {
                 Position = AxisPosition.Left,
@@ -60,23 +66,23 @@ namespace CapnoAnalyzer.Models.PlotModels
                 MinorGridlineStyle = LineStyle.Dot
             });
 
-            // Gaz Sensörü Serisi
-            var gasSeries = new LineSeries
+            // **Gaz Sensörü Serisi**
+            _gasSeries = new LineSeries
             {
                 Title = "Gas Sensor",
                 Color = OxyColors.Orange,
                 StrokeThickness = 2
             };
-            PlotModel.Series.Add(gasSeries);
+            PlotModel.Series.Add(_gasSeries);
 
-            // Referans Sensörü Serisi
-            var referenceSeries = new LineSeries
+            // **Referans Sensörü Serisi**
+            _referenceSeries = new LineSeries
             {
                 Title = "Reference Sensor",
                 Color = OxyColors.Green,
                 StrokeThickness = 2
             };
-            PlotModel.Series.Add(referenceSeries);
+            PlotModel.Series.Add(_referenceSeries);
 
             // **Legend (Açıklama)**
             PlotModel.Legends.Add(new Legend
@@ -96,31 +102,49 @@ namespace CapnoAnalyzer.Models.PlotModels
         /// <param name="referenceValue">Referans sensör değeri.</param>
         public void AddDataPoint(double time, double gasValue, double referenceValue)
         {
-            if (PlotModel == null || PlotModel.Series.Count < 2)
+            try
             {
-                Debug.WriteLine("PlotModel veya Series eksik!");
-                return;
-            }
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                if (PlotModel.Series[0] is LineSeries gasSeries && PlotModel.Series[1] is LineSeries referenceSeries)
+                if (PlotModel == null || _gasSeries == null || _referenceSeries == null)
                 {
-                    // Yeni veri noktalarını ekleyelim
-                    gasSeries.Points.Add(new DataPoint(time, gasValue));
-                    referenceSeries.Points.Add(new DataPoint(time, referenceValue));
+                    Debug.WriteLine("PlotModel veya Series eksik!");
+                    return;
+                }
 
-                    // 100'den fazla noktayı koruma
-                    if (gasSeries.Points.Count > 100)
-                        gasSeries.Points.RemoveAt(0);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    // **Yeni veri noktalarını ekleyelim**
+                    _gasSeries.Points.Add(new DataPoint(time, gasValue));
+                    _referenceSeries.Points.Add(new DataPoint(time, referenceValue));
 
-                    if (referenceSeries.Points.Count > 100)
-                        referenceSeries.Points.RemoveAt(0);
+                    // **Eski noktaları kaldır (100 noktadan fazla veri tutmayalım)**
+                    if (_gasSeries.Points.Count > 100)
+                        _gasSeries.Points.RemoveAt(0);
 
-                    // **Grafiği Yenile**
+                    if (_referenceSeries.Points.Count > 100)
+                        _referenceSeries.Points.RemoveAt(0);
+
+                    // **Grafiği yenile**
                     PlotModel.InvalidatePlot(true);
                     OnPropertyChanged(nameof(PlotModel));
-                }
+                });
+            }
+            catch (Exception ex)
+            { 
+                MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+        }
+
+        /// <summary>
+        /// Grafiği temizler ve sıfırlar.
+        /// </summary>
+        public void ClearPlot()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _gasSeries.Points.Clear();
+                _referenceSeries.Points.Clear();
+                PlotModel.InvalidatePlot(true);
             });
         }
     }

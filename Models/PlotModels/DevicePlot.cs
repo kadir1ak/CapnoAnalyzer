@@ -28,6 +28,13 @@ namespace CapnoAnalyzer.Models.PlotModels
             }
         }
 
+        private int _plotTime = 10;
+        public int PlotTime
+        {
+            get => _plotTime;
+            set => SetProperty(ref _plotTime, value);
+        }
+
         public DevicePlot()
         {
             InitializePlotModel();
@@ -95,8 +102,8 @@ namespace CapnoAnalyzer.Models.PlotModels
                 _referenceSeries.Points.Add(new DataPoint(time, referenceValue));
 
                 // 10 saniyeden eski verileri sil (1000 ms * 10) (Zaman bazlı silme)
-                _gasSeries.Points.RemoveAll((p => p.X < time - 10));
-                _referenceSeries.Points.RemoveAll((p => p.X < time - 10));
+                _gasSeries.Points.RemoveAll((p => p.X < time - PlotTime));
+                _referenceSeries.Points.RemoveAll((p => p.X < time - PlotTime));
 
                 PlotModel.InvalidatePlot(true);
                 OnPropertyChanged(nameof(PlotModel));

@@ -59,6 +59,18 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             }
         }
 
+        private int _selectedBaudRate = 921600;
+        public int SelectedBaudRate
+        {
+            get => _selectedBaudRate;
+            set
+            {
+                SetProperty(ref _selectedBaudRate, value);
+                // Port adı değişince Connect butonunu aktif/pasif güncelle:
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
         // -- 5) Komutlar (Connect/Disconnect/SendMessage) --
         public ICommand ConnectCommand { get; }
         public ICommand DisconnectCommand { get; }
@@ -325,7 +337,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 return;
 
             // 1) Manager üzerinden ilgili portu aç
-            PortManager.ConnectToPort(SelectedPortName, 921600);
+            PortManager.ConnectToPort(SelectedPortName, SelectedBaudRate);
 
             // 2) ConnectedDevices içinde bu porta ait bir cihaz var mı?
             var existingDevice = ConnectedDevices.FirstOrDefault(d => d.Properties.PortName == SelectedPortName);
@@ -343,7 +355,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 Device = existingDevice;
             }
             Debug.WriteLine($"ConnectedDevices: {Device.Properties.PortName}");
-
+     
             // UI'yi yeniden tetikle
             OnPropertyChanged(nameof(ConnectedDevices));
             OnPropertyChanged(nameof(ConnectedPorts));

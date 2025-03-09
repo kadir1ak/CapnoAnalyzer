@@ -8,12 +8,15 @@ using System.Windows;
 using CapnoAnalyzer.Views.MainViews;
 using CapnoAnalyzer.ViewModels.DeviceViewModels;
 using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
+using CapnoAnalyzer.ViewModels.SettingViewModels;
+using CapnoAnalyzer.Models.Settings;
 
 namespace CapnoAnalyzer.ViewModels.MainViewModels
 {
     class MainViewModel : BindableBase
     {
         public DevicesViewModel DevicesVM { get; set; }
+        public SettingViewModel SettingVM { get; set; }
         public ICommand NavigateCommand { get; }
 
         // **Sayfaları yeniden oluşturmamak için bir Dictionary kullanıyoruz**
@@ -23,8 +26,34 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
         {
             DevicesVM = new DevicesViewModel();
             NavigateCommand = new RelayCommand(Navigate);
+            SettingVM = new SettingViewModel();
+
+            // Ayar değiştiğinde cihazlara yansıtmak için abone olun:
+            SettingVM.CurrentSetting.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(Setting.BaudRate))
+                {
+                    UpdateDevicesBaudRate();
+                }
+                else if (e.PropertyName == nameof(Setting.PlotTime))
+                {
+                    UpdateDevicesPlotTime();
+                }
+            };
+        }
+        private void UpdateDevicesBaudRate()
+        {
+            DevicesVM.SelectedBaudRate = SettingVM.CurrentSetting.BaudRate;
         }
 
+        private void UpdateDevicesPlotTime()
+        {
+            foreach (var device in DevicesVM.IdentifiedDevices)
+            {
+                device.Interface.SensorPlot.PlotTime = SettingVM.CurrentSetting.PlotTime;
+                device.Interface.UpdatePlot(); 
+            }
+        }
         private void Navigate(object parameter)
         {
             if (parameter is string pageName)

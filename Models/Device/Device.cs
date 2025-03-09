@@ -167,7 +167,7 @@ namespace CapnoAnalyzer.Models.Device
         public DeviceProperties()
         {
             Status = DeviceStatus.Disconnected;
-            BaudRate = 9600;
+            BaudRate = 921600;
             SampleCount = 0;
             DataSamplingFrequency = 0;
         }

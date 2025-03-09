@@ -94,8 +94,9 @@ namespace CapnoAnalyzer.Models.PlotModels
                 _gasSeries.Points.Add(new DataPoint(time, gasValue));
                 _referenceSeries.Points.Add(new DataPoint(time, referenceValue));
 
-                if (_gasSeries.Points.Count > 100) _gasSeries.Points.RemoveAt(0);
-                if (_referenceSeries.Points.Count > 100) _referenceSeries.Points.RemoveAt(0);
+                // 10 saniyeden eski verileri sil (1000 ms * 10) (Zaman bazlı silme)
+                _gasSeries.Points.RemoveAll((p => p.X < time - 10));
+                _referenceSeries.Points.RemoveAll((p => p.X < time - 10));
 
                 PlotModel.InvalidatePlot(true);
                 OnPropertyChanged(nameof(PlotModel));

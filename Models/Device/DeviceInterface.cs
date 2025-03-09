@@ -11,7 +11,7 @@ namespace CapnoAnalyzer.Models.Device
         /// </summary>
         public DeviceInterface()
         {
-            MyPlot = new DevicePlot(); // **Her cihaz için yeni bir `PlotModel`**
+            SensorPlot = new DevicePlot(); // **Her cihaz için yeni bir `PlotModel`**
             Sensor = new Sensor();
             IncomingMessage = new ObservableCollection<string>();
         }
@@ -49,15 +49,15 @@ namespace CapnoAnalyzer.Models.Device
         /// <summary>
         /// Grafik modeli (Her cihaz için ayrı bir `DevicePlot` oluşturuluyor).
         /// </summary>
-        private DevicePlot _myPlot;
-        public DevicePlot MyPlot
+        private DevicePlot _sensorPlot;
+        public DevicePlot SensorPlot
         {
-            get => _myPlot;
+            get => _sensorPlot;
             set
             {
-                if (_myPlot != value)
+                if (_sensorPlot != value)
                 {
-                    _myPlot = value;
+                    _sensorPlot = value;
                     OnPropertyChanged();
                 }
             }
@@ -96,9 +96,9 @@ namespace CapnoAnalyzer.Models.Device
         /// </summary>
         public void UpdatePlot()
         {
-            if (MyPlot != null)
+            if (SensorPlot != null)
             {
-                MyPlot.AddDataPoint(Sensor.Time, Sensor.GasSensor, Sensor.ReferenceSensor);
+                SensorPlot.AddDataPoint(Sensor.Time, Sensor.GasSensor, Sensor.ReferenceSensor);
             }
         }
     }

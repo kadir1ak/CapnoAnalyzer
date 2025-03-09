@@ -35,13 +35,14 @@ namespace CapnoAnalyzer.Models.PlotModels
 
         public void InitializePlotModel()
         {
-            PlotModel = new PlotModel { Title = "Sensör Verileri" };
+            PlotModel = new PlotModel {TitleFontSize = 12, Title = "Sensör Verileri" };
 
             // X Ekseni (Zaman)
             PlotModel.Axes.Add(new LinearAxis
             {
                 Position = AxisPosition.Bottom,
                 Title = "Zaman (sn)",
+                FontSize = 10,
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot
             });
@@ -51,6 +52,7 @@ namespace CapnoAnalyzer.Models.PlotModels
             {
                 Position = AxisPosition.Left,
                 Title = "ADC Değeri",
+                FontSize = 10,
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot
             });
@@ -59,26 +61,28 @@ namespace CapnoAnalyzer.Models.PlotModels
             _gasSeries = new LineSeries
             {
                 Title = "Gas Sensor",
-                Color = OxyColors.Orange,
+                FontSize = 10,
+                Color = OxyColor.Parse("#4CAF50"),
                 StrokeThickness = 2
             };
             PlotModel.Series.Add(_gasSeries);
 
-            // Referans Sensörü Serisi
+            // Referans Sensörü Serisi 
             _referenceSeries = new LineSeries
             {
                 Title = "Reference Sensor",
-                Color = OxyColors.Green,
+                FontSize = 10,
+                Color = OxyColor.Parse("#FF5722"), 
                 StrokeThickness = 2
             };
             PlotModel.Series.Add(_referenceSeries);
 
             // Legend (Açıklama)
-            PlotModel.Legends.Add(new Legend
-            {
-                LegendTitle = "Sensörler",
-                LegendPosition = LegendPosition.TopRight
-            });
+            //PlotModel.Legends.Add(new Legend
+            //{
+            //    LegendTitle = "Sensörler",
+            //    LegendPosition = LegendPosition.TopRight
+            //});
 
             OnPropertyChanged(nameof(PlotModel));
         }

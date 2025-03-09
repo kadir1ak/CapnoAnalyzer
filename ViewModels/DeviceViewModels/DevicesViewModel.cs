@@ -89,29 +89,35 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        foreach (var device in ConnectedDevices)
+                        foreach (var device in ConnectedDevices.ToList()) // 🔥 Eğer liste değişirse hata almamak için kopyasını al
                         {
-                            if (device.IncomingMessage.LastOrDefault() == null)
+                            if (device == null || device.IncomingMessage == null)
+                                continue; // 🔥 Null kontrolü ekle
+
+                            var lastMessage = device.IncomingMessage.LastOrDefault();
+                            if (lastMessage == null) continue;
+
+                            device.Interface?.IncomingMessage.Add(lastMessage);
+
+                            while (device.Interface?.IncomingMessage.Count > 10)
                             {
-                                continue;
+                                device.Interface.IncomingMessage.RemoveAt(0);
                             }
-                            if (device != null)
-                            {
-                                device.Interface.IncomingMessage.Add(device.IncomingMessage.LastOrDefault());
-                                while (device.Interface.IncomingMessage.Count > 10)
-                                {
-                                    device.Interface.IncomingMessage.RemoveAt(0);
-                                }
-                                DeviceIdentification(device);
-                            }
+
+                            DeviceIdentification(device);
                         }
 
-                        // UI güncellemesi
+                        // **UI güncellemesi**
                         OnPropertyChanged(nameof(IdentifiedDevices));
                         OnPropertyChanged(nameof(ConnectedDevices));
                         OnPropertyChanged(nameof(ConnectedPorts));
                     });
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                // **Görev iptal edildi, hata fırlatma**
+                Debug.WriteLine("UpdateConnectedDevicesInterfaceDataLoop task canceled.");
             }
             catch (Exception ex)
             {
@@ -129,7 +135,8 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 
         public void StopConnectedDevicesUpdateInterfaceDataLoop()
         {
-            if (_updateConnectedDevicesInterfaceLoopCancellationTokenSource != null && !_updateConnectedDevicesInterfaceLoopCancellationTokenSource.IsCancellationRequested)
+            if (_updateConnectedDevicesInterfaceLoopCancellationTokenSource != null &&
+                !_updateConnectedDevicesInterfaceLoopCancellationTokenSource.IsCancellationRequested)
             {
                 _updateConnectedDevicesInterfaceLoopCancellationTokenSource.Cancel();
                 _updateConnectedDevicesInterfaceLoopCancellationTokenSource.Dispose();
@@ -146,9 +153,10 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        foreach (var device in IdentifiedDevices)
+                        foreach (var device in IdentifiedDevices.ToList()) // 🔥 Kopyasını al, değişiklik olursa hata engellenir.
                         {
-                            if (device == null) continue;
+                            if (device == null || device.Interface == null || device.Sensor == null)
+                                continue; // 🔥 Null nesneleri atla, hata önle.
 
                             bool hasSensorChanged =
                                 device.Interface.Sensor.GasSensor != device.Sensor.GasSensor ||
@@ -166,18 +174,17 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                                     Temperature = device.Sensor.Temperature,
                                     Humidity = device.Sensor.Humidity
                                 };
-                                device.Interface.UpdatePlot();
-                                // **Grafik verisini güncelle (Her cihazın kendi PlotModel'i olduğundan emin ol)**
-                                //device.Interface.MyPlot.AddDataPoint(
-                                //    device.Interface.Sensor.Time,
-                                //    device.Interface.Sensor.GasSensor,
-                                //    device.Interface.Sensor.ReferenceSensor);
+                                device.Interface.UpdatePlot(); // 🔥 Hata kaynağı olabilecek noktayı kontrol ettik.
                             }
                         }
 
                         OnPropertyChanged(nameof(IdentifiedDevices));
                     });
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                Debug.WriteLine("UpdateIdentifiedDevicesInterfaceDataLoop task canceled."); // ❌ Hata yerine debug mesajı.
             }
             catch (Exception ex)
             {

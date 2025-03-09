@@ -166,12 +166,12 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                                     Temperature = device.Sensor.Temperature,
                                     Humidity = device.Sensor.Humidity
                                 };
-                                Debug.WriteLine($"Sensor data updated: {device.Properties.PortName}");
+                                device.Interface.UpdatePlot();
                                 // **Grafik verisini güncelle (Her cihazın kendi PlotModel'i olduğundan emin ol)**
-                                device.Interface.MyPlot.AddDataPoint(
-                                    device.Interface.Sensor.Time,
-                                    device.Interface.Sensor.GasSensor,
-                                    device.Interface.Sensor.ReferenceSensor);
+                                //device.Interface.MyPlot.AddDataPoint(
+                                //    device.Interface.Sensor.Time,
+                                //    device.Interface.Sensor.GasSensor,
+                                //    device.Interface.Sensor.ReferenceSensor);
                             }
                         }
 
@@ -224,15 +224,15 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         }
         private void CalculateSampleRate(Device device)
         {
-            device.Properties.sampleCount++;
+            device.Properties.SampleCount++;
             var now = DateTime.Now;
-            var elapsed = now - device.Properties.lastUpdate;
+            var elapsed = now - device.Properties.LastUpdate;
 
             if (elapsed.TotalSeconds >= 1) // Her saniyede bir hesapla
             {
-                device.Properties.DataSamplingFrequency = device.Properties.sampleCount;
-                device.Properties.sampleCount = 0;
-                device.Properties.lastUpdate = now;
+                device.Properties.DataSamplingFrequency = device.Properties.SampleCount;
+                device.Properties.SampleCount = 0;
+                device.Properties.LastUpdate = now;
             }
         }
         private void DeviceIdentification(Device device)

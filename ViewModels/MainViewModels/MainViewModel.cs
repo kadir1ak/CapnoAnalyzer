@@ -1,4 +1,6 @@
-﻿using System.Windows.Controls;
+﻿using System;
+using System.Collections.Generic;
+using System.Windows.Controls;
 using System.Windows.Input;
 using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Views.Pages;
@@ -13,6 +15,9 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
     {
         public DevicesViewModel DevicesVM { get; set; }
         public ICommand NavigateCommand { get; }
+
+        // **Sayfaları yeniden oluşturmamak için bir Dictionary kullanıyoruz**
+        private readonly Dictionary<string, Page> _pageCache = new Dictionary<string, Page>();
 
         public MainViewModel()
         {
@@ -44,27 +49,32 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                         // 2️⃣ Ardından programı tamamen kapat
                         Application.Current.Shutdown();
                     }
-                    return; // Kullanıcı "Hayır" dediyse devam etme
-                }
-
-                if (mainWindow?.MainFrame.Content is Page currentPage && currentPage.GetType().Name == $"{pageName}Page")
-                {
-                    // Eğer zaten aynı sayfa açıksa, tekrar açma
                     return;
                 }
 
-                // Sayfa oluşturma
-                Page targetPage = pageName switch
+                // **Önbellekten sayfayı getir, eğer yoksa oluştur**
+                if (!_pageCache.ContainsKey(pageName))
                 {
-                    "Home" => new HomePage(),
-                    "Devices" => new DevicesPage(),
-                    "Settings" => new SettingsPage(),
-                    "About" => new AboutPage(),
-                    _ => new HomePage(),
-                };
+                    Page targetPage = pageName switch
+                    {
+                        "Home" => new HomePage { DataContext = DevicesVM },
+                        "Devices" => new DevicesPage { DataContext = DevicesVM },
+                        "Settings" => new SettingsPage(),
+                        "About" => new AboutPage(),
+                        _ => new HomePage(),
+                    };
 
-                // Frame'e yönlendirme işlemi
-                mainWindow?.MainFrame.Navigate(targetPage);
+                    _pageCache[pageName] = targetPage;
+                }
+
+                // Eğer zaten aynı sayfa açıksa tekrar yönlendirme yapma
+                if (mainWindow?.MainFrame.Content == _pageCache[pageName])
+                {
+                    return;
+                }
+
+                // Frame'e yönlendirme işlemi (önbellekteki sayfayı kullanarak)
+                mainWindow?.MainFrame.Navigate(_pageCache[pageName]);
             }
         }
     }

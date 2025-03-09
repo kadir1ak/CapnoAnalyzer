@@ -25,6 +25,7 @@ namespace CapnoAnalyzer.Services
 
         public event Action<string> SerialPortAdded;
         public event Action<string> SerialPortRemoved;
+        public event Action<string> DeviceDisconnected; 
         public event Action<string, string> MessageReceived;
 
         public SerialPortsManager()
@@ -221,12 +222,27 @@ namespace CapnoAnalyzer.Services
 
         private void OnSerialPortRemoved(object sender, EventArrivedEventArgs e)
         {
-            Application.Current.Dispatcher.BeginInvoke((Action)ScanSerialPorts);
+            Application.Current.Dispatcher.BeginInvoke((Action)(() =>
+            {
+                ScanSerialPorts(); // Port listesini güncelle
+            }));
+        }
+
+        // Port çıkarıldığında, ilgili cihaza haber veriyoruz.
+        public void NotifyDeviceIfPortRemoved(string portName)
+        {
+            if (!AvailablePorts.Contains(portName)) // Eğer port artık mevcut değilse
+            {
+                DeviceDisconnected?.Invoke(portName); // Cihazın bağlantısının koptuğunu bildir.
+            }
         }
 
         private void OnSerialPortAdded(object sender, EventArrivedEventArgs e)
         {
-            Application.Current.Dispatcher.BeginInvoke((Action)ScanSerialPorts);            
+            Application.Current.Dispatcher.BeginInvoke((Action)(() =>
+            {
+                ScanSerialPorts(); // Port listesini güncelle
+            }));           
         }
 
         public void ScanSerialPorts()

@@ -32,15 +32,15 @@
 
                                 <!-- Cihaz bilgileri -->
                                 <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                    <TextBlock Text="{Binding PortName}"
+                                    <TextBlock Text="{Binding Properties.PortName}"
                                                FontSize="16" 
                                                FontWeight="Bold" 
                                                Margin="5,5,10,5" />
-                                    <TextBlock Text="{Binding DataSamplingFrequency, StringFormat='{}{0} Hz'}"
+                                    <TextBlock Text="{Binding Properties.DataSamplingFrequency, StringFormat='{}{0} Hz'}"
                                                FontSize="16" 
                                                FontWeight="Bold" 
                                                Margin="5,5,0,5" />
-                                    <TextBlock Text="{Binding DeviceStatus}"
+                                    <TextBlock Text="{Binding Properties.DeviceStatus}"
                                                FontSize="16" 
                                                FontWeight="Bold" 
                                                Margin="5,5,0,5" />

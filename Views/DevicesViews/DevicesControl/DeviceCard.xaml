@@ -3,35 +3,65 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
+             xmlns:local="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"           
+          xmlns:oxy="http://oxyplot.org/wpf"
              mc:Ignorable="d">
 
-    <Grid Width="200">                
-        <!-- Cihaz Kimliği -->
-        <Border Background="#F1F3FA" Margin="10" CornerRadius="10">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="{Binding PortName}" Foreground="#2E3B4E" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding Properties.ProductId}" Foreground="#4CAF50" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding DeviceStatus}" Foreground="#5C6D8C" FontSize="18" HorizontalAlignment="Center"/>
+    <Grid Width="450" Margin="10">
+        <!-- Ana Kart -->
+        <Border Background="#F1F3FA" CornerRadius="10" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                <!-- Gaz Sensörü -->
-                <Border Background="#F1F3FA" Height="60" Margin="5" CornerRadius="10">
-                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
-                        <TextBlock Text="Gaz Sensörü" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
-                        <TextBlock Text="{Binding Interface.Sensor.GasSensor}" Foreground="#FFC107" FontSize="18" FontWeight="Bold" />
-                        <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
-                    </StackPanel>
-                </Border>
+                <!-- Üst Bilgi (Cihaz Kimliği ve Durumu) -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 5">
+                    <TextBlock Text="{Binding Properties.PortName}" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" Margin="5" />
+                    <TextBlock Text="{Binding Properties.ProductId}" Foreground="#4CAF50" FontSize="16" FontWeight="Bold" Margin="5" />
+                    <TextBlock Text="{Binding Properties.DeviceStatus}" Foreground="#5C6D8C" FontSize="16" Margin="5" />
+                </StackPanel>
 
-                <!-- Referans Sensörü -->
-                <Border Background="#F1F3FA" Height="60" Margin="5" CornerRadius="10">
-                    <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
-                        <TextBlock Text="Referans Sensör" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
-                        <TextBlock Text="{Binding Interface.Sensor.ReferenceSensor}" Foreground="#FF5722" FontSize="18" FontWeight="Bold" />
-                        <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
-                    </StackPanel>
+                <!-- Sol Panel (Sensör Verileri) -->
+                <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5">
+                    <!-- Zaman -->
+                    <Border Background="#F1F3FA" Height="70" Margin="5" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <TextBlock Text="Zaman" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Interface.Sensor.Time}" Foreground="#0078D7" FontSize="18" FontWeight="Bold" />
+                            <TextBlock Text="sn" Foreground="#5C6D8C" FontSize="12" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Gaz Sensörü -->
+                    <Border Background="#F1F3FA" Height="70" Margin="5" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <TextBlock Text="Gaz Sensörü" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Interface.Sensor.GasSensor}" Foreground="#FFC107" FontSize="18" FontWeight="Bold" />
+                            <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Referans Sensörü -->
+                    <Border Background="#F1F3FA" Height="70" Margin="5" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <TextBlock Text="Referans Sensör" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Interface.Sensor.ReferenceSensor}" Foreground="#FF5722" FontSize="18" FontWeight="Bold" />
+                            <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Sağ Panel (Grafik) -->
+                <Border Grid.Row="1" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Padding="10" Margin="5">
+                    <oxy:PlotView Model="{Binding Interface.MyPlot.PlotModel}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                 </Border>
-            </StackPanel>
-        </Border> 
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

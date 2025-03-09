@@ -3,12 +3,16 @@ using System.Collections.ObjectModel;
 using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Services;
 using System.Windows.Input;
+using CapnoAnalyzer.Models.PlotModels;
+using System.Windows;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CapnoAnalyzer.Models.Device
 {
     public class Device : BindableBase
     {
-        private readonly SerialPortsManager _manager;
+        private readonly SerialPortsManager PortManager;
         private CancellationTokenSource _autoSendTokenSource;
 
         // Giden mesajları kontrol eden komutlar
@@ -17,11 +21,25 @@ namespace CapnoAnalyzer.Models.Device
 
         public Device(SerialPortsManager manager, string portName, DeviceStatus deviceStatus)
         {
-            _manager = manager;
-            PortName = portName;
-            DeviceStatus = deviceStatus;
+            PortManager = manager;
+            PortManager.DeviceDisconnected += OnDeviceDisconnected;
+
+            Properties.PortName = portName;
+            Properties.DeviceStatus = deviceStatus;
+
             SendMessageCommand = new DeviceRelayCommand(SendMessage, CanSendMessage);
             AutoSendMessageCommand = new DeviceRelayCommand(AutoSend);
+
+            // Sensor değişikliklerini dinle ve grafiği güncelle
+            Interface.Sensor.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(Sensor.Time) ||
+                    args.PropertyName == nameof(Sensor.GasSensor) ||
+                    args.PropertyName == nameof(Sensor.ReferenceSensor))
+                {
+                    UpdatePlotWithSensorData();
+                }
+            };
         }
 
         // === NORMAL MESAJ GÖNDERME ===
@@ -29,13 +47,13 @@ namespace CapnoAnalyzer.Models.Device
         {
             if (!string.IsNullOrWhiteSpace(Interface.OutgoingMessage))
             {
-                _manager.SendMessage(PortName, Interface.OutgoingMessage);
+                PortManager.SendMessage(Properties.PortName, Interface.OutgoingMessage);
             }
         }
 
         private bool CanSendMessage()
         {
-            return (DeviceStatus == DeviceStatus.Connected || DeviceStatus == DeviceStatus.Identified) && !string.IsNullOrWhiteSpace(Interface.OutgoingMessage);
+            return (Properties.DeviceStatus == DeviceStatus.Connected || Properties.DeviceStatus == DeviceStatus.Identified) && !string.IsNullOrWhiteSpace(Interface.OutgoingMessage);
         }
 
         // === OTOMATİK GÖNDERME ===
@@ -70,7 +88,7 @@ namespace CapnoAnalyzer.Models.Device
             {
                 while (AutoSendActive && !token.IsCancellationRequested)
                 {
-                    _manager.SendMessage(PortName, Interface.OutgoingMessage);
+                    PortManager.SendMessage(Properties.PortName, Interface.OutgoingMessage);
                     await Task.Delay(10, token); // 10ms bekle
                 }
             }, token);
@@ -80,6 +98,33 @@ namespace CapnoAnalyzer.Models.Device
         {
             AutoSendActive = false;
             _autoSendTokenSource?.Cancel();
+        }
+
+        private void OnDeviceDisconnected(string portName)
+        {
+            if (Properties.PortName == portName) // Eğer bağlı olduğu port kaldırıldıysa
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Properties.DeviceStatus = DeviceStatus.Disconnected; // UI'da "Disconnected" olarak göster
+                    NotifyUIForRemoval(); // UI'daki listeden kaldırma işlemi için çağrı yap.
+                });
+            }
+        }
+
+        // UI tarafında cihazı kaldırmak için olay
+        public event Action<Device> RemoveDeviceFromUI;
+
+        private void NotifyUIForRemoval()
+        {
+            RemoveDeviceFromUI?.Invoke(this);
+        }
+
+        // Cihazın nesnesini tamamen silmek istiyorsak:
+        public void DisposeDevice()
+        {
+            StopAutoSend();
+            PortManager.DeviceDisconnected -= OnDeviceDisconnected;
         }
 
         // Gelen mesajları tutacağımız koleksiyon
@@ -104,73 +149,54 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _sensor, value);
         }
 
-        private string _id;
-        public string ID
-        {
-            get => _id;
-            set => SetProperty(ref _id, value);
-        }
-
-        private string _name;
-        public string Name
-        {
-            get => _name;
-            set => SetProperty(ref _name, value);
-        }
-
-        private string _portName;
-        public string PortName
-        {
-            get => _portName;
-            set => SetProperty(ref _portName, value);
-        }
-
-        private DeviceStatus _deviceStatus = DeviceStatus.Disconnected;
-        public DeviceStatus DeviceStatus
-        {
-            get => _deviceStatus;
-            set => SetProperty(ref _deviceStatus, value);
-
-        }
-
-        private int _baudRate = 9600;
-        public int BaudRate
-        {
-            get => _baudRate;
-            set => SetProperty(ref _baudRate, value);
-        }
-
-        public int sampleCount = 0;
-
-        public DateTime lastUpdate = DateTime.Now;
-
-        private int _dataSamplingFrequency;
-        public int DataSamplingFrequency
-        {
-            get => _dataSamplingFrequency;
-            set => SetProperty(ref _dataSamplingFrequency, value);
-        }
-
-        private Parity _parity = Parity.None;
-        public Parity Parity
-        {
-            get => _parity;
-            set => SetProperty(ref _parity, value);
-        }
-
-        private StopBits _stopBits = StopBits.One;
-        public StopBits StopBits
-        {
-            get => _stopBits;
-            set => SetProperty(ref _stopBits, value);
-        }
-
         private DeviceProperties _properties = new DeviceProperties();
         public DeviceProperties Properties
         {
             get => _properties;
             set => SetProperty(ref _properties, value);
         }
+
+        /// <summary>
+        /// Sensor'dan gelen verilerle grafiği günceller.
+        /// </summary>
+        private void UpdatePlotWithSensorData()
+        {
+            Interface.MyPlot.AddDataPoint(Interface.Sensor.Time, Interface.Sensor.GasSensor, Interface.Sensor.ReferenceSensor);
+        }
+    }
+
+    public class DeviceProperties : BindableBase
+    {
+        public int sampleCount = 0;
+
+        public DateTime lastUpdate = DateTime.Now;
+
+        public DeviceProperties()
+        {
+            DeviceStatus = DeviceStatus.Disconnected;
+            ID = string.Empty;
+            BaudRate = 9600;
+            DataSamplingFrequency = 0;
+            PortName = string.Empty;
+            CompanyName = string.Empty;
+            ProductName = string.Empty;
+            ProductModel = string.Empty;
+            ManufactureDate = string.Empty;
+            ProductId = string.Empty;
+            FirmwareVersion = string.Empty;
+        }
+
+        public DeviceStatus DeviceStatus { get; set; }
+        public int BaudRate { get; set; }
+        public int DataSamplingFrequency { get; set; }
+        public string ID { get; set; }
+        public string PortName { get; set; }
+        public string CompanyName { get; set; }
+        public string ProductName { get; set; }
+        public string ProductModel { get; set; }
+        public string ManufactureDate { get; set; }
+        public string ProductId { get; set; }
+        public string FirmwareVersion { get; set; }
     }
 
     public enum DeviceStatus
@@ -179,14 +205,5 @@ namespace CapnoAnalyzer.Models.Device
         Disconnected,
         Identified,
         Unidentified
-    }
-    public class DeviceProperties
-    {
-        public string CompanyName { get; set; }
-        public string ProductName { get; set; }
-        public string ProductModel { get; set; }
-        public string ManufactureDate { get; set; }
-        public string ProductId { get; set; }
-        public string FirmwareVersion { get; set; }
     }
 }

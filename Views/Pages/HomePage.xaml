@@ -15,8 +15,8 @@
         <ScrollViewer>
             <WrapPanel Margin="20">
 
-                <views:IdentifiedDevices Grid.Row="1" DataContext="{Binding DevicesVM}" />       
-
+                <views:IdentifiedDevices Grid.Row="1" DataContext="{Binding DevicesVM}" />
+                
             </WrapPanel>
         </ScrollViewer>
     </Grid>

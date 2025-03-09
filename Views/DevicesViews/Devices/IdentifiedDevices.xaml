@@ -7,7 +7,24 @@
              xmlns:helpers="clr-namespace:CapnoAnalyzer.Helpers"              
              xmlns:devicesDC="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
              mc:Ignorable="d">
+
     <Grid Margin="10">
-        <devicesDC:IdentifiedDevices Grid.Row="2" DataContext="{Binding}" />
+        <TextBlock Text="{Binding IdentifiedDevices.Count}" Foreground="Red" FontSize="20"/>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding IdentifiedDevices}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <devicesDC:DeviceCard DataContext="{Binding}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>

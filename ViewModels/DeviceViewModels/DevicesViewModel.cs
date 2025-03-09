@@ -166,7 +166,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                                     Temperature = device.Sensor.Temperature,
                                     Humidity = device.Sensor.Humidity
                                 };
-
+                                Debug.WriteLine($"Sensor data updated: {device.Properties.PortName}");
                                 // **Grafik verisini güncelle (Her cihazın kendi PlotModel'i olduğundan emin ol)**
                                 device.Interface.MyPlot.AddDataPoint(
                                     device.Interface.Sensor.Time,
@@ -248,7 +248,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     return; // Mesaj yoksa işlemi sonlandır
 
                 string deviceInfo = lastMessage;
-                Console.WriteLine(deviceInfo);
+                Debug.WriteLine(deviceInfo);
                 string[] parts = deviceInfo.Split(';');
                 if (parts.Length == 6 &&
                     !string.IsNullOrWhiteSpace(parts[0]) &&
@@ -274,7 +274,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error parsing device info: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine($"Error parsing device info: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void AssignDeviceProperties(Device device, string[] parts)
@@ -306,7 +306,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 
                 IdentifiedDevices.Add(device);
             }
-
+            Debug.WriteLine($"Device Identified: {device.Properties.PortName}");
             // UI güncellemesi
             OnPropertyChanged(nameof(IdentifiedDevices));
         }
@@ -334,6 +334,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 existingDevice.Properties.DeviceStatus = DeviceStatus.Connected;
                 Device = existingDevice;
             }
+            Debug.WriteLine($"ConnectedDevices: {Device.Properties.PortName}");
 
             // UI'yi yeniden tetikle
             OnPropertyChanged(nameof(ConnectedDevices));
@@ -389,7 +390,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     OnPropertyChanged(nameof(ConnectedDevices));
                 }
             }
-
+            Debug.WriteLine($"Disconnected: {SelectedPortName}");
             // Seçili cihazı sıfırla (UI'da buton vs. güncellenecek)
             Device = null;
             OnPropertyChanged(nameof(ConnectedPorts));

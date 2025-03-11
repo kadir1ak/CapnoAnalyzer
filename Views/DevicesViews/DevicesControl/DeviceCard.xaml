@@ -4,10 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"           
-          xmlns:oxy="http://oxyplot.org/wpf"
+             xmlns:plot="clr-namespace:CapnoAnalyzer.Views.DevicesViews.PlotViews"           
+             xmlns:oxy="http://oxyplot.org/wpf"
              mc:Ignorable="d">
 
-    <Grid Width="500" Margin="10">
+    <Grid Width="600" Height="400" Margin="10">
         <!-- Ana Kart -->
         <Border Background="#F1F3FA" CornerRadius="10" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1">
             <Grid>
@@ -30,7 +31,7 @@
                 <!-- Sol Panel (Sensör Verileri) -->
                 <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <!-- Zaman -->
-                    <Border Background="#F1F3FA" Height="70" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                             <TextBlock Text="Zaman" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
                             <TextBlock Text="{Binding Interface.Sensor.Time}" Foreground="#0078D7" FontSize="18" FontWeight="Bold" />
@@ -39,7 +40,7 @@
                     </Border>
 
                     <!-- Gaz Sensörü -->
-                    <Border Background="#F1F3FA" Height="70" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                             <TextBlock Text="Gaz Sensörü" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
                             <TextBlock Text="{Binding Interface.Sensor.GasSensor}" Foreground="#4CAF50" FontSize="18" FontWeight="Bold" />
@@ -48,7 +49,7 @@
                     </Border>
 
                     <!-- Referans Sensörü -->
-                    <Border Background="#F1F3FA" Height="70" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                             <TextBlock Text="Referans Sensör" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
                             <TextBlock Text="{Binding Interface.Sensor.ReferenceSensor}" Foreground="#FF5722" FontSize="18" FontWeight="Bold" />
@@ -58,8 +59,8 @@
                 </StackPanel>
 
                 <!-- Sağ Panel (Grafik) -->
-                <Border Grid.Row="1" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Padding="10">
-                    <oxy:PlotView  Background="#F1F3FA" Model="{Binding Interface.SensorPlot.PlotModel}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                <Border Grid.Row="1" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <plot:SensorPlot DataContext="{Binding Interface.SensorPlot.PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                 </Border>
             </Grid>
         </Border>

@@ -69,6 +69,7 @@ namespace CapnoAnalyzer.Models.PlotModels
             {
                 Title = "Gas Sensor",
                 FontSize = 10,
+                TrackerFormatString = "{0}\nTime: {2:0.000}\nValue: {4:0.000}",
                 Color = OxyColor.Parse("#4CAF50"),
                 StrokeThickness = 2
             };
@@ -79,6 +80,7 @@ namespace CapnoAnalyzer.Models.PlotModels
             {
                 Title = "Reference Sensor",
                 FontSize = 10,
+                TrackerFormatString = "{0}\nTime: {2:0.000}\nValue: {4:0.000}",
                 Color = OxyColor.Parse("#FF5722"), 
                 StrokeThickness = 2
             };

@@ -8,19 +8,34 @@
       mc:Ignorable="d" 
       Title="DevicesPage">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <Border Grid.Row="0" Background="#F1F3FA" Margin="10" CornerRadius="10">
-            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <TextBlock Text="Mode:Cihazın Mod Değeri:SP:Cihazın Örnemleme Hızı(ms):Emitter:Cihazın Işığı Açma/Kapama Toggle Süresi(ms)" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" />
-                <TextBlock Text="Örnek Kullanım: Mode:4;SP:1;Emitter:50;" Foreground="#4CAF50" FontSize="12" FontWeight="Bold" />
-            </StackPanel>
-        </Border>
+    <Grid Margin="20">
+        <Border Background="#F1F3FA" CornerRadius="10" Padding="20" BorderBrush="#D1D5DB" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-        <!-- Devices UserControl'ü, DataContext => MainViewModel.DevicesVM -->
-        <views:Devices Grid.Row="1" DataContext="{Binding DevicesVM}" />
+                <!-- Üst Bilgi -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,20">
+                    <TextBlock Text="⚙️ Cihazlar" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Background="#F1F3FA" Margin="10" CornerRadius="10">
+                        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <TextBlock Text="Mode:Cihazın Mod Değeri:SP:Cihazın Örnemleme Hızı(ms):Emitter:Cihazın Işığı Açma/Kapama Toggle Süresi(ms)" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" />
+                            <TextBlock Text="Örnek Kullanım: Mode:4;SP:1;Emitter:50;" Foreground="#4CAF50" FontSize="12" FontWeight="Bold" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Devices UserControl'ü, DataContext => MainViewModel.DevicesVM -->
+                <ScrollViewer Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <views:Devices DataContext="{Binding DevicesVM}" />
+                </ScrollViewer>
+            </Grid>
+        </Border>
     </Grid>
 </Page>

@@ -86,6 +86,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                         "Devices" => new DevicesPage { DataContext = DevicesVM },
                         "Settings" => new SettingsPage(),
                         "Equation" => new EquationTestPage(),
+                        "CalibrationTables" => new CalibrationTablesPage(),
                         "About" => new AboutPage(),
                         _ => new HomePage(),
                     };

@@ -1,12 +1,13 @@
-﻿<Page x:Class="CapnoAnalyzer.Views.Pages.DevicesPage"
+﻿<Page x:Class="CapnoAnalyzer.Views.Pages.CalibrationTablesPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:CapnoAnalyzer.Views.Pages"
-      xmlns:views="clr-namespace:CapnoAnalyzer.Views.DevicesViews.Devices"
+      xmlns:views="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"
       mc:Ignorable="d" 
-      Title="DevicesPage">
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="CalibrationTablesPage">
 
     <Grid Margin="20">
         <Border Background="#F1F3FA" CornerRadius="10" Padding="20" BorderBrush="#D1D5DB" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -22,18 +23,17 @@
 
                 <!-- Üst Bilgi -->
                 <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,20">
-                    <TextBlock Text="🔌 Cihazlar" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    <Border Background="#F1F3FA" Margin="10" CornerRadius="10">
-                        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                            <TextBlock Text="Mode:Cihazın Mod Değeri:SP:Cihazın Örnemleme Hızı(ms):Emitter:Cihazın Işığı Açma/Kapama Toggle Süresi(ms)" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" />
-                            <TextBlock Text="Örnek Kullanım: Mode:4;SP:1;Emitter:50;" Foreground="#4CAF50" FontSize="12" FontWeight="Bold" />
-                        </StackPanel>
-                    </Border>
+                    <TextBlock Text="🧪 Gaz Konsantrasyon Tabloları" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Devices UserControl'ü, DataContext => MainViewModel.DevicesVM -->
                 <ScrollViewer Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <views:Devices DataContext="{Binding DevicesVM}" />
+                    <StackPanel>
+                        <views:GasConcentrationTable/>
+                        <views:GasConcentrationTable/>
+                        <views:GasConcentrationTable/>
+                        <views:GasConcentrationTable/>
+                    </StackPanel>
                 </ScrollViewer>
             </Grid>
         </Border>

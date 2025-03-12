@@ -8,7 +8,24 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="AboutPage">
 
-    <Grid>
-        <TextBlock Text="ℹ️ About Page" FontSize="24" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Grid Margin="20">
+        <Border Background="#F1F3FA" CornerRadius="10" Padding="15" BorderBrush="#D1D5DB" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="3*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Üst Bilgi -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10">
+                    <TextBlock Text="ℹ️  Hakkında" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </StackPanel>
+                
+            </Grid>
+        </Border>
     </Grid>
 </Page>

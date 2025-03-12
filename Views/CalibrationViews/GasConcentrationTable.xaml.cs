@@ -92,6 +92,22 @@ namespace CapnoAnalyzer.Views.CalibrationViews
                 }
             }
 
+            // R^2 hesapla
+            // Gerçek gaz konsantrasyonlarının ortalaması
+            double meanGasConc = deviceData.Average(d => d.GasConcentration);
+
+            // Toplam kareler toplamı (SST)
+            double sst = deviceData.Sum(d => Math.Pow(d.GasConcentration - meanGasConc, 2));
+
+            // Hata kareleri toplamı (SSE)
+            double sse = deviceData
+                .Where(d => !double.IsNaN(d.PredictedGasConcentration.Value))
+                .Sum(d => Math.Pow(d.GasConcentration - d.PredictedGasConcentration.Value, 2));
+
+            // R-kare (R²) hesaplama
+            coefficients.R = 1 - (sse / sst);
+            txtCoefficientR.Text = $"R^2: {coefficients.R:F6}";
+
             DataGridDeviceData.Items.Refresh();
         }
 
@@ -157,6 +173,7 @@ namespace CapnoAnalyzer.Views.CalibrationViews
             txtCoefficientA.Text = $"a: {coefficients.A:F6}";
             txtCoefficientB.Text = $"b: {coefficients.B:F6}";
             txtCoefficientC.Text = $"c: {coefficients.C:F6}";
+            txtCoefficientR.Text = $"R^2: {coefficients.R:F6}";
         }
 
         private Vector<double> CalculateInitialGuesses(double[] x, double[] y)
@@ -189,6 +206,7 @@ namespace CapnoAnalyzer.Views.CalibrationViews
             public double A { get; set; }
             public double B { get; set; }
             public double C { get; set; }
+            public double R { get; set; }
         }
     }
 }

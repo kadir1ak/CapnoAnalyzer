@@ -17,6 +17,7 @@ namespace CapnoAnalyzer.Models.Device
             _referenceSensor = 0.0;
             _temperature = 0.0;
             _humidity = 0.0;
+            _pressure = 0.0;
             _time = 0.0;
         }
         // Time property
@@ -57,6 +58,14 @@ namespace CapnoAnalyzer.Models.Device
         {
             get => _humidity;
             set => SetProperty(ref _humidity, value);
+        }
+
+        // Pressure, property
+        private double _pressure;
+        public double Pressure
+        {
+            get => _pressure;
+            set => SetProperty(ref _pressure, value);
         }
     }
 }

@@ -56,6 +56,29 @@
                             <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
                         </StackPanel>
                     </Border>
+
+
+                    <!-- Ortam Sensörleri -->
+                    <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
+                            <TextBlock Text="Ortam Sensörleri" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Basınç" Foreground="#5C6D8C" FontSize="12" Width="40" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding Interface.Sensor.Pressure, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="40" FontWeight="Bold" />
+                                <TextBlock Text="hPa" Foreground="#5C6D8C" FontSize="12" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Sıcaklık" Foreground="#5C6D8C" FontSize="12" Width="40" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding Interface.Sensor.Temperature, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="40" FontWeight="Bold" />
+                                <TextBlock Text="°" Foreground="#5C6D8C" FontSize="12" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Nem " Foreground="#5C6D8C" FontSize="12" Width="40" Margin="0 0 5 0"/>
+                                <TextBlock Text="{Binding Interface.Sensor.Humidity, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="40" FontWeight="Bold" />
+                                <TextBlock Text="%" Foreground="#5C6D8C" FontSize="12" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <!-- Sağ Panel (Grafik) -->

@@ -1,0 +1,81 @@
+﻿<UserControl x:Class="CapnoAnalyzer.Views.CalibrationViews.CalibrationPointControls"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"        
+             xmlns:faWPF="clr-namespace:FontAwesome.WPF;assembly=FontAwesome.WPF"
+             mc:Ignorable="d">
+    <!-- Sol Panel (Sensör Verileri) -->
+    <Grid Grid.Row="1" Grid.Column="1">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border Grid.Row="0" Grid.Column="2" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
+                <Button x:Name="btnCoefficientCal" Width="150" Height="50" FontWeight="Bold">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border CornerRadius="10" Background="{TemplateBinding Background}" BorderBrush="Black" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <faWPF:FontAwesome Icon="Plus" FontSize="24" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Değer Ekle" FontSize="18"/>
+                                </StackPanel>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#FF809FFF"/>
+                            <Setter Property="Foreground" Value="Black"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FF4D78FD"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- NDIRGas Coefficients -->
+        <Border Grid.Row="0" Grid.Column="1" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="3">
+                <GroupBox Header="Uygulanan Gaz Konsantrasyonu"  FontWeight="Bold" FontSize="16" Margin="0,10,0,10" Padding="10">                                     
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBox Text="{Binding Interface.Sensor.Pressure, StringFormat=F2}" Foreground="#FF009E4B" FontSize="24" Height="36" Width="100" FontWeight="Bold" />
+                        <TextBlock Text="%" Foreground="#5C6D8C" FontSize="24" Margin="5 0 10 0"/>
+                    </StackPanel>            
+                </GroupBox>
+            </StackPanel>
+        </Border>
+        
+        <Border Grid.Row="0" Grid.Column="0" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
+                <GroupBox Header="Test Koşulları"  FontWeight="Bold" FontSize="16" Margin="0,10,0,10" Padding="10">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Sıcaklık:" Foreground="#5C6D8C" FontSize="12" Width="50" Margin="0 0 5 0"/>
+                            <TextBox Text="{Binding Interface.Sensor.Pressure, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="50" FontWeight="Bold" />
+                            <TextBlock Text="°C" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Basıncı:" Foreground="#5C6D8C" FontSize="12" Width="50" Margin="0 0 5 0"/>
+                            <TextBox Text="{Binding Interface.Sensor.Pressure, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="50" FontWeight="Bold" />
+                            <TextBlock Text="mmH" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5">
+                            <TextBlock Text="Nem:" Foreground="#5C6D8C" FontSize="12" Width="50" Margin="0 0 5 0"/>
+                            <TextBox Text="{Binding Interface.Sensor.Pressure, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="50" FontWeight="Bold" />
+                            <TextBlock Text="%" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </Border>
+        
+    </Grid>
+</UserControl>

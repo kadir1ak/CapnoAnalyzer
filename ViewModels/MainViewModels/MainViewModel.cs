@@ -87,7 +87,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                         "Settings" => new SettingsPage(),
                         "Equation" => new EquationTestPage(),
                         "CalibrationTables" => new CalibrationTablesPage(),
-                        "About" => new AboutPage(),
+                        "Notes" => new NotesPage(),
                         _ => new HomePage(),
                     };
 

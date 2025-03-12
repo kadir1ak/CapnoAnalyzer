@@ -71,13 +71,13 @@
                             Command="{Binding NavigateCommand}"
                             CommandParameter="Settings"/>
 
-                <buttons:PageButton ButtonContent="Hakkında" 
-                            ButtonIcon="InfoCircle"
+                <buttons:PageButton ButtonContent="Notlar" 
+                            ButtonIcon="StickyNote"
                             ButtonBackground="#5C6D8C" 
                             ButtonForeground="White"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
-                            CommandParameter="About"/>
+                            CommandParameter="Notes"/>
 
                 <buttons:PageButton ButtonContent="Çıkış" 
                             ButtonIcon="Close"

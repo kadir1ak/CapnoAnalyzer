@@ -41,38 +41,11 @@
                         <GroupBox Header="Cihaz 1 Veriler" Margin="0,0,0,10" Padding="10">
                             <DataGrid x:Name="dataGrid1"
                                       AutoGenerateColumns="True"
-                                      Height="200"
+                                      Height="300"
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Top" />
                         </GroupBox>
 
-                        <!-- Cihaz 2 Veriler -->
-                        <GroupBox Header="Cihaz 2 Veriler" Margin="0,0,0,10" Padding="10">
-                            <DataGrid x:Name="dataGrid2"
-                                      AutoGenerateColumns="True"
-                                      Height="200"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Top" />
-                        </GroupBox>
-
-                        <!-- Cihaz 3 Veriler -->
-                        <GroupBox Header="Cihaz 3 Veriler" Margin="0,0,0,10" Padding="10">
-                            <DataGrid x:Name="dataGrid3"
-                                      AutoGenerateColumns="True"
-                                      Height="200"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Top" />
-                        </GroupBox>
-
-                        <!-- Cihaz 4 Veriler -->
-                        <GroupBox Header="Cihaz 4 Veriler" Margin="0,0,0,10" Padding="10">
-                            <DataGrid x:Name="dataGrid4"
-                                      AutoGenerateColumns="True"
-                                      Height="200"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Top" />
-                        </GroupBox>
-                        
                         <!-- Model ve Katsayılar (Cihaz 1) -->
                         <GroupBox Header="Model ve Katsayılar (Cihaz 1)" Margin="0,0,0,10" Padding="10">
                             <StackPanel>
@@ -82,38 +55,6 @@
                                 <TextBlock x:Name="txtCihaz1C" Text="c:" FontSize="14" Margin="0,0,0,5"/>
                             </StackPanel>
                         </GroupBox>
-
-                        <!-- Model ve Katsayılar (Cihaz 2) -->
-                        <GroupBox Header="Model ve Katsayılar (Cihaz 2)" Margin="0,0,0,10" Padding="10">
-                            <StackPanel>
-                                <TextBlock x:Name="txtCihaz2_Model" Text="Model: y = a(1 - e^(-b x^c))" FontWeight="Bold" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="txtCihaz2A" Text="a:" FontSize="14" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="txtCihaz2B" Text="b:" FontSize="14" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="txtCihaz2C" Text="c:" FontSize="14" Margin="0,0,0,5"/>
-                            </StackPanel>
-                        </GroupBox>
-
-                        <!-- Model ve Katsayılar (Cihaz 3) -->
-                        <GroupBox Header="Model ve Katsayılar (Cihaz 3)" Padding="10">
-                            <StackPanel>
-                                <TextBlock x:Name="txtCihaz3_Model" Text="Model: y = a(1 - e^(-b x^c))" FontWeight="Bold" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="txtCihaz3A" Text="a:" FontSize="14" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="txtCihaz3B" Text="b:" FontSize="14" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="txtCihaz3C" Text="c:" FontSize="14" Margin="0,0,0,5"/>
-                            </StackPanel>
-                        </GroupBox>
-
-                        <!-- Model ve Katsayılar (Cihaz 4) -->
-                        <GroupBox Header="Model ve Katsayılar (Cihaz 4)" Padding="10">
-                            <StackPanel>
-                                <TextBlock x:Name="txtCihaz4_Model" Text="Model: y = a(1 - e^(-b x^c))" FontWeight="Bold" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="txtCihaz4A" Text="a:" FontSize="14" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="txtCihaz4B" Text="b:" FontSize="14" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="txtCihaz4C" Text="c:" FontSize="14" Margin="0,0,0,5"/>
-                            </StackPanel>
-                        </GroupBox>
-
-
                     </StackPanel>
                 </ScrollViewer>
 

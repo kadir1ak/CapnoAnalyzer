@@ -13,16 +13,21 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace CapnoAnalyzer.Views.CalibrationViews
+namespace CapnoAnalyzer.Views.Components.Buttons
 {
     /// <summary>
-    /// NDIRGasCoefficients.xaml etkileşim mantığı
+    /// CalculateButton.xaml etkileşim mantığı
     /// </summary>
-    public partial class NDIRGasCoefficients : UserControl
+    public partial class CalculateButton : UserControl
     {
-        public NDIRGasCoefficients()
+        public CalculateButton()
         {
             InitializeComponent();
+        }
+
+        private void btnCoefficientCal_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

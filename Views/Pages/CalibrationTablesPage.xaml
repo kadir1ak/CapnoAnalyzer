@@ -23,13 +23,12 @@
 
                 <!-- Üst Bilgi -->
                 <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,20">
-                    <TextBlock Text="🧪 Gaz Konsantrasyon Tabloları" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="🧪 NDIR Gaz Katsayılarını Hesaplama Tabloları" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Devices UserControl'ü, DataContext => MainViewModel.DevicesVM -->
                 <ScrollViewer Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
-                        <views:GasConcentrationTable/>
                         <views:GasConcentrationTable/>
                         <views:GasConcentrationTable/>
                         <views:GasConcentrationTable/>

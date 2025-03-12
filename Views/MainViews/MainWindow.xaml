@@ -31,31 +31,15 @@
         <Border DockPanel.Dock="Left" Background="#3E4A5E" Width="240">
             <StackPanel Margin="10">
 
-                <buttons:PageButton ButtonContent="Ana Sayfa" 
-                            ButtonIcon="Home"
+                <buttons:PageButton ButtonContent="Cihazlar" 
+                            ButtonIcon="BarChartOutline"
                             ButtonBackground="#5C6D8C" 
                             ButtonForeground="White"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
                             CommandParameter="Home"/>
 
-                <buttons:PageButton ButtonContent="Cihazlar" 
-                            ButtonIcon="Usb"
-                            ButtonBackground="#5C6D8C" 
-                            ButtonForeground="White"
-                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Command="{Binding NavigateCommand}"
-                            CommandParameter="Devices"/>
-
-                <buttons:PageButton ButtonContent="Denklemler" 
-                            ButtonIcon="Calculator"
-                            ButtonBackground="#5C6D8C" 
-                            ButtonForeground="White"
-                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Command="{Binding NavigateCommand}"
-                            CommandParameter="Equation"/>
-
-                <buttons:PageButton ButtonContent="Kalibrasyon Tabloları" 
+                <buttons:PageButton ButtonContent="Kalibrasyon" 
                             ButtonIcon="Tachometer"
                             ButtonBackground="#5C6D8C" 
                             ButtonForeground="White"
@@ -63,6 +47,22 @@
                             Command="{Binding NavigateCommand}"
                             CommandParameter="CalibrationTables"/>
 
+                <buttons:PageButton ButtonContent="Katsayı Hesaplama" 
+                            ButtonIcon="Calculator"
+                            ButtonBackground="#5C6D8C" 
+                            ButtonForeground="White"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Equation"/>
+                
+                <buttons:PageButton ButtonContent="Cihaz Bağlantıları" 
+                            ButtonIcon="Usb"
+                            ButtonBackground="#5C6D8C" 
+                            ButtonForeground="White"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="Devices"/>
+                
                 <buttons:PageButton ButtonContent="Ayarlar" 
                             ButtonIcon="Cogs"
                             ButtonBackground="#5C6D8C" 

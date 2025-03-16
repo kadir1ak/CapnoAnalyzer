@@ -1,12 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
+using CapnoAnalyzer.Views.CalibrationViews;
+using CapnoAnalyzer.Models.Device;
+using CapnoAnalyzer.Helpers;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
-    class CalibrationViewModel
+    public class CalibrationViewModel : BindableBase
     {
+
+        public CalibrationViewModel()
+        {
+
+        }
     }
 }

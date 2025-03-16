@@ -1,12 +1,12 @@
 ﻿<UserControl x:Class="CapnoAnalyzer.Views.CalibrationViews.SampleGasConcentrationTable"
-              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"             
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"        
              xmlns:faWPF="clr-namespace:FontAwesome.WPF;assembly=FontAwesome.WPF"
+             xmlns:buttons="clr-namespace:CapnoAnalyzer.Views.Components.Buttons"
              xmlns:oxy="http://oxyplot.org/wpf"
-             mc:Ignorable="d">
+             mc:Ignorable="d" Height="500">
     <Grid Margin="5">
         <Border Background="#F1F3FA" CornerRadius="10" Padding="3" BorderBrush="#D1D5DB" BorderThickness="1">
             <Grid>
@@ -19,189 +19,40 @@
                     <ColumnDefinition Width="2*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Üst Bilgi -->
-                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,10">
-
-                </StackPanel>
-
+                <!-- DataGrid -->
                 <Grid Grid.Row="1" Grid.Column="0">
-                    <!-- Üst Kısım: Cihaz Bilgileri -->
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <Border Background="#FFA500" Padding="0" Margin="5 0 0 0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Cihaz ID: 06" FontSize="16" FontWeight="Bold" Foreground="Black"/>
-                            <StackPanel Orientation="Horizontal" Margin="50,0,0,0">
-                                <TextBlock Text="Sıcaklık:" FontSize="14" FontWeight="Bold" Margin="0,0,10,0"/>
-                                <TextBlock Text="40.22 °C" FontSize="14" Margin="0,0,20,0"/>
-                                <TextBlock Text="Basınç:" FontSize="14" FontWeight="Bold" Margin="0,0,10,0"/>
-                                <TextBlock Text="780 mmH" FontSize="14" Margin="0,0,20,0"/>
-                                <TextBlock Text="Nem:" FontSize="14" FontWeight="Bold" Margin="0,0,10,0"/>
-                                <TextBlock Text="%55.89" FontSize="14"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Alt Kısım: DataGrid -->
-                    <DataGrid Grid.Row="1" x:Name="DataGridDeviceData" AutoGenerateColumns="False" Margin="5 0 0 5"  VirtualizingStackPanel.IsVirtualizing="True" EnableRowVirtualization="True" HeadersVisibility="Column" CanUserAddRows="False">
+                    <DataGrid Grid.Row="1" x:Name="DataGridDeviceData" 
+                              ItemsSource="{Binding DeviceData}" 
+                              AutoGenerateColumns="False" 
+                              Margin="5 0 0 5"  
+                              VirtualizingStackPanel.IsVirtualizing="True" 
+                              EnableRowVirtualization="True" 
+                              HeadersVisibility="Column" 
+                              CanUserAddRows="False">
                         <DataGrid.Columns>
                             <!-- Sample Sütunu -->
-                            <DataGridTextColumn Header="Örnek" Binding="{Binding Sample}" Width="50">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Background" Value="LightBlue"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-
+                            <DataGridTextColumn Header="Örnek" Binding="{Binding Sample}" Width="50" />
                             <!-- Gas Concentration Sütunu -->
-                            <DataGridTemplateColumn Width="100">
-                                <DataGridTemplateColumn.HeaderTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                            <TextBlock Text="Gaz Konst. %"/>
-                                            <TextBlock Text="Gas Concent. %"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.HeaderTemplate>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding GasConcentration, StringFormat=F2}" Foreground="Black" FontSize="14" Background="#FF8FE87D" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
+                            <DataGridTextColumn Header="Gaz Konst. %" Binding="{Binding GasConcentration, StringFormat=F2}" Width="100" />
                             <!-- Ref Sütunu -->
-                            <DataGridTemplateColumn Width="100">
-                                <DataGridTemplateColumn.HeaderTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                            <TextBlock Text="Ref"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.HeaderTemplate>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Ref, StringFormat=F4}" Foreground="#FFDE3B3B" FontSize="14" Background="#DFFFD6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
+                            <DataGridTextColumn Header="Ref" Binding="{Binding Ref, StringFormat=F4}" Width="100" />
                             <!-- Gas Sütunu -->
-                            <DataGridTemplateColumn Width="100">
-                                <DataGridTemplateColumn.HeaderTemplate >
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                            <TextBlock Text="Gaz"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.HeaderTemplate>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Gas, StringFormat=F4}" Foreground="#FF1D58CC" FontSize="14" Background="#DFFFD6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
+                            <DataGridTextColumn Header="Gaz" Binding="{Binding Gas, StringFormat=F4}" Width="100" />
                             <!-- Ratio Sütunu -->
-                            <DataGridTemplateColumn Width="100">
-                                <DataGridTemplateColumn.HeaderTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                            <TextBlock Text="Gaz/Ref"/>
-                                            <TextBlock Text="Oran"/>
-                                            <TextBlock Text="Ratio"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.HeaderTemplate>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Ratio, StringFormat=F9}" Foreground="Black" FontSize="14" Background="#FF7DDCAA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
+                            <DataGridTextColumn Header="Gaz/Ref Oran" Binding="{Binding Ratio, StringFormat=F9}" Width="100" />
                             <!-- Transmittance Sütunu -->
-                            <DataGridTemplateColumn Width="100">
-                                <DataGridTemplateColumn.HeaderTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                            <TextBlock Text="T=Zero/Ratio"/>
-                                            <TextBlock Text="Geçirgenlik"/>
-                                            <TextBlock Text="Transmittance"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.HeaderTemplate>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Transmittance, StringFormat=F9}" Foreground="Black" FontSize="14" Background="#FF96C0ED" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
+                            <DataGridTextColumn Header="Geçirgenlik" Binding="{Binding Transmittance, StringFormat=F9}" Width="100" />
                             <!-- Absorption Sütunu -->
-                            <DataGridTemplateColumn Width="100">
-                                <DataGridTemplateColumn.HeaderTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                            <TextBlock Text="ABS=1-T"/>
-                                            <TextBlock Text="Emilim"/>
-                                            <TextBlock Text="Absorption"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.HeaderTemplate>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Absorption, StringFormat=F9}" Foreground="Black" FontSize="14" Background="#FF96C0ED" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- Tahmin Edilen veya Hesaplanan Absorption Sütunu -->
-                            <DataGridTemplateColumn Width="150">
-                                <DataGridTemplateColumn.HeaderTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                            <TextBlock Text="𝐴𝐵𝑆=𝑎(1−𝑒^(−𝑏𝑥^𝑐))"/>
-                                            <TextBlock Text="Tahmin Edilen Emilim"/>
-                                            <TextBlock Text="Predicted Absorption"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.HeaderTemplate>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding PredictedAbsorption, StringFormat=F9}" Foreground="Black" FontSize="14" Background="#FFD87EE2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
-                            <!-- Tahmin Edilen veya Hesaplanan Tahmini Gaz Konsantrasyonu Sütunu -->
-                            <DataGridTemplateColumn Width="200">
-                                <DataGridTemplateColumn.HeaderTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
-                                            <TextBlock TextWrapping="Wrap">
-                                                x = c√((ln(1 - (ABS / a))) / -b)
-                                            </TextBlock>
-                                            <TextBlock Text="Tahmini Gaz Konsantrasyon %"/>
-                                            <TextBlock Text="Predicted Gas Concentration %"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.HeaderTemplate>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding PredictedGasConcentration , StringFormat=F3}" Foreground="Black" FontSize="14" Background="#FF8FE87D" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Emilim" Binding="{Binding Absorption, StringFormat=F9}" Width="100" />
+                            <!-- Predicted Absorption Sütunu -->
+                            <DataGridTextColumn Header="Tahmin Edilen Emilim" Binding="{Binding PredictedAbsorption, StringFormat=F9}" Width="150" />
+                            <!-- Predicted Gas Concentration Sütunu -->
+                            <DataGridTextColumn Header="Tahmini Gaz Konsantrasyonu %" Binding="{Binding PredictedGasConcentration, StringFormat=F3}" Width="200" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
 
-                <!-- Sol Panel (Sensör Verileri) -->
+                <!-- Sağ Panel -->
                 <Grid Grid.Row="1" Grid.Column="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -211,44 +62,30 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
+
+                    <!-- Hesapla Butonu -->
                     <Border Grid.Row="0" Grid.Column="1" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
-                            <Button x:Name="btnCoefficientCal" Width="150" Height="50" FontWeight="Bold" Click="btnCoefficientCal_Click">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border CornerRadius="10" Background="{TemplateBinding Background}" BorderBrush="Black" BorderThickness="1">
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <faWPF:FontAwesome Icon="Calculator" FontSize="20" Margin="0,0,10,0"/>
-                                                <TextBlock Text="Hesapla" FontSize="16"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Button.Template>
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Background" Value="#FFD580"/>
-                                        <Setter Property="Foreground" Value="Black"/>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="Orange"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
+                            <!-- CalculateButton Kullanımı -->
+                            <buttons:CalculateButton 
+                                    ButtonContent="Hesapla" 
+                                    ButtonIcon="Calculator" 
+                                    ButtonBackground="#FFD580" 
+                                    ButtonForeground="Black" 
+                                    Command="{Binding CalculateCommand}" />
                         </StackPanel>
                     </Border>
 
                     <!-- NDIRGas Coefficients -->
                     <Border Grid.Row="0" Grid.Column="0" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
-                            <GroupBox Header="Katsayılar" Margin="0,10,0,10" Padding="10">
-                                <StackPanel>
-                                    <TextBlock x:Name="txtCihaz1_Model" Text="Model: y = a(1 - e^(-b x^c))" FontSize="14" FontWeight="Bold" Margin="0,0,0,5"/>
-                                    <TextBlock x:Name="txtCoefficientA" Text="a:" FontSize="14" Margin="0,0,0,5"/>
-                                    <TextBlock x:Name="txtCoefficientB" Text="b:" FontSize="14" Margin="0,0,0,5"/>
-                                    <TextBlock x:Name="txtCoefficientC" Text="c:" FontSize="14" Margin="0,0,0,5"/>
-                                    <TextBlock x:Name="txtCoefficientR" Text="R^2:" FontWeight="Bold" FontSize="14" Margin="0,20,0,5"/>
+                            <GroupBox Header="Katsayılar" Margin="0,5,0,5" Padding="0">
+                                <StackPanel Grid.Row="0" Grid.Column="0" Margin="3">
+                                    <TextBlock Text="Model: y = a(1 - e^(-b x^c))" FontSize="14" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBlock Text="{Binding Coefficients.A, StringFormat=a: {0:F6}}" FontSize="14" Margin="0,0,0,5"/>
+                                    <TextBlock Text="{Binding Coefficients.B, StringFormat=b: {0:F6}}" FontSize="14" Margin="0,0,0,5"/>
+                                    <TextBlock Text="{Binding Coefficients.C, StringFormat=c: {0:F6}}" FontSize="14" Margin="0,0,0,5"/>
+                                    <TextBlock Text="{Binding Coefficients.R, StringFormat=R^2: {0:F6}}" FontWeight="Bold" FontSize="14" Margin="0,10,0,5"/>
                                 </StackPanel>
                             </GroupBox>
                         </StackPanel>
@@ -256,9 +93,8 @@
 
                     <!-- NDIRGas Coefficients -->
                     <Border Grid.Row="1"  Grid.Column="0" Grid.ColumnSpan="2" Background="#F1F3FA" Margin="5" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                        <oxy:PlotView x:Name="plotView" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        <oxy:PlotView x:Name="plotView" Model="{Binding PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                     </Border>
-
                 </Grid>
             </Grid>
         </Border>

@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="CapnoAnalyzer.Views.CalibrationViews.GasConcentrationTables"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Margin="10">
+        <Border Background="#F1F3FA" CornerRadius="10" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Üst Bilgi -->
+                <StackPanel Grid.Row="0" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,20">
+                    <TextBlock Text="🧪 Cihaz Kalibrasyon Tabloları" FontSize="16" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" />
+                    <TextBlock Text="Tüm tanımlı cihazlar için kalibrasyon tabloları aşağıda listelenmiştir." FontSize="12" Foreground="#5C6D8C" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Kalibrasyon Tabloları -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <!-- Tüm cihazların tabloları burada dinamik olarak yüklenecek -->
+                        <ItemsControl ItemsSource="{Binding CalibrationTables}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- Her cihaz için bir SampleGasConcentrationTable -->
+                                    <local:SampleGasConcentrationTable />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

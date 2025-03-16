@@ -10,6 +10,8 @@ using CapnoAnalyzer.ViewModels.DeviceViewModels;
 using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
 using CapnoAnalyzer.ViewModels.SettingViewModels;
 using CapnoAnalyzer.Models.Settings;
+using CapnoAnalyzer.ViewModels.CalibrationViewModels;
+using CapnoAnalyzer.Views.DevicesViews.Devices;
 
 namespace CapnoAnalyzer.ViewModels.MainViewModels
 {
@@ -24,7 +26,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
 
         public MainViewModel()
         {
-            DevicesVM = new DevicesViewModel();
+            DevicesVM = new DevicesViewModel();          
             NavigateCommand = new RelayCommand(Navigate);
             SettingVM = new SettingViewModel();
 

@@ -7,7 +7,7 @@
         Title="Kapnografi Test Ortamı"
         Width="1280" Height="720"
         WindowStyle="SingleBorderWindow"
-        WindowState="Normal">
+        WindowState="Maximized">
 
     <Window.DataContext>
         <!-- Ana pencerede MainViewModel kullanıyoruz -->

@@ -31,23 +31,85 @@
                               CanUserAddRows="False">
                         <DataGrid.Columns>
                             <!-- Sample Sütunu -->
-                            <DataGridTextColumn Header="Örnek" Binding="{Binding Sample}" Width="50" />
+                            <DataGridTemplateColumn Header="Örnek" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Sample}" Background="LightBlue" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Gas Concentration Sütunu -->
-                            <DataGridTextColumn Header="Gaz Konst. %" Binding="{Binding GasConcentration, StringFormat=F2}" Width="100" />
+                            <DataGridTemplateColumn Header="Gaz Konst. %" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding GasConcentration, StringFormat=F2}" Background="#FF8FE87D" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Ref Sütunu -->
-                            <DataGridTextColumn Header="Ref" Binding="{Binding Ref, StringFormat=F4}" Width="100" />
+                            <DataGridTemplateColumn Header="Ref" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Ref, StringFormat=F4}" Background="#DFFFD6" Foreground="#FFDE3B3B" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Gas Sütunu -->
-                            <DataGridTextColumn Header="Gaz" Binding="{Binding Gas, StringFormat=F4}" Width="100" />
+                            <DataGridTemplateColumn Header="Gaz" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Gas, StringFormat=F4}" Background="#DFFFD6" Foreground="#FF1D58CC" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Ratio Sütunu -->
-                            <DataGridTextColumn Header="Gaz/Ref Oran" Binding="{Binding Ratio, StringFormat=F9}" Width="100" />
+                            <DataGridTemplateColumn Header="Gaz/Ref Oran" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Ratio, StringFormat=F9}" Background="#FF7DDCAA" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Transmittance Sütunu -->
-                            <DataGridTextColumn Header="Geçirgenlik" Binding="{Binding Transmittance, StringFormat=F9}" Width="100" />
+                            <DataGridTemplateColumn Header="Geçirgenlik" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Transmittance, StringFormat=F9}" Background="#FF96C0ED" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Absorption Sütunu -->
-                            <DataGridTextColumn Header="Emilim" Binding="{Binding Absorption, StringFormat=F9}" Width="100" />
+                            <DataGridTemplateColumn Header="Emilim" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Absorption, StringFormat=F9}" Background="#FF96C0ED" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Predicted Absorption Sütunu -->
-                            <DataGridTextColumn Header="Tahmin Edilen Emilim" Binding="{Binding PredictedAbsorption, StringFormat=F9}" Width="150" />
+                            <DataGridTemplateColumn Header="Tahmin Edilen Emilim" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding PredictedAbsorption, StringFormat=F9}" Background="#FFD87EE2" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
                             <!-- Predicted Gas Concentration Sütunu -->
-                            <DataGridTextColumn Header="Tahmini Gaz Konsantrasyonu %" Binding="{Binding PredictedGasConcentration, StringFormat=F3}" Width="200" />
+                            <DataGridTemplateColumn Header="Tahmini Gaz Konsantrasyonu %" Width="200">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding PredictedGasConcentration, StringFormat=F3}" Background="#FF8FE87D" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>

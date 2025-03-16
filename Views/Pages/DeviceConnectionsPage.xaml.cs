@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace CapnoAnalyzer.Views.Pages
 {
     /// <summary>
-    /// HomePage.xaml etkileşim mantığı
+    /// DeviceConnectionsPage.xaml etkileşim mantığı
     /// </summary>
-    public partial class HomePage : Page
+    public partial class DeviceConnectionsPage : Page
     {
-        public HomePage()
+        public DeviceConnectionsPage()
         {
             InitializeComponent();
         }

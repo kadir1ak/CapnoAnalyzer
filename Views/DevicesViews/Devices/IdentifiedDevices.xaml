@@ -8,7 +8,7 @@
              xmlns:devicesDC="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
              mc:Ignorable="d">
 
-    <Grid Margin="10">
+    <Grid Margin="5">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding IdentifiedDevices}">
                 <ItemsControl.ItemsPanel>

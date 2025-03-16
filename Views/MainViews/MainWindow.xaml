@@ -37,7 +37,7 @@
                             ButtonForeground="White"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
-                            CommandParameter="Home"/>
+                            CommandParameter="Devices"/>
 
                 <buttons:PageButton ButtonContent="Kalibrasyon" 
                             ButtonIcon="Tachometer"
@@ -61,7 +61,7 @@
                             ButtonForeground="White"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
-                            CommandParameter="Devices"/>
+                            CommandParameter="DeviceConnections"/>
                 
                 <buttons:PageButton ButtonContent="Ayarlar" 
                             ButtonIcon="Cogs"

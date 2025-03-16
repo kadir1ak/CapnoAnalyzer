@@ -25,7 +25,7 @@ namespace CapnoAnalyzer.Views.MainViews
             DataContext = new MainViewModel();
 
             // İlk sayfa olarak HomePage yüklüyoruz
-            MainFrame.Navigate(new HomePage());
+            MainFrame.Navigate(new DevicesPage());
 
             // Frame'in içindeki Page'lere DataContext aktarımı için event ekleyelim
             MainFrame.Navigated += OnFrameNavigated;

@@ -4,31 +4,51 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:CapnoAnalyzer.Views.Pages"
+      xmlns:devicesCV="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"
       xmlns:views="clr-namespace:CapnoAnalyzer.Views.DevicesViews.Devices"
+      xmlns:calViews="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"
       mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
       Title="DevicesPage">
 
-    <Grid Margin="20">
-        <Border Background="#F1F3FA" CornerRadius="10" Padding="20" BorderBrush="#D1D5DB" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+    <Grid Margin="5">
+        <Border Background="#F1F3FA" CornerRadius="10" Padding="0" BorderBrush="#D1D5DB" BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="2*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Üst Bilgi -->
-                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,20">
-                    <TextBlock Text="🔌 Cihaz Bağlantıları" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,20">
+                    <TextBlock Text="📟 Cihazlar" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Devices UserControl'ü, DataContext => MainViewModel.DevicesVM -->
-                <ScrollViewer Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <views:Devices DataContext="{Binding DevicesVM}" />
-                </ScrollViewer>
+                <!-- Ana Panel -->
+                <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <!-- Cihazlar -->
+                    <Border Grid.Row="0" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <ScrollViewer>
+                            <WrapPanel Margin="0">
+                                <views:IdentifiedDevices Grid.Row="1" DataContext="{Binding DevicesVM}" />
+                            </WrapPanel>
+                        </ScrollViewer>
+                    </Border>
+                    <!-- Değer Ekleme-->
+                    <Border  Grid.Row="1" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" Margin="3">
+                            <calViews:CalibrationPointControls />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </Border>
     </Grid>

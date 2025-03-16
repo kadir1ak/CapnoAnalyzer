@@ -8,7 +8,7 @@
              xmlns:oxy="http://oxyplot.org/wpf"
              mc:Ignorable="d">
 
-    <Grid Width="600" Height="400" Margin="10">
+    <Grid Width="540" Height="350" Margin="0">
         <!-- Ana Kart -->
         <Border Background="#F1F3FA" CornerRadius="10" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1">
             <Grid>
@@ -22,14 +22,23 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Üst Bilgi (Cihaz Kimliği ve Durumu) -->
-                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 5">
-                    <TextBlock Text="{Binding Properties.PortName}" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" Margin="0" />
-                    <TextBlock Text="{Binding Properties.ProductId}" Foreground="#2E3B4E" FontSize="16" FontWeight="Bold" Margin="5 0 0 0" />
-                    <TextBlock Text="{Binding Properties.Status}" Foreground="#5C6D8C" FontSize="16" Margin="5 0 0 0" />
+                <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0 0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Port:" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Margin="0" />
+                        <TextBlock Text="{Binding Properties.PortName}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Margin="5 2 0 0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="10 0 0 0" VerticalAlignment="Center">
+                        <TextBlock Text="ID:" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Margin="5 0 0 0" />
+                        <TextBlock Text="{Binding Properties.ProductId}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Margin="5 2 0 0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10 0 0 0">
+                        <TextBlock Text="Cihaz Durumu:" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0" />
+                        <TextBlock Text="{Binding Properties.Status}" Foreground="#5C6D8C" FontSize="11" Margin="5 2 0 0" />
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Sol Panel (Sensör Verileri) -->
-                <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <!-- Zaman -->
                     <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">

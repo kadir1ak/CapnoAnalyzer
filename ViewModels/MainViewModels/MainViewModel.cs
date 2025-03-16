@@ -82,13 +82,13 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                 {
                     Page targetPage = pageName switch
                     {
-                        "Home" => new HomePage { DataContext = DevicesVM },
                         "Devices" => new DevicesPage { DataContext = DevicesVM },
-                        "Settings" => new SettingsPage(),
-                        "Equation" => new EquationTestPage(),
                         "CalibrationTables" => new CalibrationTablesPage(),
+                        "Equation" => new EquationTestPage(),
+                        "DeviceConnections" => new DeviceConnectionsPage { DataContext = DevicesVM },
+                        "Settings" => new SettingsPage(),  
                         "Notes" => new NotesPage(),
-                        _ => new HomePage(),
+                        _ => new DevicesPage(),
                     };
 
                     _pageCache[pageName] = targetPage;

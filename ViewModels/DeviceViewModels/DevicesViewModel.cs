@@ -74,6 +74,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         // -- 5) Komutlar (Connect/Disconnect/SendMessage) --
         public ICommand ConnectCommand { get; }
         public ICommand DisconnectCommand { get; }
+        public ICommand IdentifyDeviceCommand { get; }
 
         // -- 6) Yapıcı Metot --
         public DevicesViewModel()
@@ -84,6 +85,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 
             ConnectCommand = new DeviceRelayCommand(ExecuteConnect, CanExecuteConnect);
             DisconnectCommand = new DeviceRelayCommand(ExecuteDisconnect, CanExecuteDisconnect);
+            IdentifyDeviceCommand = new DeviceRelayCommand(ExecuteIdentifyDevice, CanExecuteIdentifyDevice);
 
             // UI Güncelleme Döngüsünü Başlat
             StartConnectedDevicesUpdateInterfaceDataLoop();
@@ -418,6 +420,42 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 
         // Butonun aktif olması için: Seçili bir Device ve Port’u dolu olmalı
         private bool CanExecuteDisconnect()
+        {
+            // Seçili port adına sahip, IsConnected=true durumda bir Device var mı?
+            return !string.IsNullOrEmpty(SelectedPortName) && ConnectedDevices.Any(d => d.Properties.PortName == SelectedPortName && (d.Properties.Status == DeviceStatus.Connected || d.Properties.Status == DeviceStatus.Identified));
+        }
+        // ========== DISCONNECT ==========
+        private async void ExecuteIdentifyDevice()
+        {
+            // İlk olarak IdentifiedDevices içerisindeki cihazı kontrol et
+            var identifiedDevice = ConnectedDevices.FirstOrDefault(d => d.Properties.PortName == SelectedPortName);
+            if (identifiedDevice != null)
+            {
+                // PortName boşsa işlem yapma
+                if (!string.IsNullOrEmpty(identifiedDevice.Properties.PortName))
+                {
+                    // Cihaz zaten varsa, özelliklerini güncelle
+                    identifiedDevice.Properties.CompanyName = "Null";
+                    identifiedDevice.Properties.ProductName = "Null";
+                    identifiedDevice.Properties.ProductModel = "Null";
+                    identifiedDevice.Properties.ManufactureDate = "Null";
+                    identifiedDevice.Properties.ProductId = SelectedPortName;
+                    identifiedDevice.Properties.FirmwareVersion = "Null";
+                    identifiedDevice.Properties.Status = DeviceStatus.Identified;
+
+                    // IdentifiedDevices'tan cihazı çıkar
+                    IdentifiedDevices.Add(identifiedDevice);
+
+                    // UI'yi güncelle
+                    OnPropertyChanged(nameof(IdentifiedDevices));
+                    OnPropertyChanged(nameof(ConnectedDevices));
+                }
+            }
+            Debug.WriteLine($"Identify Device: {SelectedPortName}");
+        }
+
+        // Butonun aktif olması için: Seçili bir Device ve Port’u dolu olmalı
+        private bool CanExecuteIdentifyDevice()
         {
             // Seçili port adına sahip, IsConnected=true durumda bir Device var mı?
             return !string.IsNullOrEmpty(SelectedPortName) && ConnectedDevices.Any(d => d.Properties.PortName == SelectedPortName && (d.Properties.Status == DeviceStatus.Connected || d.Properties.Status == DeviceStatus.Identified));

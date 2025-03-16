@@ -39,7 +39,7 @@
                             Command="{Binding NavigateCommand}"
                             CommandParameter="Devices"/>
 
-                <buttons:PageButton ButtonContent="Kalibrasyon" 
+                <buttons:PageButton ButtonContent="Kalibrasyon Tabloları" 
                             ButtonIcon="Tachometer"
                             ButtonBackground="#5C6D8C" 
                             ButtonForeground="White"

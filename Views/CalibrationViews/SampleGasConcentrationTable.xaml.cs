@@ -10,7 +10,10 @@ using OxyPlot.Series;
 
 namespace CapnoAnalyzer.Views.CalibrationViews
 {
-    public partial class GasConcentrationTable : UserControl
+    /// <summary>
+    /// SampleGasConcentrationTable.xaml etkileşim mantığı
+    /// </summary>
+    public partial class SampleGasConcentrationTable : UserControl
     {
         private Func<Vector<double>, double, double> model = (parameters, xVal) =>
         {
@@ -20,7 +23,7 @@ namespace CapnoAnalyzer.Views.CalibrationViews
             return a * (1 - Math.Exp(-b * Math.Pow(xVal, c)));
         };
 
-        public GasConcentrationTable()
+        public SampleGasConcentrationTable()
         {
             InitializeComponent();
             LoadData();

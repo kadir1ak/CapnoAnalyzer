@@ -11,6 +11,8 @@ using CapnoAnalyzer.Services;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using CapnoAnalyzer.Views.DevicesViews.Devices;
+using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
+using System;
 namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 {
     public class DevicesViewModel : BindableBase
@@ -454,12 +456,23 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             Debug.WriteLine($"Identify Device: {SelectedPortName}");
         }
 
-        // Butonun aktif olması için: Seçili bir Device ve Port’u dolu olmalı
+        // Butonun aktif olması için: Seçili bir Device olmalı (SelectedPortName boş olmamalı).
+        // Seçili porta bağlı bir cihaz olmalı(ConnectedDevices listesinde, IsConnected == true olan bir cihaz bulunmalı).
+        // Bu cihaz, IdentifiedDevices listesinde olmamalı.
         private bool CanExecuteIdentifyDevice()
         {
-            // Seçili port adına sahip, IsConnected=true durumda bir Device var mı?
-            return !string.IsNullOrEmpty(SelectedPortName) && ConnectedDevices.Any(d => d.Properties.PortName == SelectedPortName && (d.Properties.Status == DeviceStatus.Connected || d.Properties.Status == DeviceStatus.Identified));
+            // Seçili port adı boş mu?
+            if (string.IsNullOrEmpty(SelectedPortName))
+                return false;
+
+            // Seçili porta bağlı bir cihaz var mı ve bu cihaz IdentifiedDevices listesinde değil mi?
+            return ConnectedDevices.Any(connectedDevice =>
+                connectedDevice.Properties.PortName == SelectedPortName &&
+                connectedDevice.Properties.Status == DeviceStatus.Connected &&
+                !IdentifiedDevices.Any(identifiedDevice =>
+                    identifiedDevice.Properties.PortName == SelectedPortName));
         }
+
 
         // ========== Cihazın Durumunu Bildir ==========
         public DeviceStatus? IsDeviceStatus(string portName)

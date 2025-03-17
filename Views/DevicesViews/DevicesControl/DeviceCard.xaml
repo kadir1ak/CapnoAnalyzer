@@ -23,19 +23,36 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Üst Bilgi (Cihaz Kimliği ve Durumu) -->
-                <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0 0">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Port:" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Margin="0" />
-                        <TextBlock Text="{Binding Properties.PortName}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Margin="5 2 0 0" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="10 0 0 0" VerticalAlignment="Center">
-                        <TextBlock Text="ID:" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Margin="5 0 0 0" />
-                        <TextBlock Text="{Binding Properties.ProductId}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Margin="5 2 0 0" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10 0 0 0">
-                        <TextBlock Text="Cihaz Durumu:" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0" />
-                        <TextBlock Text="{Binding Properties.Status}" Foreground="#5C6D8C" FontSize="11" Margin="5 2 0 0" />
-                    </StackPanel>
+                <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0 0">
+                    <Border Background="#F1F3FA" Margin="0 2 0 0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10 0 0 0">
+                                    <TextBlock Text="Port:" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Margin="0" />
+                                    <TextBlock Text="{Binding Properties.PortName}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Margin="5 2 0 0" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="10 0 0 0" VerticalAlignment="Center">
+                                    <TextBlock Text="ID:" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Margin="5 0 0 0" />
+                                    <TextBlock Text="{Binding Properties.ProductId}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Margin="5 2 0 0" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5 0 0 0">
+                                    <TextBlock Text="Baud Rate:" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0" />
+                                    <TextBlock Text="{Binding Properties.BaudRate}" Foreground="#5C6D8C" FontSize="11" Margin="5 2 0 0" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5 0 0 0">
+                                    <TextBlock Text="Cihaz Durumu:" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0" />
+                                    <TextBlock Text="{Binding Properties.Status}" Foreground="#5C6D8C" FontSize="11" Margin="5 2 0 0" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5 0 0 0">
+                                    <TextBlock Text="Veri Paketi Modu:" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0" />
+                                    <TextBlock Text="{Binding Properties.TestMode}" Foreground="#5C6D8C" FontSize="11" Margin="5 2 0 0" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>    
                 </StackPanel>
 
                 <!-- Sol Panel (Sensör Verileri) -->

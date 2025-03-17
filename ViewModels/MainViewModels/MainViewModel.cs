@@ -35,36 +35,20 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
             // Ayar değiştiğinde cihazlara yansıtmak için abone olun:
             SettingVM.CurrentSetting.PropertyChanged += (s, e) =>
             {
-                if (e.PropertyName == nameof(Setting.BaudRate))
-                {
-                    UpdateDevicesBaudRate();
-                }
-                else if (e.PropertyName == nameof(Setting.PlotTime))
+                if (e.PropertyName == nameof(Setting.PlotTime))
                 {
                     UpdateDevicesPlotTime();
                 }
                 else if (e.PropertyName == nameof(Setting.SampleTime))
                 {
                     UpdateDevicesSampleTime();
-                } else if (e.PropertyName == nameof(Setting.TestMode))
-                {
-                    UpdateDevicesTestMode();
                 }
             };
-        }
-
-        private void UpdateDevicesTestMode()
-        {
-            DevicesVM.TestMode = SettingVM.CurrentSetting.TestMode;
         }
 
         private void UpdateDevicesSampleTime() 
         {
             //DevicesVM.CalibrationVM.SampleTime = SettingVM.CurrentSetting.SampleTime;
-        }
-        private void UpdateDevicesBaudRate()
-        {
-            DevicesVM.SelectedBaudRate = SettingVM.CurrentSetting.BaudRate;
         }
 
         private void UpdateDevicesPlotTime()

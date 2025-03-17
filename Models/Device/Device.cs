@@ -167,34 +167,63 @@ namespace CapnoAnalyzer.Models.Device
         public DeviceProperties()
         {
             Status = DeviceStatus.Disconnected;
-            BaudRate = 921600;
+            BaudRate = 0;
+            TestMode = "1";
             SampleCount = 0;
             DataSamplingFrequency = 0;
+            PortName = string.Empty;
+            ProductId = string.Empty;
+            FirmwareVersion = string.Empty;
         }
 
-        private DeviceStatus _status = new();
+        private DeviceStatus _status;
         public DeviceStatus Status
         {
             get => _status;
-            set => SetProperty(ref _status, value);
+            set => SetProperty(ref _status, value); 
         }
 
-        private int _dataSamplingFrequency = new();
+        private int _dataSamplingFrequency;
         public int DataSamplingFrequency
         {
             get => _dataSamplingFrequency;
             set => SetProperty(ref _dataSamplingFrequency, value);
         }
 
-        public string ID { get; set; } = string.Empty;
-        public string PortName { get; set; } = string.Empty;
-        public string CompanyName { get; set; } = string.Empty;
-        public string ProductName { get; set; } = string.Empty;
-        public string ProductModel { get; set; } = string.Empty;
-        public string ManufactureDate { get; set; } = string.Empty;
-        public string ProductId { get; set; } = string.Empty;
-        public string FirmwareVersion { get; set; } = string.Empty;
-        public int BaudRate { get; set; }
+        private string _portName;
+        public string PortName
+        {
+            get => _portName;
+            set => SetProperty(ref _portName, value);
+        }
+
+        private string _productId;
+        public string ProductId
+        {
+            get => _productId;
+            set => SetProperty(ref _productId, value);
+        }
+
+        private string _firmwareVersion;
+        public string FirmwareVersion
+        {
+            get => _firmwareVersion;
+            set => SetProperty(ref _firmwareVersion, value);
+        }
+
+        private int _baudRate;
+        public int BaudRate
+        {
+            get => _baudRate;
+            set => SetProperty(ref _baudRate, value);
+        }
+
+        private string _testMode;
+        public string TestMode
+        {
+            get => _testMode;
+            set => SetProperty(ref _testMode, value);
+        }
     }
     #endregion
 

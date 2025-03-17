@@ -14,8 +14,6 @@ namespace CapnoAnalyzer.Models.Settings
         {
             PlotTime = 10; // Varsayılan 10 saniye
             SampleTime = 10; // Varsayılan 10 saniye
-            BaudRate = 921600; // Varsayılan 921600
-            TestMode = 1; // Varsayılan 1
         }
 
         private int _plotTime;
@@ -30,20 +28,6 @@ namespace CapnoAnalyzer.Models.Settings
         {
             get => _sampleTime;
             set => SetProperty(ref _sampleTime, value);
-        }
-
-        private int _baudRate;
-        public int BaudRate
-        {
-            get => _baudRate;
-            set => SetProperty(ref _baudRate, value);
-        }
-
-        private int _testMode;
-        public int TestMode
-        {
-            get => _testMode;
-            set => SetProperty(ref _testMode, value);
         }
     }
 }

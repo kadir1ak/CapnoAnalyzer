@@ -27,18 +27,7 @@
                 </StackPanel>
 
                 <!-- Sol Panel -->
-                <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,0,0,0">
-                    <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,0,0,0">
-                        <TextBlock Text="Baud Hızı:" FontSize="14" Margin="0,0,0,5"/>
-                        <ComboBox SelectedValue="{Binding CurrentSetting.BaudRate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              SelectedValuePath="Content" Width="150" HorizontalAlignment="Left">
-                            <ComboBoxItem Content="9600" />
-                            <ComboBoxItem Content="115200" />
-                            <ComboBoxItem Content="230400" />
-                            <ComboBoxItem Content="460800" />
-                            <ComboBoxItem Content="921600" />
-                        </ComboBox>
-                    </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,0,0,0">                  
                     <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,10,0,0">
                         <TextBlock Text="Grafik Çerçeve Süresi (sn):" FontSize="14" Margin="0,0,0,5"/>
                         <TextBox Text="{Binding CurrentSetting.PlotTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="150" HorizontalAlignment="Left"/>

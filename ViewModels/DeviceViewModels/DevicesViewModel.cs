@@ -59,12 +59,24 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             {
                 SetProperty(ref _selectedPortName, value);
                 // Port adı değişince Connect butonunu aktif/pasif güncelle:
+                DeviceIDUpdate();
+                DeviceTestModeUpdate();
                 CommandManager.InvalidateRequerySuggested();
             }
         }
 
-        private int _testMode = 1;
-        public int TestMode
+        private string _deviceID;
+        public string DeviceID
+        {
+            get => _deviceID;
+            set
+            {
+                SetProperty(ref _deviceID, value);
+            }
+        }
+
+        private string _testMode;
+        public string TestMode
         {
             get => _testMode;
             set
@@ -72,6 +84,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 SetProperty(ref _testMode, value);
             }
         }
+
         private int _selectedBaudRate = 921600;
         public int SelectedBaudRate
         {
@@ -104,6 +117,70 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             StartConnectedDevicesUpdateInterfaceDataLoop();
             StartIdentifiedDevicesUpdateInterfaceDataLoop();
 
+        }
+
+        private void DeviceIDUpdate()
+        {
+            try
+            {
+                // Seçili porta göre cihazı bul
+                var device = ConnectedDevices.FirstOrDefault(d => d.Properties.PortName == SelectedPortName);
+
+                if (device != null)
+                {
+                    // Eğer cihaz bulunduysa ve DeviceID bilgisi mevcutsa, DeviceID'yi ata
+                    if (!string.IsNullOrEmpty(device.Properties.ProductId))
+                    {
+                        DeviceID = device.Properties.ProductId;
+                    }
+                }
+                else
+                {
+                    DeviceID = SelectedPortName;
+                }
+
+                // UI'yi güncelle
+                OnPropertyChanged(nameof(IdentifiedDevices));
+                OnPropertyChanged(nameof(ConnectedDevices));
+
+                Debug.WriteLine($"Device ID Updated: {SelectedPortName}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Device ID Update Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void DeviceTestModeUpdate()
+        {
+            try
+            {
+                // Seçili porta göre cihazı bul
+                var device = ConnectedDevices.FirstOrDefault(d => d.Properties.PortName == SelectedPortName);
+
+                if (device != null)
+                {
+                    // Eğer cihaz bulunduysa ve TestMode bilgisi mevcutsa, TestMode'u ata
+                    if (!string.IsNullOrEmpty(device.Properties.TestMode))
+                    {
+                        TestMode = device.Properties.TestMode;
+                    }
+                }
+                else
+                {
+                    TestMode = "1";
+                }
+
+                // UI'yi güncelle
+                OnPropertyChanged(nameof(IdentifiedDevices));
+                OnPropertyChanged(nameof(ConnectedDevices));
+
+                Debug.WriteLine($"Device Test Mode Updated: {SelectedPortName}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Device Test Mode Update Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async Task UpdateConnectedDevicesInterfaceDataLoop(CancellationToken token)
@@ -319,10 +396,6 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             if (existingDevice != null)
             {
                 // Cihaz zaten varsa, özelliklerini güncelle
-                existingDevice.Properties.CompanyName = parts[0];
-                existingDevice.Properties.ProductName = parts[1];
-                existingDevice.Properties.ProductModel = parts[2];
-                existingDevice.Properties.ManufactureDate = parts[3];
                 existingDevice.Properties.ProductId = parts[4];
                 existingDevice.Properties.FirmwareVersion = parts[5];
                 existingDevice.Properties.Status = DeviceStatus.Identified;
@@ -330,10 +403,6 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             else
             {
                 // Cihaz yoksa, özelliklerini ata ve koleksiyona ekle
-                device.Properties.CompanyName = parts[0];
-                device.Properties.ProductName = parts[1];
-                device.Properties.ProductModel = parts[2];
-                device.Properties.ManufactureDate = parts[3];
                 device.Properties.ProductId = parts[4];
                 device.Properties.FirmwareVersion = parts[5];
                 device.Properties.Status = DeviceStatus.Identified;
@@ -360,6 +429,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             {
                 // Yoksa yeni bir device oluşturup ekleyin:
                 var newDevice = new Device(PortManager, SelectedPortName, deviceStatus: DeviceStatus.Connected);
+                newDevice.Properties.BaudRate = SelectedBaudRate;
                 ConnectedDevices.Add(newDevice);
                 Device = newDevice;
             }
@@ -448,11 +518,9 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 if (!string.IsNullOrEmpty(identifiedDevice.Properties.PortName))
                 {
                     // Cihaz zaten varsa, özelliklerini güncelle
-                    identifiedDevice.Properties.CompanyName = "Null";
-                    identifiedDevice.Properties.ProductName = "Null";
-                    identifiedDevice.Properties.ProductModel = "Null";
-                    identifiedDevice.Properties.ManufactureDate = "Null";
-                    identifiedDevice.Properties.ProductId = SelectedPortName;
+                    identifiedDevice.Properties.ProductId = DeviceID;
+                    identifiedDevice.Properties.BaudRate = SelectedBaudRate;
+                    identifiedDevice.Properties.TestMode = TestMode;
                     identifiedDevice.Properties.FirmwareVersion = "Null";
                     identifiedDevice.Properties.Status = DeviceStatus.Identified;
 

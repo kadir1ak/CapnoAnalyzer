@@ -5,6 +5,8 @@ using System.Windows.Input;
 using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Views.Pages;
 using System.Windows;
+using System.Windows.Navigation;
+using System.ComponentModel;
 using CapnoAnalyzer.Views.MainViews;
 using CapnoAnalyzer.ViewModels.DeviceViewModels;
 using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
@@ -41,7 +43,24 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                 {
                     UpdateDevicesPlotTime();
                 }
+                else if (e.PropertyName == nameof(Setting.SampleTime))
+                {
+                    UpdateDevicesSampleTime();
+                } else if (e.PropertyName == nameof(Setting.TestMode))
+                {
+                    UpdateDevicesTestMode();
+                }
             };
+        }
+
+        private void UpdateDevicesTestMode()
+        {
+            DevicesVM.TestMode = SettingVM.CurrentSetting.TestMode;
+        }
+
+        private void UpdateDevicesSampleTime() 
+        {
+            //DevicesVM.CalibrationVM.SampleTime = SettingVM.CurrentSetting.SampleTime;
         }
         private void UpdateDevicesBaudRate()
         {

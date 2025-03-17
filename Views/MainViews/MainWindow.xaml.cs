@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Windows;
+using System.Windows.Navigation;
+using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Navigation;
@@ -13,22 +15,25 @@ namespace CapnoAnalyzer.Views.MainViews
     {
         public MainWindow()
         {
+            try
+            {
+                InitializeComponent();
 
-            InitializeComponent();
+                //this.Loaded += MainWindow_Loaded;
 
-            //this.Loaded += MainWindow_Loaded;
+                // Tasarım modunda çalışıyorsak, hiçbir işlem yapmadan çık
+                if (DesignerProperties.GetIsInDesignMode(this))
+                    return;
 
-            // Tasarım modunda çalışıyorsak, hiçbir işlem yapmadan çık
-            if (DesignerProperties.GetIsInDesignMode(this))
-                return;
+                DataContext = new MainViewModel();
 
-            DataContext = new MainViewModel();
+                // İlk sayfa olarak HomePage yüklüyoruz
+                MainFrame.Navigate(new DevicesPage());
 
-            // İlk sayfa olarak HomePage yüklüyoruz
-            MainFrame.Navigate(new DevicesPage());
-
-            // Frame'in içindeki Page'lere DataContext aktarımı için event ekleyelim
-            MainFrame.Navigated += OnFrameNavigated;
+                // Frame'in içindeki Page'lere DataContext aktarımı için event ekleyelim
+                MainFrame.Navigated += OnFrameNavigated;
+            }
+            catch (Exception) { }         
         }
 
         private void OnFrameNavigated(object sender, NavigationEventArgs e)

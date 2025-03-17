@@ -27,10 +27,8 @@
                 </StackPanel>
 
                 <!-- Sol Panel -->
-
-
                 <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,0,0,0">
-                    <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,0,0,0">
+                    <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,0,0,0">
                         <TextBlock Text="Baud Hızı:" FontSize="14" Margin="0,0,0,5"/>
                         <ComboBox SelectedValue="{Binding CurrentSetting.BaudRate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               SelectedValuePath="Content" Width="150" HorizontalAlignment="Left">
@@ -41,98 +39,19 @@
                             <ComboBoxItem Content="921600" />
                         </ComboBox>
                     </StackPanel>
-                    <StackPanel Grid.Row="2" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,10,0,0">
+                    <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,10,0,0">
                         <TextBlock Text="Grafik Çerçeve Süresi (sn):" FontSize="14" Margin="0,0,0,5"/>
                         <TextBox Text="{Binding CurrentSetting.PlotTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="150" HorizontalAlignment="Left"/>
                     </StackPanel>
-                </StackPanel>
-
-                <Grid Grid.Row="1" Grid.RowSpan="4" Grid.Column="1" Grid.ColumnSpan="2" Margin="10" HorizontalAlignment="Left">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Sample Period -->
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Sample Period (ms) :" VerticalAlignment="Center" Margin="5"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" Width="50" Text="1" Margin="5"/>
-
-                    <!-- Download Timings Button -->
-                    <Button Grid.Row="0" Grid.RowSpan="3" Grid.Column="2" Content="Cihaz Ayarlarını Güncelle" Margin="5" HorizontalAlignment="Left" />
-
-                    <!-- Emitter ON Time -->
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Emitter ON time (ms) :" VerticalAlignment="Center" Margin="5"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Width="50" Text="50" Margin="5"/>
-
-                    <!-- Emitter OFF Time -->
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Emitter OFF time (ms) :" VerticalAlignment="Center" Margin="5"/>
-                    <TextBox Grid.Row="2" Grid.Column="1" Width="50" Text="50" Margin="5"/>
-
-                    <!-- Channel Configuration -->
-                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Gain" VerticalAlignment="Center" Margin="5"/>
-                    <TextBlock Grid.Row="3" Grid.Column="2" Text="HP Filter" VerticalAlignment="Center" Margin="5"/>
-                    <TextBlock Grid.Row="3" Grid.Column="3" Text="Trans" VerticalAlignment="Center" Margin="5"/>
-                    <TextBlock Grid.Row="3" Grid.Column="4" Text="LP Filter" VerticalAlignment="Center" Margin="5"/>
-
-                    <!-- Channel 0 -->
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Ch0 : " HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5"/>
-                    <ComboBox Grid.Row="4" Grid.Column="1" Width="50" Margin="5">
-                        <ComboBoxItem Content="16" IsSelected="True"/>
-                        <ComboBoxItem Content="8"/>
-                        <ComboBoxItem Content="4"/>
-                    </ComboBox>
-                    <ComboBox Grid.Row="4" Grid.Column="2" Width="80" Margin="5">
-                        <ComboBoxItem Content="1Hz" IsSelected="True"/>
-                        <ComboBoxItem Content="10Hz"/>
-                        <ComboBoxItem Content="100Hz"/>
-                    </ComboBox>
-                    <ComboBox Grid.Row="4" Grid.Column="3" Width="80" Margin="5">
-                        <ComboBoxItem Content="0.15T" IsSelected="True"/>
-                        <ComboBoxItem Content="0.2T"/>
-                        <ComboBoxItem Content="0.3T"/>
-                    </ComboBox>
-                    <ComboBox Grid.Row="4" Grid.Column="4" Width="80" Margin="5">
-                        <ComboBoxItem Content="180Hz" IsSelected="True"/>
-                        <ComboBoxItem Content="200Hz"/>
-                        <ComboBoxItem Content="220Hz"/>
-                    </ComboBox>
-
-                    <!-- Channel 1 -->
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Ch1 : " HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5"/>
-                    <ComboBox Grid.Row="5" Grid.Column="1" Width="50" Margin="5">
-                        <ComboBoxItem Content="16" IsSelected="True"/>
-                        <ComboBoxItem Content="8"/>
-                        <ComboBoxItem Content="4"/>
-                    </ComboBox>
-                    <ComboBox Grid.Row="5" Grid.Column="2" Width="80" Margin="5">
-                        <ComboBoxItem Content="1Hz" IsSelected="True"/>
-                        <ComboBoxItem Content="10Hz"/>
-                        <ComboBoxItem Content="100Hz"/>
-                    </ComboBox>
-                    <ComboBox Grid.Row="5" Grid.Column="3" Width="80" Margin="5">
-                        <ComboBoxItem Content="0.15T" IsSelected="True"/>
-                        <ComboBoxItem Content="0.2T"/>
-                        <ComboBoxItem Content="0.3T"/>
-                    </ComboBox>
-                    <ComboBox Grid.Row="5" Grid.Column="4" Width="80" Margin="5">
-                        <ComboBoxItem Content="180Hz" IsSelected="True"/>
-                        <ComboBoxItem Content="200Hz"/>
-                        <ComboBoxItem Content="220Hz"/>
-                    </ComboBox>
-
-                </Grid>
-                
+                    <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,10,0,0">
+                        <TextBlock Text="Veri Örnek Toplama Süresi (sn):" FontSize="14" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding CurrentSetting.PlotTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="150" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,10,0,0">
+                        <TextBlock Text="Test Modu:" FontSize="14" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding CurrentSetting.TestMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="150" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </StackPanel>             
             </Grid>
         </Border>
     </Grid>

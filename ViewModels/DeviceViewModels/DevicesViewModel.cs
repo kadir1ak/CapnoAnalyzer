@@ -27,6 +27,8 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         private readonly object _IdentifiedDevicesInterfaceDataLock = new();
         private int IdentifiedDevicesUpdateTimeMillisecond = 100;  // 10 Hz (100ms)
 
+        //public CalibrationViewModel CalibrationVM = new CalibrationViewModel();
+
         // -- 1) Bağlı Cihazların Listesi --
         public ObservableCollection<Device> ConnectedDevices { get; } = new ObservableCollection<Device>();
         public ObservableCollection<Device> IdentifiedDevices { get; } = new ObservableCollection<Device>();
@@ -61,6 +63,15 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             }
         }
 
+        private int _testMode = 1;
+        public int TestMode
+        {
+            get => _testMode;
+            set
+            {
+                SetProperty(ref _testMode, value);
+            }
+        }
         private int _selectedBaudRate = 921600;
         public int SelectedBaudRate
         {

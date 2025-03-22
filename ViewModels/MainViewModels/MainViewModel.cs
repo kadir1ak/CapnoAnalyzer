@@ -14,130 +14,179 @@ using CapnoAnalyzer.ViewModels.SettingViewModels;
 using CapnoAnalyzer.Models.Settings;
 using CapnoAnalyzer.ViewModels.CalibrationViewModels;
 using CapnoAnalyzer.Views.DevicesViews.Devices;
+using System.Threading.Tasks;
 
 namespace CapnoAnalyzer.ViewModels.MainViewModels
 {
     class MainViewModel : BindableBase
     {
-        public DevicesViewModel DevicesVM { get; set; }
-        public SettingViewModel SettingVM { get; set; }
+        public DevicesViewModel DevicesVM { get; private set; }
+        public SettingViewModel SettingVM { get; private set; }
         public ICommand NavigateCommand { get; }
 
-        // **Sayfaları yeniden oluşturmamak için bir Dictionary kullanıyoruz**
+        // Sayfa önbelleği
         private readonly Dictionary<string, Page> _pageCache = new Dictionary<string, Page>();
 
         public MainViewModel()
         {
-            DevicesVM = new DevicesViewModel();          
-            NavigateCommand = new RelayCommand(Navigate);
-            SettingVM = new SettingViewModel();
-
-            // Ayar değiştiğinde cihazlara yansıtmak için abone olun:
-            SettingVM.CurrentSetting.PropertyChanged += (s, e) =>
+            // Tasarım modunda çalışıyorsak, veri bağlama için sahte veriler kullan
+            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
             {
-                if (e.PropertyName == nameof(Setting.PlotTime))
+                InitializeDesignTimeData();
+                return;
+            }
+
+            // Çalışma zamanı için ViewModel'leri başlat
+            DevicesVM = new DevicesViewModel();
+            SettingVM = new SettingViewModel();
+            NavigateCommand = new RelayCommand(Navigate);
+
+            // Ayar değişikliklerine abone olunması
+            SettingVM.CurrentSetting.PropertyChanged += OnSettingChanged;
+        }
+
+        /// <summary>
+        /// Tasarım modunda çalışırken kullanılacak sahte verileri başlatır.
+        /// </summary>
+        private void InitializeDesignTimeData()
+        {
+            DevicesVM = new DevicesViewModel { };
+
+            SettingVM = new SettingViewModel
+            {
+                CurrentSetting = new Setting
                 {
-                    UpdateDevicesPlotTime();
-                }
-                else if (e.PropertyName == nameof(Setting.SampleTime))
-                {
-                    UpdateDevicesSampleTime();
+                    PlotTime = 10,
+                    SampleTime = 5
                 }
             };
         }
 
-        private void UpdateDevicesSampleTime() 
+        private void OnSettingChanged(object sender, PropertyChangedEventArgs e)
         {
-            //DevicesVM.CalibrationVM.SampleTime = SettingVM.CurrentSetting.SampleTime;
+            switch (e.PropertyName)
+            {
+                case nameof(Setting.PlotTime):
+                    UpdateDevicesPlotTime();
+                    break;
+                case nameof(Setting.SampleTime):
+                    UpdateDevicesSampleTime();
+                    break;
+            }
+        }
+
+        private void UpdateDevicesSampleTime()
+        {
+            // Cihazlara örnekleme süresini güncelle
+            foreach (var device in DevicesVM.IdentifiedDevices)
+            {
+               //device.Interface.SensorSample.SampleTime = SettingVM.CurrentSetting.SampleTime;
+            }
         }
 
         private void UpdateDevicesPlotTime()
         {
+            // Cihazlara çizim süresini güncelle
             foreach (var device in DevicesVM.IdentifiedDevices)
             {
                 device.Interface.SensorPlot.PlotTime = SettingVM.CurrentSetting.PlotTime;
-                device.Interface.UpdatePlot(); 
+                device.Interface.UpdatePlot();
             }
         }
+
         private void Navigate(object parameter)
         {
-            if (parameter is string pageName)
+            if (parameter is not string pageName) return;
+
+            var mainWindow = Application.Current.MainWindow as MainWindow;
+
+            if (pageName == "Close")
             {
-                var mainWindow = Application.Current.MainWindow as MainWindow;
+                PromptCloseApplication();
+                return;
+            }
 
-                if (pageName == "Close")
+            // Önbellekten sayfa getir veya oluştur
+            var targetPage = GetOrCreatePage(pageName);
+
+            // Eğer aynı sayfa zaten açıksa yönlendirme yapma
+            if (mainWindow?.MainContentArea.Content == targetPage) return;
+
+            // Frame'e yönlendirme işlemi
+            mainWindow?.MainContentArea.Navigate(targetPage);
+        }
+
+        private Page GetOrCreatePage(string pageName)
+        {
+            // Null veya boş kontrolü
+            if (string.IsNullOrWhiteSpace(pageName))
+            {
+                throw new ArgumentException("pageName null, boş veya yalnızca boşluk içeremez.", nameof(pageName));
+            }
+
+            // Eğer önbellekte yoksa yeni bir sayfa oluştur ve önbelleğe ekle
+            if (!_pageCache.ContainsKey(pageName))
+            {
+                Page targetPage = pageName switch
                 {
-                    // Kullanıcıya çıkış onayı sor
-                    MessageBoxResult result = MessageBox.Show(
-                        "Uygulamadan çıkmak istediğinize emin misiniz?",
-                        "Çıkış Onayı",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question
-                    );
+                    "Devices" => new DevicesPage { DataContext = DevicesVM },
+                    "CalibrationTables" => new CalibrationTablesPage(),
+                    "Equation" => new EquationTestPage(),
+                    "DeviceConnections" => new DeviceConnectionsPage { DataContext = DevicesVM },
+                    "Settings" => new SettingsPage(),
+                    "Notes" => new NotesPage(),
+                    _ => throw new ArgumentException($"Geçersiz sayfa adı: {pageName}", nameof(pageName)) // Hatalı sayfa adı için
+                };
 
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        CloseApplication(); // Bağımsız kapatma metodunu çağır
-                    }
-                    return;
-                }
+                // Yeni sayfayı önbelleğe ekle
+                _pageCache[pageName] = targetPage;
+            }
 
-                // **Önbellekten sayfayı getir, eğer yoksa oluştur**
-                if (!_pageCache.ContainsKey(pageName))
-                {
-                    Page targetPage = pageName switch
-                    {
-                        "Devices" => new DevicesPage { DataContext = DevicesVM },
-                        "CalibrationTables" => new CalibrationTablesPage(),
-                        "Equation" => new EquationTestPage(),
-                        "DeviceConnections" => new DeviceConnectionsPage { DataContext = DevicesVM },
-                        "Settings" => new SettingsPage(),  
-                        "Notes" => new NotesPage(),
-                        _ => new DevicesPage(),
-                    };
+            // Önbellekten sayfayı döndür
+            return _pageCache[pageName];
+        }
 
-                    _pageCache[pageName] = targetPage;
-                }
+        private void PromptCloseApplication()
+        {
+            // Kullanıcıya çıkış onayı sor
+            var result = MessageBox.Show(
+                "Uygulamadan çıkmak istediğinize emin misiniz?",
+                "Çıkış Onayı",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question
+            );
 
-                // Eğer zaten aynı sayfa açıksa tekrar yönlendirme yapma
-                if (mainWindow?.MainFrame.Content == _pageCache[pageName])
-                {
-                    return;
-                }
-
-                // Frame'e yönlendirme işlemi (önbellekteki sayfayı kullanarak)
-                mainWindow?.MainFrame.Navigate(_pageCache[pageName]);
+            if (result == MessageBoxResult.Yes)
+            {
+                CloseApplication();
             }
         }
+
         public async void CloseApplication()
         {
             try
             {
-                // 1️⃣ **Tüm seri port bağlantılarını güvenli şekilde kapat**
+                // Seri port bağlantılarını kapat
                 if (DevicesVM != null)
                 {
                     await Task.Run(() => DevicesVM.CloseAllPorts());
                 }
 
-                // 2️⃣ **Tüm arka plan işlemlerini iptal et**
+                // Arka plan işlemlerini iptal et
                 DevicesVM?.StopConnectedDevicesUpdateInterfaceDataLoop();
                 DevicesVM?.StopIdentifiedDevicesUpdateInterfaceDataLoop();
 
-                // 3️⃣ **Önbellekteki tüm sayfaları temizle (Bellek sızıntısını önlemek için)**
+                // Önbellekteki sayfaları temizle
                 _pageCache.Clear();
 
-                // 4️⃣ **Ana pencereyi kapat ve tüm kaynakları temizle**
+                // Ana pencereyi kapat
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var mainWindow = Application.Current.MainWindow;
-                    mainWindow?.Close();
+                    Application.Current.MainWindow?.Close();
                 });
 
-                // 5️⃣ **Arka planda kapanmayı bekle ve zorla kapat**
-                await Task.Delay(500);
+                // Uygulamayı tamamen kapat
                 App.Current.Shutdown();
-
-                // 6️⃣ **Uygulamanın tamamen kapandığından emin olmak için**
                 Environment.Exit(0);
             }
             catch (Exception ex)

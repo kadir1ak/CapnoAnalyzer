@@ -90,7 +90,7 @@
         </Border>
 
         <!-- Main Content Area -->
-        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden" />
+        <Frame x:Name="MainContentArea" NavigationUIVisibility="Hidden" />
         
 
     </DockPanel>

@@ -1,12 +1,8 @@
-﻿using System.ComponentModel;
+﻿using System;
 using System.Windows;
 using System.Windows.Navigation;
-using System.ComponentModel;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Navigation;
 using CapnoAnalyzer.ViewModels.MainViewModels;
-using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
 using CapnoAnalyzer.Views.Pages;
 
 namespace CapnoAnalyzer.Views.MainViews
@@ -19,23 +15,24 @@ namespace CapnoAnalyzer.Views.MainViews
             {
                 InitializeComponent();
 
-                //this.Loaded += MainWindow_Loaded;
-
-                // Tasarım modunda çalışıyorsak, hiçbir işlem yapmadan çık
-                if (DesignerProperties.GetIsInDesignMode(this))
-                    return;
-
+                // MainViewModel'i DataContext olarak ayarla
                 DataContext = new MainViewModel();
 
-                // İlk sayfa olarak HomePage yüklüyoruz
-                MainFrame.Navigate(new DevicesPage());
+                // İlk sayfa olarak DevicesPage yüklüyoruz
+                MainContentArea.Navigate(new DevicesPage());
 
-                // Frame'in içindeki Page'lere DataContext aktarımı için event ekleyelim
-                MainFrame.Navigated += OnFrameNavigated;
+                // Frame'in içindeki Page'lere DataContext aktarımı için event ekle
+                MainContentArea.Navigated += OnFrameNavigated;
             }
-            catch (Exception) { }         
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Uygulama başlatılırken bir hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
+        /// <summary>
+        /// Frame içinde navigasyon gerçekleştiğinde sayfalara DataContext aktarımı yapar.
+        /// </summary>
         private void OnFrameNavigated(object sender, NavigationEventArgs e)
         {
             if (e.Content is Page page)
@@ -45,17 +42,28 @@ namespace CapnoAnalyzer.Views.MainViews
             }
         }
 
+        /// <summary>
+        /// MainWindow yüklendiğinde ekran boyutlarını ayarlar.
+        /// </summary>
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            this.WindowState = WindowState.Normal;
-            this.WindowStyle = WindowStyle.None;
+            try
+            {
+                // Pencereyi tam ekran yap
+                this.WindowState = WindowState.Normal;
+                this.WindowStyle = WindowStyle.None;
 
-            // Get screen working area excluding the taskbar
-            var screen = System.Windows.SystemParameters.WorkArea;
-            this.Left = screen.Left;
-            this.Top = screen.Top;
-            this.Width = screen.Width;
-            this.Height = screen.Height;
+                // Çalışma alanını (taskbar hariç ekran boyutunu) al
+                var screen = System.Windows.SystemParameters.WorkArea;
+                this.Left = screen.Left;
+                this.Top = screen.Top;
+                this.Width = screen.Width;
+                this.Height = screen.Height;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Pencere boyutları ayarlanırken bir hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

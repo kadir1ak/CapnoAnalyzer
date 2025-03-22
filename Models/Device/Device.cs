@@ -142,11 +142,25 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _interface, value);
         }
 
-        private Sensor _sensor = new();
-        public Sensor Sensor
+        private DataPacket_1 _dataPacket_1 = new();
+        public DataPacket_1 DataPacket_1
         {
-            get => _sensor;
-            set => SetProperty(ref _sensor, value);
+            get => _dataPacket_1;
+            set => SetProperty(ref _dataPacket_1, value);
+        }
+
+        private DataPacket_2 _dataPacket_2 = new();
+        public DataPacket_2 DataPacket_2
+        {
+            get => _dataPacket_2;
+            set => SetProperty(ref _dataPacket_2, value);
+        }
+
+        private DataPacket_3 _dataPacket_3 = new(); 
+        public DataPacket_3 DataPacket_3
+        {
+            get => _dataPacket_3;
+            set => SetProperty(ref _dataPacket_3, value);
         }
 
         private DeviceProperties _properties = new();
@@ -168,7 +182,7 @@ namespace CapnoAnalyzer.Models.Device
         {
             Status = DeviceStatus.Disconnected;
             BaudRate = 0;
-            TestMode = "1";
+            DataPacketType = "1";
             SampleCount = 0;
             DataSamplingFrequency = 0;
             PortName = string.Empty;
@@ -218,11 +232,11 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _baudRate, value);
         }
 
-        private string _testMode;
-        public string TestMode
+        private string _dataPacketType;
+        public string DataPacketType
         {
-            get => _testMode;
-            set => SetProperty(ref _testMode, value);
+            get => _dataPacketType;
+            set => SetProperty(ref _dataPacketType, value);
         }
     }
     #endregion

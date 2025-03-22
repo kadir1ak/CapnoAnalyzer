@@ -12,7 +12,8 @@ namespace CapnoAnalyzer.Models.Device
         public DeviceInterface()
         {
             SensorPlot = new DevicePlot(); // **Her cihaz için yeni bir `PlotModel`**
-            Sensor = new Sensor();
+            //Sensor = new Sensor();
+            Data = new AllDataPaket();
             IncomingMessage = new ObservableCollection<string>();
         }
 
@@ -39,11 +40,21 @@ namespace CapnoAnalyzer.Models.Device
         /// <summary>
         /// Sensor nesnesi (veri kaynağı).
         /// </summary>
-        private Sensor _sensor;
-        public Sensor Sensor
+        //private Sensor _sensor;
+        //public Sensor Sensor
+        //{
+        //    get => _sensor;
+        //    set => SetProperty(ref _sensor, value);
+        //}    
+        
+        /// <summary>
+        /// Sensor nesnesi (veri kaynağı).
+        /// </summary>
+        private AllDataPaket _data;
+        public AllDataPaket Data
         {
-            get => _sensor;
-            set => SetProperty(ref _sensor, value);
+            get => _data;
+            set => SetProperty(ref _data, value);
         }
 
         /// <summary>
@@ -98,8 +109,50 @@ namespace CapnoAnalyzer.Models.Device
         {
             if (SensorPlot != null)
             {
-                SensorPlot.AddDataPoint(Sensor.Time, Sensor.GasSensor, Sensor.ReferenceSensor);
+                SensorPlot.AddDataPoint(Data.Time, Data.GasSensor, Data.ReferenceSensor);
             }
+        }
+
+        /// <summary>
+        /// Gerçek verilerle arayüz verilerini günceller.
+        /// </summary>
+        public void SyncWithDevice(Device device)
+        {
+            if (device == null) return;
+
+            // Arayüzde gösterilecek verileri güncelle
+            if (device.Properties.DataPacketType == "1")
+            {
+                Data.Time = device.DataPacket_1.Time;
+                Data.GasSensor = device.DataPacket_1.GasSensor;
+                Data.ReferenceSensor = device.DataPacket_1.ReferenceSensor;
+                Data.Temperature = device.DataPacket_1.Temperature;
+                Data.Humidity = device.DataPacket_1.Humidity;
+            }
+            else if (device.Properties.DataPacketType == "2")
+            {
+                Data.Time = device.DataPacket_2.Time;
+                Data.GasSensor = device.DataPacket_2.AdsRawValues[0];
+                Data.ReferenceSensor = device.DataPacket_2.AdsRawValues[1];
+
+                Data.AngVoltages = device.DataPacket_2.AngVoltages;
+                Data.AdsRawValues = device.DataPacket_2.AdsRawValues;
+                Data.AdsVoltages = device.DataPacket_2.AdsVoltages;
+                Data.GainAdsVoltagesF = device.DataPacket_2.GainAdsVoltagesF;
+                Data.GainAdsVoltagesIIR = device.DataPacket_2.GainAdsVoltagesIIR;
+                Data.IrStatus = device.DataPacket_2.IrStatus;
+            }
+            else if (device.Properties.DataPacketType == "3")
+            {
+                Data.Time = device.DataPacket_3.Time;
+                Data.GasSensor = device.DataPacket_3.Ch0;
+                Data.ReferenceSensor = device.DataPacket_3.Ch1;
+                Data.Frame = device.DataPacket_3.Frame;
+                Data.Emitter = device.DataPacket_3.Emitter;
+            }
+
+            // Grafiği güncelle
+            UpdatePlot();
         }
     }
 }

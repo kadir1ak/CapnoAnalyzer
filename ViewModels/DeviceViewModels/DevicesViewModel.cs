@@ -75,13 +75,13 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             }
         }
 
-        private string _testMode;
-        public string TestMode
+        private string _dataPacketType;
+        public string DataPacketType
         {
-            get => _testMode;
+            get => _dataPacketType;
             set
             {
-                SetProperty(ref _testMode, value);
+                SetProperty(ref _dataPacketType, value);
             }
         }
 
@@ -161,14 +161,14 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 if (device != null)
                 {
                     // Eğer cihaz bulunduysa ve TestMode bilgisi mevcutsa, TestMode'u ata
-                    if (!string.IsNullOrEmpty(device.Properties.TestMode))
+                    if (!string.IsNullOrEmpty(device.Properties.DataPacketType))
                     {
-                        TestMode = device.Properties.TestMode;
+                        DataPacketType = device.Properties.DataPacketType;
                     }
                 }
                 else
                 {
-                    TestMode = "1";
+                    DataPacketType = "1";
                 }
 
                 // UI'yi güncelle
@@ -259,29 +259,11 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     {
                         foreach (var device in IdentifiedDevices.ToList()) // 🔥 Kopyasını al, değişiklik olursa hata engellenir.
                         {
-                            if (device == null || device.Interface == null || device.Sensor == null)
+                            if (device == null)
                                 continue; // 🔥 Null nesneleri atla, hata önle.
 
-                            bool hasSensorChanged =
-                                device.Interface.Sensor.GasSensor != device.Sensor.GasSensor ||
-                                device.Interface.Sensor.ReferenceSensor != device.Sensor.ReferenceSensor ||
-                                device.Interface.Sensor.Temperature != device.Sensor.Temperature ||
-                                device.Interface.Sensor.Humidity != device.Sensor.Humidity;
-
-                            if (hasSensorChanged)
-                            {
-                                device.Interface.Sensor = new Sensor
-                                {
-                                    Time = device.Sensor.Time,
-                                    GasSensor = device.Sensor.GasSensor,
-                                    ReferenceSensor = device.Sensor.ReferenceSensor,
-                                    Temperature = device.Sensor.Temperature,
-                                    Humidity = device.Sensor.Humidity
-                                };
-                                device.Interface.UpdatePlot(); // 🔥 Hata kaynağı olabilecek noktayı kontrol ettik.
-                            }
+                            device.Interface.SyncWithDevice(device);
                         }
-
                         OnPropertyChanged(nameof(IdentifiedDevices));
                     });
                 }
@@ -328,7 +310,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.IncomingMessage.RemoveAt(0);
                     }
 
-                    SensorDataParsing(device, data);
+                    DeviceDataParsing(device, data);
                     CalculateSampleRate(device);
                 }
             });
@@ -440,7 +422,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 Device = existingDevice;
             }
             Debug.WriteLine($"ConnectedDevices: {Device.Properties.PortName}");
-     
+
             // UI'yi yeniden tetikle
             OnPropertyChanged(nameof(ConnectedDevices));
             OnPropertyChanged(nameof(ConnectedPorts));
@@ -520,7 +502,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     // Cihaz zaten varsa, özelliklerini güncelle
                     identifiedDevice.Properties.ProductId = DeviceID;
                     identifiedDevice.Properties.BaudRate = SelectedBaudRate;
-                    identifiedDevice.Properties.TestMode = TestMode;
+                    identifiedDevice.Properties.DataPacketType = DataPacketType;
                     identifiedDevice.Properties.FirmwareVersion = "Null";
                     identifiedDevice.Properties.Status = DeviceStatus.Identified;
 
@@ -577,33 +559,23 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             PortManager.ConnectedPorts.Clear();
         }
 
-        private void SensorDataParsing(Device device, string data)
+        private void DeviceDataParsing(Device device, string data)
         {
             try
             {
-                // Veriyi ayrıştır ve UI güncellemesini yap
-                string[] dataParts = data.Split(',');
-                if (dataParts.Length == 5 &&
-                    double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
-                    double.TryParse(dataParts[1].Replace('.', ','), out double ch1) &&
-                    double.TryParse(dataParts[2].Replace('.', ','), out double ch2) &&
-                    double.TryParse(dataParts[3].Replace('.', ','), out double temp) &&
-                    double.TryParse(dataParts[4].Replace('.', ','), out double hum))
+                switch (device.Properties.DataPacketType)
                 {
-                    if (Application.Current?.Dispatcher.CheckAccess() == true)
-                    {
-                        // UI iş parçacığında isek doğrudan çalıştır
-                        UpdateSensorData(device, time, ch1, ch2, temp, hum);
-                    }
-                    else
-                    {
-                        // UI iş parçacığında değilsek Dispatcher kullan
-                        Application.Current?.Dispatcher.Invoke(() =>
-                        {
-                            UpdateSensorData(device, time, ch1, ch2, temp, hum);
-                        });
-                    }
+                    case "1":
+                        UpdateDeviceDataPacket_1(device, data);
+                        break;
+                    case "2":
+                        UpdateDeviceDataPacket_2(device, data);
+                        break;
+                    case "3":
+                        UpdateDeviceDataPacket_3(device, data);
+                        break;
                 }
+                UpdateDeviceDataPacket_1(device, data);
             }
             catch (OperationCanceledException)
             {
@@ -615,13 +587,119 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             }
         }
 
-        private void UpdateSensorData(Device device, double time, double ch1, double ch2, double temp, double hum)
+        private void UpdateDeviceDataPacket_1(Device device, string data)
         {
-            device.Sensor.Time = time;
-            device.Sensor.GasSensor = ch1;
-            device.Sensor.ReferenceSensor = ch2;
-            device.Sensor.Temperature = temp;
-            device.Sensor.Humidity = hum;
+            // Veriyi ayrıştır ve UI güncellemesini yap
+            string[] dataParts = data.Split(',');
+            if (dataParts.Length == 5 &&
+                double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
+                double.TryParse(dataParts[1].Replace('.', ','), out double ch1) &&
+                double.TryParse(dataParts[2].Replace('.', ','), out double ch2) &&
+                double.TryParse(dataParts[3].Replace('.', ','), out double temp) &&
+                double.TryParse(dataParts[4].Replace('.', ','), out double hum))
+            {
+                if (Application.Current?.Dispatcher.CheckAccess() == true)
+                {
+                    // UI iş parçacığında isek doğrudan çalıştır
+                    device.DataPacket_1.Time = time;
+                    device.DataPacket_1.GasSensor = ch1;
+                    device.DataPacket_1.ReferenceSensor = ch2;
+                    device.DataPacket_1.Temperature = temp;
+                    device.DataPacket_1.Humidity = hum;
+                }
+                else
+                {
+                    // UI iş parçacığında değilsek Dispatcher kullan
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        device.DataPacket_1.Time = time;
+                        device.DataPacket_1.GasSensor = ch1;
+                        device.DataPacket_1.ReferenceSensor = ch2;
+                        device.DataPacket_1.Temperature = temp;
+                        device.DataPacket_1.Humidity = hum;
+                    });
+                }
+            }
+        }
+        private void UpdateDeviceDataPacket_2(Device device, string data)
+        {
+            // Veriyi ayrıştır ve UI güncellemesini yap
+            string[] dataParts = data.Split(',');
+            if (dataParts.Length == 17 &&
+                double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
+                double.TryParse(dataParts[1].Replace('.', ','), out double ang1) &&
+                double.TryParse(dataParts[2].Replace('.', ','), out double ang2) &&
+                double.TryParse(dataParts[3].Replace('.', ','), out double ang3) &&
+                double.TryParse(dataParts[4].Replace('.', ','), out double raw1) &&
+                double.TryParse(dataParts[5].Replace('.', ','), out double raw2) &&
+                double.TryParse(dataParts[6].Replace('.', ','), out double raw3) &&
+                double.TryParse(dataParts[7].Replace('.', ','), out double raw4) &&
+                double.TryParse(dataParts[8].Replace('.', ','), out double volt1) &&
+                double.TryParse(dataParts[9].Replace('.', ','), out double volt2) &&
+                double.TryParse(dataParts[10].Replace('.', ','), out double volt3) &&
+                double.TryParse(dataParts[11].Replace('.', ','), out double volt4) &&
+                double.TryParse(dataParts[12].Replace('.', ','), out double voltF2) &&
+                double.TryParse(dataParts[13].Replace('.', ','), out double voltF3) &&
+                double.TryParse(dataParts[14].Replace('.', ','), out double voltIIR2) &&
+                double.TryParse(dataParts[15].Replace('.', ','), out double voltIIR3) &&
+                int.TryParse(dataParts[16], out int irStatus))
+            {
+                if (Application.Current?.Dispatcher.CheckAccess() == true)
+                {
+                    device.DataPacket_2.Time = time;
+                    device.DataPacket_2.AngVoltages = new[] { ang1, ang2, ang3 };
+                    device.DataPacket_2.AdsRawValues = new[] { raw1, raw2, raw3, raw4 };
+                    device.DataPacket_2.AdsVoltages = new[] { volt1, volt2, volt3, volt4 };
+                    device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2, voltF3 };
+                    device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2, voltIIR3 };
+                    device.DataPacket_2.IrStatus = irStatus == 1;
+                }
+                else
+                {
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        device.DataPacket_2.Time = time;
+                        device.DataPacket_2.AngVoltages = new[] { ang1, ang2, ang3 };
+                        device.DataPacket_2.AdsRawValues = new[] { raw1, raw2, raw3, raw4 };
+                        device.DataPacket_2.AdsVoltages = new[] { volt1, volt2, volt3, volt4 };
+                        device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2, voltF3 };
+                        device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2, voltIIR3 };
+                        device.DataPacket_2.IrStatus = irStatus == 1;
+                    });
+                }
+            }
+        }
+
+        private void UpdateDeviceDataPacket_3(Device device, string data)
+        {
+            // Veriyi ayrıştır ve UI güncellemesini yap
+            string[] dataParts = data.Split(',');
+            if (dataParts.Length == 5 &&
+                double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
+                double.TryParse(dataParts[2].Replace('.', ','), out double ch0) &&
+                double.TryParse(dataParts[3].Replace('.', ','), out double ch1) &&
+                int.TryParse(dataParts[4], out int frame) &&
+                int.TryParse(dataParts[4], out int emitter))
+            {
+                if (Application.Current?.Dispatcher.CheckAccess() == true)
+                {
+                    device.DataPacket_3.Time = time;
+                    device.DataPacket_3.Ch0 = ch0;
+                    device.DataPacket_3.Ch1 = ch1;
+                    device.DataPacket_3.Frame = frame;
+                    device.DataPacket_3.Emitter = emitter;
+                }
+                else
+                {
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        device.DataPacket_3.Time = time;
+                        device.DataPacket_3.Ch0 = ch0;
+                        device.DataPacket_3.Ch1 = ch1;
+                        device.DataPacket_3.Frame = frame;
+                    });
+                }
+            }
         }
     }
 }

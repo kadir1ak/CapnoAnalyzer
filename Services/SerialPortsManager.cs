@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Linq;
 using System.Management;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -50,7 +51,9 @@ namespace CapnoAnalyzer.Services
                     StopBits = StopBits.One,
                     Handshake = Handshake.None,
                     ReadTimeout = 5000,
-                    WriteTimeout = 5000
+                    WriteTimeout = 5000,
+                    ReadBufferSize = 4096,
+                    WriteBufferSize = 2048
                 };
 
                 serialPort.DataReceived += (s, e) => OnDataReceived(serialPort);
@@ -112,7 +115,7 @@ namespace CapnoAnalyzer.Services
         {
             return ConnectedPorts.Select(p => p.PortName);
         }
-
+        private readonly ConcurrentDictionary<string, StringBuilder> _buffers = new();
         private void OnDataReceived(SerialPort serialPort)
         {
             try
@@ -120,9 +123,33 @@ namespace CapnoAnalyzer.Services
                 string data = serialPort.ReadExisting();
                 if (!string.IsNullOrEmpty(data))
                 {
+                    // Tampon bellekte veriyi biriktir
+                    if (!_buffers.ContainsKey(serialPort.PortName))
+                    {
+                        _buffers[serialPort.PortName] = new StringBuilder();
+                    }
+
+                    var buffer = _buffers[serialPort.PortName];
+                    buffer.Append(data);
+
+                    // Tam mesajları ayır ve kuyruğa ekle
+                    string bufferContent = buffer.ToString();
+                    string[] messages = bufferContent.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+                    buffer.Clear();
+                    if (!bufferContent.EndsWith("\r\n") && !bufferContent.EndsWith("\n"))
+                    {
+                        buffer.Append(messages[^1]); // Eksik mesajı tekrar tampon belleğe ekle
+                        messages = messages.Take(messages.Length - 1).ToArray();
+                    }
+
+                    // Mesajları işleme kuyruğuna ekle
                     if (_portDataQueues.TryGetValue(serialPort.PortName, out var queue))
                     {
-                        queue.Add(data);
+                        foreach (var message in messages)
+                        {
+                            queue.Add(message);
+                        }
                     }
                 }
             }
@@ -139,20 +166,25 @@ namespace CapnoAnalyzer.Services
             var cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
 
+            // Her port için bir veri kuyruğu oluştur
             var dataQueue = new BlockingCollection<string>();
             _portDataQueues[portName] = dataQueue;
             _portCancellationTokens[portName] = cancellationTokenSource;
 
-            var processingTask = Task.Run(() =>
+            // Veri işleme görevini başlat
+            var processingTask = Task.Run(async () =>
             {
                 try
                 {
                     foreach (var data in dataQueue.GetConsumingEnumerable(cancellationToken))
                     {
-                        ProcessData(portName, data);
+                        await ProcessDataAsync(portName, data);
                     }
                 }
-                catch (OperationCanceledException) { }
+                catch (OperationCanceledException)
+                {
+                    // Görev iptal edildiğinde sessizce çık
+                }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Error processing data for port {portName}: {ex.Message}",
@@ -161,6 +193,23 @@ namespace CapnoAnalyzer.Services
             }, cancellationToken);
 
             _portProcessingTasks[portName] = processingTask;
+        }
+        private async Task ProcessDataAsync(string portName, string data)
+        {
+            try
+            {
+                // UI güncellemesini asenkron olarak yap
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    // Mesaj alındı olayını tetikleyin
+                    MessageReceived?.Invoke(portName, data);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error processing data for port {portName}: {ex.Message}",
+                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void StopProcessingPortData(string portName)
@@ -179,23 +228,6 @@ namespace CapnoAnalyzer.Services
             if (_portProcessingTasks.TryRemove(portName, out var processingTask))
             {
                 processingTask.Wait();
-            }
-        }
-
-        private void ProcessData(string portName, string data)
-        {
-            try
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    // Olayı tetikleyelim
-                    MessageReceived?.Invoke(portName, data);
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error processing data for port {portName}: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

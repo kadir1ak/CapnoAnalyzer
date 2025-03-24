@@ -8,14 +8,15 @@
              xmlns:oxy="http://oxyplot.org/wpf"
              mc:Ignorable="d">
 
-    <Grid Width="540" Height="412" Margin="0">
+    <Grid Width="540" Margin="0">
         <!-- Ana Kart -->
-        <Border Background="#F1F3FA" CornerRadius="10" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1">
+        <Border Background="#F1F3FA" CornerRadius="10" Padding="5" BorderBrush="#D1D5DB" BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -48,7 +49,7 @@
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5 0 0 0">
                                     <TextBlock Text="Veri Paketi Modu:" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0" />
-                                    <TextBlock Text="{Binding Properties.TestMode}" Foreground="#5C6D8C" FontSize="11" Margin="5 2 0 0" />
+                                    <TextBlock Text="{Binding Properties.DataPacketType}" Foreground="#5C6D8C" FontSize="11" Margin="5 2 0 0" />
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
@@ -56,7 +57,7 @@
                 </StackPanel>
 
                 <!-- Sol Panel (Sensör Verileri) -->
-                <StackPanel Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <StackPanel Grid.Row="0" Grid.RowSpan="4" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top">
                     <!-- Zaman -->
                     <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
@@ -91,17 +92,17 @@
                             <TextBlock Text="Ortam Sensörleri" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Basınç" Foreground="#5C6D8C" FontSize="12" Width="40" Margin="0 0 5 0"/>
-                                <TextBlock Text="{Binding Interface.Data.Pressure, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="40" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Interface.Data.Pressure, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="60" FontWeight="Bold" />
                                 <TextBlock Text="hPa" Foreground="#5C6D8C" FontSize="12" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Sıcaklık" Foreground="#5C6D8C" FontSize="12" Width="40" Margin="0 0 5 0"/>
-                                <TextBlock Text="{Binding Interface.Data.Temperature, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="40" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Interface.Data.Temperature, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="60" FontWeight="Bold" />
                                 <TextBlock Text="°" Foreground="#5C6D8C" FontSize="12" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Nem " Foreground="#5C6D8C" FontSize="12" Width="40" Margin="0 0 5 0"/>
-                                <TextBlock Text="{Binding Interface.Data.Humidity, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="40" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Interface.Data.Humidity, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="60" FontWeight="Bold" />
                                 <TextBlock Text="%" Foreground="#5C6D8C" FontSize="12" />
                             </StackPanel>
                         </StackPanel>
@@ -109,14 +110,15 @@
                 </StackPanel>
 
                 <!-- Sağ Panel (Grafik) -->
-                <Border Grid.Row="1" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                <Border Grid.Row="1" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top" Height="300">
                     <plot:SensorPlot DataContext="{Binding Interface.SensorPlot.PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                 </Border>
 
                 <!-- Alt Bilgi (Cihaz Ayarları) -->
-                <Border Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Background="#F1F3FA" Margin="0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                <Border Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Background="#F1F3FA" Margin="0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top">
                     <Grid>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
@@ -181,12 +183,12 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="1" Orientation="Horizontal">
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Top">
                             <Grid Grid.Row="1" Grid.RowSpan="4" Grid.Column="1" Grid.ColumnSpan="2" Margin="0" HorizontalAlignment="Left">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -248,11 +250,128 @@
                                     <ComboBoxItem Content="220Hz"/>
                                 </ComboBox>
                             </Grid>
-                        </StackPanel>
-                            
-                    </Grid>
-                    
-                
+                        </StackPanel>                      
+                    </Grid>   
+                </Border>
+                <!-- Diğer Veriler  -->
+                <Border  Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"  Background="#F1F3FA" Margin="0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_2_Status}">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
+                        <TextBlock Text="Tüm Cihaz Verileri" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold"/>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="ti " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.Time, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="irStatus " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.IrStatus, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="angVoltages[0] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AngVoltages[0], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="angVoltages[1] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AngVoltages[1], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="angVoltages[2] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AngVoltages[2], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsRawValues[0] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AdsRawValues[0], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsRawValues[1]" Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AdsRawValues[1], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsRawValues[2] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AdsRawValues[2], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsRawValues[3] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AdsRawValues[3], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsVoltages[0] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AdsVoltages[0], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsVoltages[1]" Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AdsVoltages[1], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsVoltages[2] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AdsVoltages[2], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsVoltages[3] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.AdsVoltages[3], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsVoltagesF[2] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.GainAdsVoltagesF[0], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsVoltagesF[3] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.GainAdsVoltagesF[1], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsVoltagesIIR[2] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.GainAdsVoltagesIIR[0], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="adsVoltagesIIR[3] " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.GainAdsVoltagesIIR[1], StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
                 </Border>
             </Grid>
         </Border>

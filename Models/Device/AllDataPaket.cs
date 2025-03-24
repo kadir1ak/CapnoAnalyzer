@@ -1,5 +1,6 @@
 ﻿using CapnoAnalyzer.Helpers;
 using System;
+using System.Windows;
 
 namespace CapnoAnalyzer.Models.Device
 {
@@ -50,6 +51,13 @@ namespace CapnoAnalyzer.Models.Device
         }
 
         // DataPacket_2 İçeriği
+        private Visibility _dataPacket_2_Status;
+        public Visibility DataPacket_2_Status
+        {
+            get => _dataPacket_2_Status;
+            set => SetProperty(ref _dataPacket_2_Status, value);
+        }
+
         private double[] _angVoltages;
         public double[] AngVoltages
         {
@@ -85,8 +93,8 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _gainAdsVoltagesIIR, value);
         }
 
-        private bool _irStatus;
-        public bool IrStatus
+        private int _irStatus;
+        public int IrStatus
         {
             get => _irStatus;
             set => SetProperty(ref _irStatus, value);
@@ -134,12 +142,13 @@ namespace CapnoAnalyzer.Models.Device
 
             // DataPacket_2 Varsayılan Değerler
             Time = 0.0;
+            DataPacket_2_Status = Visibility.Collapsed;  
             AngVoltages = new double[3]; // 3 elemanlı sıfır dizisi
             AdsRawValues = new double[4]; // 4 elemanlı sıfır dizisi
             AdsVoltages = new double[4]; // 4 elemanlı sıfır dizisi
             GainAdsVoltagesF = new double[2]; // 2 elemanlı sıfır dizisi
             GainAdsVoltagesIIR = new double[2]; // 2 elemanlı sıfır dizisi
-            IrStatus = false;
+            IrStatus = 0;
 
             // DataPacket_3 Varsayılan Değerler
             Time = 0.0;

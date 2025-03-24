@@ -652,7 +652,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     device.DataPacket_2.AdsVoltages = new[] { volt1, volt2, volt3, volt4 };
                     device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2, voltF3 };
                     device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2, voltIIR3 };
-                    device.DataPacket_2.IrStatus = irStatus == 1;
+                    device.DataPacket_2.IrStatus = irStatus;
                 }
                 else
                 {
@@ -664,7 +664,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DataPacket_2.AdsVoltages = new[] { volt1, volt2, volt3, volt4 };
                         device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2, voltF3 };
                         device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2, voltIIR3 };
-                        device.DataPacket_2.IrStatus = irStatus == 1;
+                        device.DataPacket_2.IrStatus = irStatus;
                     });
                 }
             }

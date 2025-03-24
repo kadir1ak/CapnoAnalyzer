@@ -73,7 +73,7 @@ namespace CapnoAnalyzer.Models.Device
             AdsVoltages = new double[4];
             GainAdsVoltagesF = new double[2];
             GainAdsVoltagesIIR = new double[2];
-            IrStatus = false;
+            IrStatus = 0;
         }
 
         // Ortak Zaman Özelliği
@@ -120,8 +120,8 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _gainAdsVoltagesIIR, value);
         }
 
-        private bool _irStatus;
-        public bool IrStatus
+        private int _irStatus;
+        public int IrStatus
         {
             get => _irStatus;
             set => SetProperty(ref _irStatus, value);

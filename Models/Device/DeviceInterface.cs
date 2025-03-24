@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Windows;
 using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Models.PlotModels;
 
@@ -12,7 +13,6 @@ namespace CapnoAnalyzer.Models.Device
         public DeviceInterface()
         {
             SensorPlot = new DevicePlot(); // **Her cihaz için yeni bir `PlotModel`**
-            //Sensor = new Sensor();
             Data = new AllDataPaket();
             IncomingMessage = new ObservableCollection<string>();
         }
@@ -37,16 +37,6 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _outgoingMessage, value);
         }
 
-        /// <summary>
-        /// Sensor nesnesi (veri kaynağı).
-        /// </summary>
-        //private Sensor _sensor;
-        //public Sensor Sensor
-        //{
-        //    get => _sensor;
-        //    set => SetProperty(ref _sensor, value);
-        //}    
-        
         /// <summary>
         /// Sensor nesnesi (veri kaynağı).
         /// </summary>
@@ -118,41 +108,54 @@ namespace CapnoAnalyzer.Models.Device
         /// </summary>
         public void SyncWithDevice(Device device)
         {
-            if (device == null) return;
-
-            // Arayüzde gösterilecek verileri güncelle
-            if (device.Properties.DataPacketType == "1")
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Data.Time = device.DataPacket_1.Time;
-                Data.GasSensor = device.DataPacket_1.GasSensor;
-                Data.ReferenceSensor = device.DataPacket_1.ReferenceSensor;
-                Data.Temperature = device.DataPacket_1.Temperature;
-                Data.Humidity = device.DataPacket_1.Humidity;
-            }
-            else if (device.Properties.DataPacketType == "2")
-            {
-                Data.Time = device.DataPacket_2.Time;
-                Data.GasSensor = device.DataPacket_2.AdsRawValues[0];
-                Data.ReferenceSensor = device.DataPacket_2.AdsRawValues[1];
+                if (device == null) return;
 
-                Data.AngVoltages = device.DataPacket_2.AngVoltages;
-                Data.AdsRawValues = device.DataPacket_2.AdsRawValues;
-                Data.AdsVoltages = device.DataPacket_2.AdsVoltages;
-                Data.GainAdsVoltagesF = device.DataPacket_2.GainAdsVoltagesF;
-                Data.GainAdsVoltagesIIR = device.DataPacket_2.GainAdsVoltagesIIR;
-                Data.IrStatus = device.DataPacket_2.IrStatus;
-            }
-            else if (device.Properties.DataPacketType == "3")
-            {
-                Data.Time = device.DataPacket_3.Time;
-                Data.GasSensor = device.DataPacket_3.Ch0;
-                Data.ReferenceSensor = device.DataPacket_3.Ch1;
-                Data.Frame = device.DataPacket_3.Frame;
-                Data.Emitter = device.DataPacket_3.Emitter;
-            }
+                // Arayüzde gösterilecek verileri güncelle
+                if (device.Properties.DataPacketType == "1")
+                {
+                    Data.Time = device.DataPacket_1.Time;
+                    Data.GasSensor = device.DataPacket_1.GasSensor;
+                    Data.ReferenceSensor = device.DataPacket_1.ReferenceSensor;
+                    Data.Temperature = device.DataPacket_1.Temperature;
+                    Data.Humidity = device.DataPacket_1.Humidity;
+                }
+                else if (device.Properties.DataPacketType == "2")
+                {
+                    Data.Time = device.DataPacket_2.Time;
+                    Data.GasSensor = device.DataPacket_2.AdsRawValues[0];
+                    Data.ReferenceSensor = device.DataPacket_2.AdsRawValues[1];
 
-            // Grafiği güncelle
-            UpdatePlot();
+                    Data.AngVoltages = device.DataPacket_2.AngVoltages;
+                    Data.AdsRawValues = device.DataPacket_2.AdsRawValues;
+                    Data.AdsVoltages = device.DataPacket_2.AdsVoltages;
+                    Data.GainAdsVoltagesF = device.DataPacket_2.GainAdsVoltagesF;
+                    Data.GainAdsVoltagesIIR = device.DataPacket_2.GainAdsVoltagesIIR;
+                    Data.IrStatus = device.DataPacket_2.IrStatus;
+                }
+                else if (device.Properties.DataPacketType == "3")
+                {
+                    Data.Time = device.DataPacket_3.Time;
+                    Data.GasSensor = device.DataPacket_3.Ch0;
+                    Data.ReferenceSensor = device.DataPacket_3.Ch1;
+                    Data.Frame = device.DataPacket_3.Frame;
+                    Data.Emitter = device.DataPacket_3.Emitter;
+                }
+
+                // 
+                if (device.Properties.DataPacketType == "2")
+                {
+                    Data.DataPacket_2_Status = Visibility.Visible;
+                }
+                else
+                {
+                    Data.DataPacket_2_Status = Visibility.Collapsed;
+                }
+
+                // Grafiği güncelle
+                UpdatePlot();
+            });         
         }
     }
 }

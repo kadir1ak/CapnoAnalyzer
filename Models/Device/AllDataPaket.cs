@@ -101,6 +101,13 @@ namespace CapnoAnalyzer.Models.Device
         }
 
         // DataPacket_3 İçeriği
+        private Visibility _dataPacket_3_Status;
+        public Visibility DataPacket_3_Status
+        {
+            get => _dataPacket_3_Status;
+            set => SetProperty(ref _dataPacket_3_Status, value);
+        }
+
         private double _ch0;
         public double Ch0
         {

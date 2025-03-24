@@ -697,6 +697,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DataPacket_3.Ch0 = ch0;
                         device.DataPacket_3.Ch1 = ch1;
                         device.DataPacket_3.Frame = frame;
+                        device.DataPacket_3.Emitter = emitter;
                     });
                 }
             }

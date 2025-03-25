@@ -24,7 +24,7 @@
         
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3">
-                <ProgressBar Height="30" Width="500" Value="{Binding AppliedGasConcentrationAsDouble, Mode=OneWay}" Minimum="0" Maximum="100">
+                <ProgressBar Height="30" Width="500" Value="{Binding SampleTime, Mode=OneWay}" Minimum="0" Maximum="100">
                     <ProgressBar.Template>
                         <ControlTemplate TargetType="ProgressBar">
                             <Grid>
@@ -57,14 +57,14 @@
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <TextBox 
-                        Text="{Binding AppliedGasConcentrationAsDouble, Mode=TwoWay, StringFormat=F2, UpdateSourceTrigger=PropertyChanged}" 
+                        Text="{Binding AppliedGasConcentration, Mode=TwoWay, StringFormat=F2, UpdateSourceTrigger=PropertyChanged}" 
                         Foreground="#FF009E4B" 
                         FontSize="24" 
                         Height="36" 
                         Width="100" 
                         FontWeight="Bold" />
                             <Label 
-                        Content="{Binding AppliedGasConcentrationAsDouble, StringFormat=F2}" 
+                        Content="{Binding AppliedGasConcentration, StringFormat=F2}" 
                         Foreground="#FF009E4B" 
                         HorizontalAlignment="Center" 
                         VerticalAlignment="Top" 

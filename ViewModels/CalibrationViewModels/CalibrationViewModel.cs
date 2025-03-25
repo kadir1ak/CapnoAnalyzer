@@ -18,6 +18,13 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         public ICommand AppliedGasCommand { get; private set; }
 
+        private bool _isInputEnabled = true;
+        public bool IsInputEnabled
+        {
+            get => _isInputEnabled;
+            set => SetProperty(ref _isInputEnabled, value);
+        }
+
         private int _sample = 0;
         public int Sample
         {
@@ -48,7 +55,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             Devices = devices;
             DeviceTables = new ObservableCollection<GasConcentrationTablesViewModel>();
 
-            AppliedGasCommand = new RelayCommand(StartCalibration);
+            AppliedGasCommand = new RelayCommand(StartSamplingCalculation);
 
             Devices.DeviceAdded += OnDeviceAdded;
             Devices.DeviceRemoved += OnDeviceRemoved;
@@ -62,7 +69,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             _gasDataBuffer = new Dictionary<string, List<double>>();
         }
 
-        private void StartCalibration()
+        private void StartSamplingCalculation()
         {
             if (AppliedGasConcentration == null)
             {
@@ -75,6 +82,9 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 MessageBox.Show("Uygulanan gaz konsantrasyonu 0 ile 100 arasında olmalıdır!", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+
+            // Girişleri devre dışı bırak
+            IsInputEnabled = false;
 
             // Sayaç başlangıcı
             SampleTime = 0;
@@ -90,7 +100,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             }
 
             _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromMilliseconds(1);
+            _timer.Interval = TimeSpan.FromMilliseconds(100);
             _timer.Tick += TimerTick;
             _timer.Start();
         }
@@ -98,7 +108,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         private void TimerTick(object sender, EventArgs e)
         {
             // Sayaç ilerlet
-            SampleTime+=10;
+            SampleTime+=1;
 
             // Cihazlardan veri topla
             foreach (var device in Devices.IdentifiedDevices)
@@ -152,7 +162,13 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 table.DeviceData.Add(newDeviceData);
             }
 
-           // MessageBox.Show("Kalibrasyon tamamlandı ve veriler tabloya eklendi!", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+            // SampleTime sıfırla
+            SampleTime = 0;
+
+            // Girişleri tekrar aktif hale getir
+            IsInputEnabled = true;
+
+            // MessageBox.Show("Kalibrasyon tamamlandı ve veriler tabloya eklendi!", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private double CalculateRMS(List<double> data)

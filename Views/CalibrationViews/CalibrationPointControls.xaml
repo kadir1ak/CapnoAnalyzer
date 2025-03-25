@@ -15,7 +15,7 @@
         </Grid.ColumnDefinitions>
         <Border Grid.Row="0" Grid.Column="2" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
-                <Button x:Name="btnCoefficientCal" Width="150" Height="50" FontWeight="Bold">
+                <Button x:Name="btnCoefficientCal" Width="150" Height="50" FontWeight="Bold" Command="{Binding ShowAppliedGasCommand}">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border CornerRadius="10" Background="{TemplateBinding Background}" BorderBrush="Black" BorderThickness="1">

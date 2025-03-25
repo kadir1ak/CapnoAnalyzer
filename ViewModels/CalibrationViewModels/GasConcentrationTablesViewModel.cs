@@ -44,7 +44,8 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             DeviceName = deviceName;
             DeviceData = new ObservableCollection<DeviceData>();
             Coefficients = new Coefficients();
-            PlotModel = new PlotModel { Title = $"Nonlineer Model Fit: {deviceName}" };
+
+            PlotModel = new PlotModel { Title = $"Cihaz: {deviceName} - Model: y = a(1 - e^{{-bx^c}})" };
             CalculateCommand = new RelayCommand(_ => CalculateCoefficients(), _ => CanCalculate());
         }
 
@@ -55,46 +56,50 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         private void CalculateCoefficients()
         {
-            double zero = DeviceData.First(d => d.GasConcentration == 0.00).Gas /
-                          DeviceData.First(d => d.GasConcentration == 0.00).Ref;
-
-            foreach (var data in DeviceData)
+            try
             {
-                data.Ratio = data.Gas / data.Ref;
-                data.Transmittance = data.Ratio / zero;
-                data.Absorption = 1 - data.Transmittance;
-            }
+                double zero = DeviceData.First(d => d.GasConcentration == 0.00).Gas /
+                     DeviceData.First(d => d.GasConcentration == 0.00).Ref;
 
-            var gasConcentration = DeviceData.Select(d => d.GasConcentration).ToArray();
-            var absorption = DeviceData.Select(d => d.Absorption ?? 0.0).ToArray();
-
-            PlotAndOptimize(gasConcentration, absorption);
-
-            foreach (var data in DeviceData)
-            {
-                data.PredictedAbsorption = model(
-                    Vector<double>.Build.DenseOfArray(new[] { Coefficients.A, Coefficients.B, Coefficients.C }),
-                    data.GasConcentration);
-
-                if (data.Absorption.HasValue && data.Absorption.Value > 0 && data.Absorption.Value < Coefficients.A)
+                foreach (var data in DeviceData)
                 {
-                    data.PredictedGasConcentration = Math.Pow(
-                        -Math.Log(1 - (data.Absorption.Value / Coefficients.A)) / Coefficients.B,
-                        1 / Coefficients.C);
+                    data.Ratio = data.Gas / data.Ref;
+                    data.Transmittance = data.Ratio / zero;
+                    data.Absorption = 1 - data.Transmittance;
                 }
-                else
+
+                var gasConcentration = DeviceData.Select(d => d.GasConcentration).ToArray();
+                var absorption = DeviceData.Select(d => d.Absorption ?? 0.0).ToArray();
+
+                PlotAndOptimize(gasConcentration, absorption);
+
+                foreach (var data in DeviceData)
                 {
-                    data.PredictedGasConcentration = double.NaN;
+                    data.PredictedAbsorption = model(
+                        Vector<double>.Build.DenseOfArray(new[] { Coefficients.A, Coefficients.B, Coefficients.C }),
+                        data.GasConcentration);
+
+                    if (data.Absorption.HasValue && data.Absorption.Value > 0 && data.Absorption.Value < Coefficients.A)
+                    {
+                        data.PredictedGasConcentration = Math.Pow(
+                            -Math.Log(1 - (data.Absorption.Value / Coefficients.A)) / Coefficients.B,
+                            1 / Coefficients.C);
+                    }
+                    else
+                    {
+                        data.PredictedGasConcentration = double.NaN;
+                    }
                 }
+
+                double meanGasConc = DeviceData.Average(d => d.GasConcentration);
+                double sst = DeviceData.Sum(d => Math.Pow(d.GasConcentration - meanGasConc, 2));
+                double sse = DeviceData
+                    .Where(d => !double.IsNaN(d.PredictedGasConcentration ?? double.NaN))
+                    .Sum(d => Math.Pow(d.GasConcentration - (d.PredictedGasConcentration ?? 0), 2));
+
+                Coefficients.R = 1 - (sse / sst);
             }
-
-            double meanGasConc = DeviceData.Average(d => d.GasConcentration);
-            double sst = DeviceData.Sum(d => Math.Pow(d.GasConcentration - meanGasConc, 2));
-            double sse = DeviceData
-                .Where(d => !double.IsNaN(d.PredictedGasConcentration ?? double.NaN))
-                .Sum(d => Math.Pow(d.GasConcentration - (d.PredictedGasConcentration ?? 0), 2));
-
-            Coefficients.R = 1 - (sse / sst);
+            catch (Exception){}       
         }
 
         private void PlotAndOptimize(double[] x, double[] y)
@@ -148,8 +153,12 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         private bool CanCalculate()
         {
-            return DeviceData != null && DeviceData.Any() &&
-                   DeviceData.All(d => d.Ref > 0 && d.Gas > 0);
+            try
+            {
+                return DeviceData != null && DeviceData.Any() &&
+                       DeviceData.All(d => d.Ref > 0 && d.Gas > 0);
+            }
+            catch (Exception) { return false; }
         }
     }
 }

@@ -29,11 +29,8 @@
                 <!-- Devices UserControl'ü, DataContext => MainViewModel.DevicesVM -->
                 <ScrollViewer Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
-                        <views:SampleGasConcentrationTable/>
-                        <views:SampleGasConcentrationTable/>
-                        <views:SampleGasConcentrationTable/>
-                        <views:SampleGasConcentrationTable/>
-                        <views:GasConcentrationTables/>
+                        <!-- <views:SampleGasConcentrationTable/> -->
+                        <views:GasConcentrationTables DataContext="{Binding CalibrationVM}" />
                     </StackPanel>
                 </ScrollViewer>
             </Grid>

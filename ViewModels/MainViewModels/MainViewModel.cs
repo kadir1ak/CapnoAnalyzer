@@ -132,7 +132,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                 Page targetPage = pageName switch
                 {
                     "Devices" => new DevicesPage { DataContext = DevicesVM },
-                    "CalibrationTables" => new CalibrationTablesPage(),
+                    "CalibrationTables" => new CalibrationTablesPage { DataContext = CalibrationVM },
                     "Equation" => new EquationTestPage(),
                     "DeviceConnections" => new DeviceConnectionsPage { DataContext = DevicesVM },
                     "Settings" => new SettingsPage(),

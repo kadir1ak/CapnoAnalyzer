@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Documents;
 using CapnoAnalyzer.Views.DevicesViews.Devices;
 using System.Windows.Input;
+using MathNet.Numerics.Distributions;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
@@ -15,7 +16,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         public DevicesViewModel Devices { get; private set; }
         public ObservableCollection<GasConcentrationTablesViewModel> DeviceTables { get; set; }
 
-        public ICommand ShowAppliedGasCommand { get; private set; }
+        public ICommand AppliedGasCommand { get; private set; }
 
         private int _sample = 0;
         public int Sample
@@ -24,8 +25,15 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             set => SetProperty(ref _sample, value);
         }
 
-        private string _appliedGasConcentration;
-        public string AppliedGasConcentration
+        private int _sampleTime = 0;
+        public int SampleTime
+        {
+            get => _sampleTime;
+            set => SetProperty(ref _sampleTime, value);
+        }
+
+        private double? _appliedGasConcentration = null;
+        public double? AppliedGasConcentration
         {
             get => _appliedGasConcentration;
             set => SetProperty(ref _appliedGasConcentration, value);
@@ -37,7 +45,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             DeviceTables = new ObservableCollection<GasConcentrationTablesViewModel>();
 
             // Komut tanımla
-            ShowAppliedGasCommand = new RelayCommand(ShowAppliedGas);
+            AppliedGasCommand = new RelayCommand(AddingAppliedGasTables);
 
             // DevicesViewModel'deki olayları dinliyoruz
             Devices.DeviceAdded += OnDeviceAdded;
@@ -49,36 +57,44 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 AddDeviceTable(device.Properties.ProductId);
             }
         }
-        private void ShowAppliedGas()
+        private void AddingAppliedGasTables()
         {
-            if (string.IsNullOrWhiteSpace(AppliedGasConcentration))
+            if (AppliedGasConcentration == null)
             {
                 MessageBox.Show("Uygulanan gaz konsantrasyonu belirtilmedi!", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-
-            // Her cihaz tablosuna yeni bir satır ekle
-            foreach (var table in DeviceTables)
+            else if (AppliedGasConcentration >= 0 && AppliedGasConcentration <= 100)
             {
-                // Tablo boşsa başlangıç değerlerini oluştur
-                var lastSample = table.DeviceData.LastOrDefault();
-                int newSampleNumber = lastSample != null ? int.Parse(lastSample.Sample) + 1 : 1; // Sample değeri belirle
-
-                // Yeni veri oluştur
-                var newDeviceData = new DeviceData
+                // Her cihaz tablosuna yeni bir satır ekle
+                foreach (var table in DeviceTables)
                 {
-                    Sample = newSampleNumber.ToString(),
-                    GasConcentration = double.TryParse(AppliedGasConcentration, out var gasConcentration) ? gasConcentration : 0.0,
-                    Ref = Math.Round(2680 + new Random().NextDouble() * 40, 4), // Rastgele Ref değeri
-                    Gas = Math.Round(3200 + new Random().NextDouble() * 2000, 4) // Rastgele Gas değeri
-                };
+                    // Tablo boşsa başlangıç değerlerini oluştur
+                    var lastSample = table.DeviceData.LastOrDefault();
+                    int newSampleNumber = lastSample != null ? int.Parse(lastSample.Sample) + 1 : 1; // Sample değeri belirle
+             
+                    // Yeni veri oluştur
+                    var newDeviceData = new DeviceData
+                    {
+                        Sample = newSampleNumber.ToString(),
+                        GasConcentration = (double)AppliedGasConcentration,
+                        Ref = Math.Round(2680 + new Random().NextDouble() * 40, 4), // Rastgele Ref değeri
+                        Gas = Math.Round(3200 + new Random().NextDouble() * 2000, 4) // Rastgele Gas değeri
+                    };
 
-                // Yeni veriyi tabloya ekle
-                table.DeviceData.Add(newDeviceData);
+                    // Yeni veriyi tabloya ekle
+                    table.DeviceData.Add(newDeviceData);
+                }
+
+                // İşlem tamamlandıktan sonra kullanıcıya bilgi ver
+                MessageBox.Show("Tüm cihaz tablolarına yeni bir satır eklendi!", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
             }
-
-            // İşlem tamamlandıktan sonra kullanıcıya bilgi ver
-            MessageBox.Show("Tüm cihaz tablolarına yeni bir satır eklendi!", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+            else
+            {
+                MessageBox.Show("Uygulanan gaz konsantrasyonu 0 ile 100 arasında olmalıdır!", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
         }
 
         private void OnDeviceAdded(Device newDevice)

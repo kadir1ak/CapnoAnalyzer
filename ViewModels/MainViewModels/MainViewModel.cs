@@ -22,6 +22,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
     {
         public DevicesViewModel DevicesVM { get; private set; }
         public SettingViewModel SettingVM { get; private set; }
+        public CalibrationViewModel CalibrationVM { get; private set; }
         public ICommand NavigateCommand { get; }
 
         // Sayfa önbelleği
@@ -38,6 +39,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
 
             // Çalışma zamanı için ViewModel'leri başlat
             DevicesVM = new DevicesViewModel();
+            CalibrationVM = new CalibrationViewModel(DevicesVM);
             SettingVM = new SettingViewModel();
             NavigateCommand = new RelayCommand(Navigate);
 

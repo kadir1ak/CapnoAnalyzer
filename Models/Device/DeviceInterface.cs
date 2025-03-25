@@ -46,7 +46,7 @@ namespace CapnoAnalyzer.Models.Device
         {
             get => _data;
             set => SetProperty(ref _data, value);
-        }
+        }   
 
         /// <summary>
         /// Grafik modeli (Her cihaz için ayrı bir `DevicePlot` oluşturuluyor).
@@ -148,18 +148,27 @@ namespace CapnoAnalyzer.Models.Device
                 }
 
                 // 
-                if (device.Properties.DataPacketType == "2")
+                if (device.Properties.DataPacketType == "1")
                 {
+                    Data.DataPacket_1_Status = Visibility.Visible;
+                    Data.DataPacket_3_Status = Visibility.Collapsed;
+                    Data.DataPacket_3_Status = Visibility.Collapsed;
+                }
+                else if (device.Properties.DataPacketType == "2")
+                {
+                    Data.DataPacket_1_Status = Visibility.Collapsed;
                     Data.DataPacket_2_Status = Visibility.Visible;
                     Data.DataPacket_3_Status = Visibility.Collapsed;
                 }
                 else if (device.Properties.DataPacketType == "3")
                 {
+                    Data.DataPacket_1_Status = Visibility.Collapsed;
                     Data.DataPacket_2_Status = Visibility.Collapsed;
                     Data.DataPacket_3_Status = Visibility.Visible;
                 }
                 else
                 {
+                    Data.DataPacket_1_Status = Visibility.Collapsed;
                     Data.DataPacket_2_Status = Visibility.Collapsed;
                     Data.DataPacket_3_Status = Visibility.Collapsed;
                 }

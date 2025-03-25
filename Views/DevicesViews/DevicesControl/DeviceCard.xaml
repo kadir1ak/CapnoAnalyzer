@@ -253,6 +253,61 @@
                         </StackPanel>                      
                     </Grid>   
                 </Border>
+
+                <!-- DataPacket_1 Verileri  -->
+                <Border  Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"  Background="#F1F3FA" Margin="0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_1_Status}">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
+                        <TextBlock Text="Tüm Cihaz Verileri" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold"/>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Time " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.Time, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="GasSensor " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.GasSensor, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="ReferenceSensor " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.ReferenceSensor, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Temperature " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.Temperature, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Humidity " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.Humidity, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Pressure " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
+                                    <TextBlock Text="{Binding Interface.Data.Pressure, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold" />
+                                    <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
                 <!-- DataPacket_2 Verileri  -->          
                 <Border  Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"  Background="#F1F3FA" Margin="0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_2_Status}">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
@@ -373,6 +428,7 @@
                         </Grid>
                     </StackPanel>
                 </Border>
+                
                 <!-- DataPacket_3 Verileri  -->
                 <Border  Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"  Background="#F1F3FA" Margin="0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_3_Status}">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
@@ -421,6 +477,8 @@
                         </Grid>
                     </StackPanel>
                 </Border>
+            
+            
             </Grid>
         </Border>
     </Grid>

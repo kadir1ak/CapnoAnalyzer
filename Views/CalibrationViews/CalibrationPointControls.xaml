@@ -7,7 +7,7 @@
              xmlns:faWPF="clr-namespace:FontAwesome.WPF;assembly=FontAwesome.WPF"
              mc:Ignorable="d">
     <!-- Sol Panel (Sensör Verileri) -->
-    <Grid Grid.Row="1" Grid.Column="1">
+    <Grid Grid.Row="1" Grid.Column="1" DataContext="{Binding}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
@@ -44,38 +44,16 @@
         <!-- NDIRGas Coefficients -->
         <Border Grid.Row="0" Grid.Column="1" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
             <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="3">
-                <GroupBox Header="Uygulanan Gaz Konsantrasyonu"  FontWeight="Bold" FontSize="16" Margin="0,10,0,10" Padding="10">                                     
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBox Text="{Binding Interface.Sensor.Pressure, StringFormat=F2}" Foreground="#FF009E4B" FontSize="24" Height="36" Width="100" FontWeight="Bold" />
-                        <TextBlock Text="%" Foreground="#5C6D8C" FontSize="24" Margin="5 0 10 0"/>
-                    </StackPanel>            
-                </GroupBox>
-            </StackPanel>
-        </Border>
-        
-        <Border Grid.Row="0" Grid.Column="0" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
-                <GroupBox Header="Test Koşulları"  FontWeight="Bold" FontSize="16" Margin="0,0,0,0" Padding="0">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="5">
-                            <TextBlock Text="Sıcaklık:" Foreground="#5C6D8C" FontSize="12" Width="50" Margin="0 0 5 0"/>
-                            <TextBox Text="{Binding Interface.Sensor.Pressure, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="50" FontWeight="Bold" />
-                            <TextBlock Text="°C" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="5">
-                            <TextBlock Text="Basıncı:" Foreground="#5C6D8C" FontSize="12" Width="50" Margin="0 0 5 0"/>
-                            <TextBox Text="{Binding Interface.Sensor.Pressure, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="50" FontWeight="Bold" />
-                            <TextBlock Text="mmH" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="5">
-                            <TextBlock Text="Nem:" Foreground="#5C6D8C" FontSize="12" Width="50" Margin="0 0 5 0"/>
-                            <TextBox Text="{Binding Interface.Sensor.Pressure, StringFormat=F2}" Foreground="#FFFF2222" FontSize="12" Width="50" FontWeight="Bold" />
-                            <TextBlock Text="%" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0"/>
-                        </StackPanel>
+                <GroupBox Header="Uygulanan Gaz Konsantrasyonu"  FontWeight="Bold" FontSize="16" Margin="0,10,0,10" Padding="10">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBox Text="{Binding AppliedGasConcentration, Mode=TwoWay, StringFormat=F2, UpdateSourceTrigger=PropertyChanged}" Foreground="#FF009E4B" FontSize="24" Height="36" Width="100" FontWeight="Bold" />
+                            <Label Content ="{Binding AppliedGasConcentration, StringFormat=F2}" Foreground="#FF009E4B" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0 -5 0 0" FontSize="24" Height="36" Width="60" FontWeight="Bold" />
+                            <TextBlock Text="%" Foreground="#5C6D8C" Width="30" FontSize="24" Margin="5 0 0 0"/>
+                        </StackPanel>                     
                     </StackPanel>
                 </GroupBox>
             </StackPanel>
-        </Border>
-        
+        </Border>       
     </Grid>
 </UserControl>

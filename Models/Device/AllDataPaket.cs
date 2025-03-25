@@ -15,6 +15,12 @@ namespace CapnoAnalyzer.Models.Device
         }
 
         // DataPacket_1 İçeriği
+        private Visibility _dataPacket_1_Status;
+        public Visibility DataPacket_1_Status
+        {
+            get => _dataPacket_1_Status;
+            set => SetProperty(ref _dataPacket_1_Status, value);
+        }
         private double _gasSensor;
         public double GasSensor
         {
@@ -141,6 +147,7 @@ namespace CapnoAnalyzer.Models.Device
         {
             // DataPacket_1 Varsayılan Değerler
             Time = 0.0;
+            DataPacket_1_Status = Visibility.Collapsed;
             GasSensor = 0.0;
             ReferenceSensor = 0.0;
             Temperature = 0.0;
@@ -159,6 +166,7 @@ namespace CapnoAnalyzer.Models.Device
 
             // DataPacket_3 Varsayılan Değerler
             Time = 0.0;
+            DataPacket_3_Status = Visibility.Collapsed;
             Ch0 = 0.0;
             Ch1 = 0.0;
             Frame = 0;

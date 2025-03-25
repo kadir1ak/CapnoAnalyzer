@@ -37,6 +37,10 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         public ObservableCollection<SerialPort> ConnectedPorts => PortManager.ConnectedPorts;
         public ObservableCollection<string> AvailablePorts => PortManager.AvailablePorts;
 
+        // Cihaz ekleme/kaldırma için bir olay tanımlıyoruz
+        public event Action<Device> DeviceAdded;
+        public event Action<Device> DeviceRemoved;
+
         // -- 3) Seçili Cihaz Nesnesi --
         private Device _device;
         public Device Device
@@ -109,6 +113,10 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             // Serial port değişikliklerini dinle
             PortManager.MessageReceived += OnMessageReceived;
 
+            ConnectedDevices = new ObservableCollection<Device>();
+            IdentifiedDevices = new ObservableCollection<Device>();
+            IdentifiedDevices.CollectionChanged += IdentifiedDevices_CollectionChanged;
+
             ConnectCommand = new DeviceRelayCommand(ExecuteConnect, CanExecuteConnect);
             DisconnectCommand = new DeviceRelayCommand(ExecuteDisconnect, CanExecuteDisconnect);
             IdentifyDeviceCommand = new DeviceRelayCommand(ExecuteIdentifyDevice, CanExecuteIdentifyDevice);
@@ -118,7 +126,24 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             StartIdentifiedDevicesUpdateInterfaceDataLoop();
 
         }
+        private void IdentifiedDevices_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (Device newDevice in e.NewItems)
+                {
+                    DeviceAdded?.Invoke(newDevice); // Yeni cihaz eklendiğinde tetiklenir
+                }
+            }
 
+            if (e.OldItems != null)
+            {
+                foreach (Device removedDevice in e.OldItems)
+                {
+                    DeviceRemoved?.Invoke(removedDevice); // Cihaz kaldırıldığında tetiklenir
+                }
+            }
+        }
         private void DeviceIDUpdate()
         {
             try

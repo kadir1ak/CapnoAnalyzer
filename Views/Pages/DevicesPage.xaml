@@ -45,7 +45,7 @@
                     <!-- Değer Ekleme-->
                     <Border  Grid.Row="1" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Stretch" Margin="3">
-                            <calViews:CalibrationPointControls />
+                            <calViews:CalibrationPointControls DataContext="{Binding CalibrationVM}"/>
                         </StackPanel>
                     </Border>
                 </Grid>

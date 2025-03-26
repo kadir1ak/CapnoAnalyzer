@@ -1,6 +1,7 @@
 ﻿using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Models.Device;
 using CapnoAnalyzer.ViewModels.DeviceViewModels;
+using CapnoAnalyzer.Views.DevicesViews.Devices;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -32,11 +33,11 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             set => SetProperty(ref _sample, value);
         }
 
-        private int _sampleTime = 0;
-        public int SampleTime
+        private int _mainSampleTime = 0;
+        public int MainSampleTime
         {
-            get => _sampleTime;
-            set => SetProperty(ref _sampleTime, value);
+            get => _mainSampleTime;
+            set => SetProperty(ref _mainSampleTime, value);
         }
 
         private double? _appliedGasConcentration = null;
@@ -87,7 +88,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             IsInputEnabled = false;
 
             // Sayaç başlangıcı
-            SampleTime = 0;
+            MainSampleTime = 0;
 
             // Veri tamponlarını sıfırla
             _refDataBuffer.Clear();
@@ -97,6 +98,10 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             {
                 _refDataBuffer[device.Properties.ProductId] = new List<double>();
                 _gasDataBuffer[device.Properties.ProductId] = new List<double>();
+
+                // Girişleri devre dışı bırak
+                device.Interface.IsInputEnabled = false;
+                device.Interface.SampleTimeCount = 0;
             }
 
             _timer = new DispatcherTimer();
@@ -108,8 +113,8 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         private void TimerTick(object sender, EventArgs e)
         {
             // Sayaç ilerlet
-            SampleTime+=1;
-
+            MainSampleTime += 1;
+        
             // Cihazlardan veri topla
             foreach (var device in Devices.IdentifiedDevices)
             {
@@ -122,10 +127,12 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 // Verileri tamponlara ekle
                 _refDataBuffer[productId].Add(refValue);
                 _gasDataBuffer[productId].Add(gasValue);
+
+                device.Interface.SampleTimeCount = MainSampleTime;
             }
 
             // Sayaç 10 saniyeye ulaştıysa işlemi bitir
-            if (SampleTime >= 100)
+            if (MainSampleTime >= 100)
             {
                 _timer.Stop();
                 CompleteCalibration();
@@ -160,10 +167,17 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
                 // Yeni veriyi tabloya ekle
                 table.DeviceData.Add(newDeviceData);
+
+
+                // SampleTime sıfırla
+                device.Interface.SampleTimeCount = 0;
+
+                // Girişleri tekrar aktif hale getir
+                device.Interface.IsInputEnabled = true;
             }
 
             // SampleTime sıfırla
-            SampleTime = 0;
+            MainSampleTime = 0;
 
             // Girişleri tekrar aktif hale getir
             IsInputEnabled = true;

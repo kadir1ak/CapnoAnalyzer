@@ -13,6 +13,7 @@ namespace CapnoAnalyzer.Models.Device
         /// </summary>
         public DeviceInterface()
         {
+            SampleMode = SampleMode.RMS;
             SensorPlot = new DevicePlot(); // **Her cihaz için yeni bir `PlotModel`**
             Data = new AllDataPaket();
             IncomingMessage = new ObservableCollection<string>();
@@ -65,6 +66,41 @@ namespace CapnoAnalyzer.Models.Device
             }
         }
 
+        private SampleMode _sampleMode;
+        public IEnumerable<SampleMode> SampleModes => System.Enum.GetValues(typeof(SampleMode)) as IEnumerable<SampleMode>;
+        public SampleMode SampleMode
+        {
+            get => _sampleMode;
+            set
+            {
+                if (_sampleMode != value)
+                {
+                    _sampleMode = value;
+                    OnPropertyChanged(nameof(SampleMode));
+                }
+            }
+        }
+
+        private int _sampleTime = 10;
+        public int SampleTime
+        {
+            get => _sampleTime;
+            set => SetProperty(ref _sampleTime, value);
+        }
+
+        private int _sampleTimeCount = 0;
+        public int SampleTimeCount
+        {
+            get => _sampleTimeCount;
+            set => SetProperty(ref _sampleTimeCount, value);
+        }
+
+        private bool _isInputEnabled = true;
+        public bool IsInputEnabled
+        {
+            get => _isInputEnabled;
+            set => SetProperty(ref _isInputEnabled, value);
+        }
         /// <summary>
         /// Gelen mesajları listeye ekler.
         /// </summary>
@@ -176,6 +212,12 @@ namespace CapnoAnalyzer.Models.Device
                 // Grafiği güncelle
                 UpdatePlot();
             });         
-        }
+        }       
+    }
+    public enum SampleMode
+    {
+        RMS,
+        PP,
+        AVG
     }
 }

@@ -648,8 +648,17 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         }
         private void UpdateDeviceDataPacket_2(Device device, string data)
         {
-            // Veriyi ayrıştır ve UI güncellemesini yap
-            string[] dataParts = data.Split(',');
+            // Veri paketinin "GV" ile başladığını kontrol et
+            if (!data.StartsWith("GV"))
+            {
+                // Veri doğru formatta değilse işlemi sonlandır
+                return;
+            }
+
+            // "GV," kısmını kaldır ve veriyi ayrıştır
+            string[] dataParts = data.Substring(3).Split(',');
+
+            // Veri parça sayısını ve türlerini kontrol et
             if (dataParts.Length == 17 &&
                 double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
                 double.TryParse(dataParts[1].Replace('.', ','), out double ang1) &&
@@ -669,8 +678,10 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 double.TryParse(dataParts[15].Replace('.', ','), out double voltIIR3) &&
                 int.TryParse(dataParts[16], out int irStatus))
             {
+                // UI güncellemesi için Dispatcher kontrolü
                 if (Application.Current?.Dispatcher.CheckAccess() == true)
                 {
+                    // Verileri güncelle
                     device.DataPacket_2.Time = time;
                     device.DataPacket_2.AngVoltages = new[] { ang1, ang2, ang3 };
                     device.DataPacket_2.AdsRawValues = new[] { raw1, raw2, raw3, raw4 };
@@ -681,6 +692,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                 }
                 else
                 {
+                    // Dispatcher kullanarak verileri güncelle
                     Application.Current?.Dispatcher.Invoke(() =>
                     {
                         device.DataPacket_2.Time = time;

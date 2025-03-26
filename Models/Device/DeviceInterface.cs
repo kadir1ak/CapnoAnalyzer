@@ -125,8 +125,8 @@ namespace CapnoAnalyzer.Models.Device
                 else if (device.Properties.DataPacketType == "2")
                 {
                     Data.Time = device.DataPacket_2.Time;
-                    Data.GasSensor = device.DataPacket_2.AdsRawValues[0];
-                    Data.ReferenceSensor = device.DataPacket_2.AdsRawValues[1];
+                    Data.GasSensor = device.DataPacket_2.GainAdsVoltagesIIR[0];
+                    Data.ReferenceSensor = device.DataPacket_2.GainAdsVoltagesIIR[1];
 
                     Data.AngVoltages = device.DataPacket_2.AngVoltages;
                     Data.AdsRawValues = device.DataPacket_2.AdsRawValues;

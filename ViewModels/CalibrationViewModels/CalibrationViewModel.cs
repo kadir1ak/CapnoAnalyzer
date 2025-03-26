@@ -33,11 +33,32 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             set => SetProperty(ref _sample, value);
         }
 
-        private int _mainSampleTime = 0;
-        public int MainSampleTime
+        private int _mainSampleMaxTimeCount = 0;
+        public int MainSampleMaxTimeCount
         {
-            get => _mainSampleTime;
-            set => SetProperty(ref _mainSampleTime, value);
+            get => _mainSampleMaxTimeCount;
+            set => SetProperty(ref _mainSampleMaxTimeCount, value);
+        }
+
+        private int _mainTimeCount = 0;
+        public int MainTimeCount
+        {
+            get => _mainTimeCount;
+            set => SetProperty(ref _mainTimeCount, value);
+        }
+
+        private int _mainSampleTimeCount = 0;
+        public int MainSampleTimeCount
+        {
+            get => _mainSampleTimeCount;
+            set => SetProperty(ref _mainSampleTimeCount, value);
+        }
+
+        private int _mainSampleTimeProgressBar = 0;
+        public int MainSampleTimeProgressBar
+        {
+            get => _mainSampleTimeProgressBar;
+            set => SetProperty(ref _mainSampleTimeProgressBar, value);
         }
 
         private double? _appliedGasConcentration = null;
@@ -88,7 +109,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             IsInputEnabled = false;
 
             // Sayaç başlangıcı
-            MainSampleTime = 0;
+            MainSampleTimeCount = 0;
 
             // Veri tamponlarını sıfırla
             _refDataBuffer.Clear();
@@ -102,6 +123,10 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 // Girişleri devre dışı bırak
                 device.Interface.IsInputEnabled = false;
                 device.Interface.SampleTimeCount = 0;
+                if (device.Interface.SampleTime > MainSampleMaxTimeCount) 
+                {
+                    MainSampleMaxTimeCount = device.Interface.SampleTime;
+                }
             }
 
             _timer = new DispatcherTimer();
@@ -112,30 +137,72 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         private void TimerTick(object sender, EventArgs e)
         {
-            // Sayaç ilerlet
-            MainSampleTime += 1;
-        
-            // Cihazlardan veri topla
+            // Ana sayaç ilerlet
+            MainTimeCount++;
+            if (MainTimeCount >= 10)
+            {
+                MainTimeCount = 0;
+                MainSampleTimeCount += (int)(100 / MainSampleMaxTimeCount);
+
+                // MainProgressBar'ı güncelle
+                MainSampleTimeProgressBar = MainSampleTimeCount;
+            }
+
+            // Her cihazın zamanlayıcı mantığını kontrol et
             foreach (var device in Devices.IdentifiedDevices)
             {
                 var productId = device.Properties.ProductId;
 
-                // Sensör verilerini al
-                double refValue = device.Interface.Data.ReferenceSensor;
-                double gasValue = device.Interface.Data.GasSensor;
+                // Cihazın zamanlayıcı mantığını güncelle
+                if (device.Interface.SampleTimeCount < device.Interface.SampleTime)
+                {
+                    device.Interface.TimeCount++;
+                    if (device.Interface.TimeCount >= 10)
+                    {
+                        device.Interface.TimeCount = 0;
+                       
+                        device.Interface.SampleTimeCount++;
+                        device.Interface.SampleTimeProgressBar = (int)((100.0 / device.Interface.SampleTime) * device.Interface.SampleTimeCount);
+                    }
 
-                // Verileri tamponlara ekle
-                _refDataBuffer[productId].Add(refValue);
-                _gasDataBuffer[productId].Add(gasValue);
+                    // Sensör verilerini topla
+                    double refValue = 0;
+                    double gasValue = 0;
+                    if (device.Properties.DataPacketType == "1")
+                    {
+                        refValue = device.DataPacket_1.ReferenceSensor;
+                        gasValue = device.DataPacket_1.GasSensor;
+                    }
+                    else if (device.Properties.DataPacketType == "2")
+                    {
+                        refValue = device.DataPacket_2.GainAdsVoltagesIIR[1];
+                        gasValue = device.DataPacket_2.GainAdsVoltagesIIR[0];
+                    }
+                    else if (device.Properties.DataPacketType == "3")
+                    {
+                        refValue = device.DataPacket_3.Ch1;
+                        gasValue = device.DataPacket_3.Ch0;
+                    }
 
-                device.Interface.SampleTimeCount = MainSampleTime;
+                    _refDataBuffer[productId].Add(refValue);
+                    _gasDataBuffer[productId].Add(gasValue);
+                }
             }
 
-            // Sayaç 10 saniyeye ulaştıysa işlemi bitir
-            if (MainSampleTime >= 100)
+            // Ana sayaç maks süreye ulaştıysa işlemi bitir
+            if (MainSampleTimeCount >= 100)
             {
                 _timer.Stop();
-                CompleteCalibration();
+
+                // 3 saniyelik bekleme için yeni bir zamanlayıcı başlat
+                var waitTimer = new DispatcherTimer();
+                waitTimer.Interval = TimeSpan.FromSeconds(3);
+                waitTimer.Tick += (s, args) =>
+                {
+                    waitTimer.Stop();
+                    CompleteCalibration();
+                };
+                waitTimer.Start();
             }
         }
 
@@ -145,9 +212,27 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             {
                 var productId = device.Properties.ProductId;
 
-                // RMS değerlerini hesapla
-                double rmsRef = CalculateRMS(_refDataBuffer[productId]);
-                double rmsGas = CalculateRMS(_gasDataBuffer[productId]);
+                // SampleMode durumuna göre hesaplama yap
+                double calculatedRefValue = 0;
+                double calculatedGasValue = 0;
+
+                switch (device.Interface.SampleMode)
+                {
+                    case SampleMode.AVG:
+                        calculatedRefValue = CalculateAverage(_refDataBuffer[productId]);
+                        calculatedGasValue = CalculateAverage(_gasDataBuffer[productId]);
+                        break;
+
+                    case SampleMode.RMS:
+                        calculatedRefValue = CalculateRMS(_refDataBuffer[productId]);
+                        calculatedGasValue = CalculateRMS(_gasDataBuffer[productId]);
+                        break;
+
+                    case SampleMode.PP:
+                        calculatedRefValue = CalculatePeakToPeak(_refDataBuffer[productId]);
+                        calculatedGasValue = CalculatePeakToPeak(_gasDataBuffer[productId]);
+                        break;
+                }
 
                 // İlgili tabloyu bul
                 var table = DeviceTables.FirstOrDefault(t => t.DeviceName == productId);
@@ -161,36 +246,72 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 {
                     Sample = newSampleNumber.ToString(),
                     GasConcentration = (double)AppliedGasConcentration,
-                    Ref = Math.Round(rmsRef, 4),
-                    Gas = Math.Round(rmsGas, 4)
+                    Ref = Math.Round(calculatedRefValue, 4),
+                    Gas = Math.Round(calculatedGasValue, 4)
                 };
 
                 // Yeni veriyi tabloya ekle
                 table.DeviceData.Add(newDeviceData);
 
-
                 // SampleTime sıfırla
                 device.Interface.SampleTimeCount = 0;
+                device.Interface.SampleTimeProgressBar = 0;
 
                 // Girişleri tekrar aktif hale getir
                 device.Interface.IsInputEnabled = true;
             }
 
             // SampleTime sıfırla
-            MainSampleTime = 0;
+            MainSampleTimeCount = 0;
+            MainSampleTimeProgressBar = 0;
 
             // Girişleri tekrar aktif hale getir
             IsInputEnabled = true;
-
-            // MessageBox.Show("Kalibrasyon tamamlandı ve veriler tabloya eklendi!", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+        private double CalculateAverage(List<double> data)
+        {
+            if (data == null || data.Count == 0)
+                return 0;
 
+            // Daha performanslı bir ortalama hesaplama
+            double sum = 0;
+            foreach (var value in data)
+            {
+                sum += value;
+            }
+
+            return sum / data.Count;
+        }
         private double CalculateRMS(List<double> data)
         {
-            if (data == null || data.Count == 0) return 0;
+            if (data == null || data.Count == 0)
+                return 0;
 
-            double sumOfSquares = data.Sum(x => x * x);
+            // Performansı artırmak için "foreach" döngüsü ile RMS hesaplama
+            double sumOfSquares = 0;
+            foreach (var value in data)
+            {
+                sumOfSquares += value * value;
+            }
+
             return Math.Sqrt(sumOfSquares / data.Count);
+        }
+        private double CalculatePeakToPeak(List<double> data)
+        {
+            if (data == null || data.Count == 0)
+                return 0;
+
+            // Minimum ve maksimum değerleri tek döngüde bul
+            double min = double.MaxValue;
+            double max = double.MinValue;
+
+            foreach (var value in data)
+            {
+                if (value < min) min = value;
+                if (value > max) max = value;
+            }
+
+            return max - min;
         }
 
         private void OnDeviceAdded(Device newDevice)

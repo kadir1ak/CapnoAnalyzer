@@ -88,11 +88,25 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _sampleTime, value);
         }
 
+        private int _timeCount = 0;
+        public int TimeCount
+        {
+            get => _timeCount;
+            set => SetProperty(ref _timeCount, value);
+        }
+
         private int _sampleTimeCount = 0;
         public int SampleTimeCount
         {
             get => _sampleTimeCount;
             set => SetProperty(ref _sampleTimeCount, value);
+        }
+
+        private int _sampleTimeProgressBar = 0;
+        public int SampleTimeProgressBar
+        {
+            get => _sampleTimeProgressBar;
+            set => SetProperty(ref _sampleTimeProgressBar, value);
         }
 
         private bool _isInputEnabled = true;

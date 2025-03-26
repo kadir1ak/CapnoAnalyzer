@@ -699,8 +699,8 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DataPacket_2.AngVoltages = new[] { ang1, ang2, ang3 };
                         device.DataPacket_2.AdsRawValues = new[] { raw1, raw2, raw3, raw4 };
                         device.DataPacket_2.AdsVoltages = new[] { volt1, volt2, volt3, volt4 };
-                        device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2, voltF3 };
-                        device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2, voltIIR3 };
+                        device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2 * 10, voltF3 * 10 };
+                        device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2 * 10, voltIIR3 * 10 };
                         device.DataPacket_2.IrStatus = irStatus;
                     });
                 }

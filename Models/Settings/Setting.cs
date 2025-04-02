@@ -29,5 +29,12 @@ namespace CapnoAnalyzer.Models.Settings
             get => _sampleTime;
             set => SetProperty(ref _sampleTime, value);
         }
+
+        private int _maxValueSamplingTime = 10;
+        public int MaxValueSamplingTime
+        {
+            get => _maxValueSamplingTime;
+            set => SetProperty(ref _maxValueSamplingTime, value);
+        }
     }
 }

@@ -74,9 +74,19 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                 case nameof(Setting.SampleTime):
                     UpdateDevicesSampleTime();
                     break;
+                case nameof(Setting.MaxValueSamplingTime):
+                    UpdateDevicesMaxValueSamplingTime();
+                    break;
             }
         }
-
+        private void UpdateDevicesMaxValueSamplingTime()
+        {
+            // Cihazlara örnekleme süresini güncelle
+            foreach (var device in DevicesVM.IdentifiedDevices)
+            {
+                device.Interface.MaxValueSamplingTime = SettingVM.CurrentSetting.MaxValueSamplingTime;
+            }
+        }
         private void UpdateDevicesSampleTime()
         {
             // Cihazlara örnekleme süresini güncelle

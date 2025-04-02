@@ -81,6 +81,13 @@ namespace CapnoAnalyzer.Models.Device
             }
         }
 
+        private int _maxValueSamplingTime = 10;
+        public int MaxValueSamplingTime
+        {
+            get => _maxValueSamplingTime;
+            set => SetProperty(ref _maxValueSamplingTime, value);
+        }
+
         private int _sampleTime = 10;
         public int SampleTime
         {

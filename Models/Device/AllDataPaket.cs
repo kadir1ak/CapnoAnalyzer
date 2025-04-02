@@ -14,6 +14,38 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _time, value);
         }
 
+        // GasSensorMaxValue Özelliği
+        private double _gasSensorMaxValue;
+        public double GasSensorMaxValue
+        {
+            get => _gasSensorMaxValue;
+            set => SetProperty(ref _gasSensorMaxValue, value);
+        }
+
+        // GasSensorMinValue Özelliği
+        private double _gasSensorMinValue;
+        public double GasSensorMinValue
+        {
+            get => _gasSensorMinValue;
+            set => SetProperty(ref _gasSensorMinValue, value);
+        }
+
+        // ReferenceSensorMaxValue Özelliği
+        private double _referenceSensorMaxValue;
+        public double ReferenceSensorMaxValue
+        {
+            get => _referenceSensorMaxValue;
+            set => SetProperty(ref _referenceSensorMaxValue, value);
+        }
+
+        // ReferenceSensorMinValue Özelliği
+        private double _referenceSensorMinValue;
+        public double ReferenceSensorMinValue
+        {
+            get => _referenceSensorMinValue;
+            set => SetProperty(ref _referenceSensorMinValue, value);
+        }
+
         // DataPacket_1 İçeriği
         private Visibility _dataPacket_1_Status;
         public Visibility DataPacket_1_Status

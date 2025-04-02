@@ -34,7 +34,7 @@
                 <buttons:PageButton ButtonContent="Cihazlar" 
                             ButtonIcon="BarChartOutline"
                             ButtonBackground="#5C6D8C" 
-                            ButtonForeground="White"
+                            ButtonForeground="#FFEA6550"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
                             CommandParameter="Devices"/>
@@ -42,7 +42,7 @@
                 <buttons:PageButton ButtonContent="Kalibrasyon Tabloları" 
                             ButtonIcon="Tachometer"
                             ButtonBackground="#5C6D8C" 
-                            ButtonForeground="White"
+                            ButtonForeground="#FFECED49"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
                             CommandParameter="CalibrationTables"/>
@@ -58,7 +58,7 @@
                 <buttons:PageButton ButtonContent="Cihaz Bağlantıları" 
                             ButtonIcon="Usb"
                             ButtonBackground="#5C6D8C" 
-                            ButtonForeground="White"
+                            ButtonForeground="#FF60ED90"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
                             CommandParameter="DeviceConnections"/>

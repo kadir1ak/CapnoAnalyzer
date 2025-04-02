@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,6 +36,9 @@ namespace CapnoAnalyzer.Models.Device
 
             SendMessageCommand = new DeviceRelayCommand(SendMessage, CanSendMessage);
             AutoSendMessageCommand = new DeviceRelayCommand(ToggleAutoSend);
+
+            // İşlemi başlat
+            InitializeDeviceAsync();
         }
         #endregion
 
@@ -170,6 +174,112 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _properties, value);
         }
         #endregion
+
+        private async void InitializeDeviceAsync()
+        {
+            await StartSensorProcessingAsync();
+        }
+
+        private bool isProcessing = false; // İşlem durumu kontrolü için bayrak
+        private CancellationTokenSource cancellationTokenSource = null; // Task iptal mekanizması
+
+        public async Task StartSensorProcessingAsync()
+        {
+            // Eğer işlem zaten çalışıyorsa yeni bir işlem başlatma
+            if (isProcessing)
+            {
+                Debug.WriteLine("Sensor processing is already running.");
+                return;
+            }
+
+            // İşlem durumu ve iptal mekanizmasını başlat
+            isProcessing = true;
+            cancellationTokenSource = new CancellationTokenSource();
+
+            try
+            {
+                // Sonsuz döngü içinde sensör işleme başlat
+                await Task.Run(async () =>
+                {
+                    while (!cancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        var samplingStartTime = DateTime.Now;
+                        var gasSensorValues = new List<double>();
+                        var referenceSensorValues = new List<double>();
+
+                        // MaxValueSamplingTime süresi boyunca sensör verilerini topla
+                        while ((DateTime.Now - samplingStartTime).TotalSeconds < Interface.MaxValueSamplingTime)
+                        {
+                            if (cancellationTokenSource.Token.IsCancellationRequested)
+                            {
+                                Debug.WriteLine("Sensor processing canceled.");
+                                break;
+                            }
+
+                            // Gelen verileri kontrol et ve biriktir
+                            switch (Properties.DataPacketType)
+                            {
+                                case "1":
+                                    gasSensorValues.Add(DataPacket_1.GasSensor);
+                                    referenceSensorValues.Add(DataPacket_1.ReferenceSensor);
+                                    break;
+
+                                case "2":
+                                    gasSensorValues.Add(DataPacket_2.GainAdsVoltagesIIR[0]);
+                                    referenceSensorValues.Add(DataPacket_2.GainAdsVoltagesIIR[1]);
+                                    break;
+
+                                case "3":
+                                    gasSensorValues.Add(DataPacket_3.Ch0);
+                                    referenceSensorValues.Add(DataPacket_3.Ch1);
+                                    break;
+
+                                default:
+                                    Debug.WriteLine("Unknown DataPacketType.");
+                                    break;
+                            }
+
+                            // Küçük bir gecikme ekleyerek CPU kullanımını optimize et
+                            await Task.Delay(10, cancellationTokenSource.Token);
+                        }
+
+                        // Max ve Min değerleri hesapla ve Interface.Data'ya ata
+                        if (gasSensorValues.Any())
+                        {
+                            Interface.Data.GasSensorMaxValue = gasSensorValues.Max();
+                            Interface.Data.GasSensorMinValue = gasSensorValues.Min();
+                        }
+
+                        if (referenceSensorValues.Any())
+                        {
+                            Interface.Data.ReferenceSensorMaxValue = referenceSensorValues.Max();
+                            Interface.Data.ReferenceSensorMinValue = referenceSensorValues.Min();
+                        }
+                    }
+                }, cancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Sensor processing task was canceled.");
+            }
+            finally
+            {
+                // İşlem durumu sıfırla ve kaynakları temizle
+                isProcessing = false;
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
+            }
+        }
+
+        public void StopSensorProcessing()
+        {
+            // Eğer işlem çalışıyorsa iptal et
+            if (isProcessing && cancellationTokenSource != null)
+            {
+                cancellationTokenSource.Cancel();
+            }
+        }
+
     }
 
     #region DeviceProperties Sınıfı

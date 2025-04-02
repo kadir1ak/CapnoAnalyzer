@@ -67,7 +67,7 @@
                     <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                             <TextBlock Text="Zaman" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
-                            <TextBlock Text="{Binding Interface.Data.Time}" Foreground="#0078D7" FontSize="18" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Interface.Data.Time}" Foreground="#0078D7" FontSize="16" FontWeight="Bold" />
                             <TextBlock Text="sn" Foreground="#5C6D8C" FontSize="12" />
                         </StackPanel>
                     </Border>
@@ -76,8 +76,15 @@
                     <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                             <TextBlock Text="Gaz Sensörü" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
-                            <TextBlock Text="{Binding Interface.Data.GasSensor}" Foreground="#4CAF50" FontSize="18" FontWeight="Bold" />
-                            <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
+                            <TextBlock Text="{Binding Interface.Data.GasSensor}" Foreground="#4CAF50" FontSize="16" FontWeight="Bold" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0">
+                                <TextBlock Text="Max: " Foreground="#5C6D8C" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Interface.Data.GasSensorMaxValue}" Foreground="#4CAF50" FontSize="11" FontWeight="Bold" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0">
+                                <TextBlock Text="Min: " Foreground="#5C6D8C" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Interface.Data.GasSensorMinValue}" Foreground="#4CAF50" FontSize="11" FontWeight="Bold" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 
@@ -85,8 +92,15 @@
                     <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                             <TextBlock Text="Referans Sensör" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" />
-                            <TextBlock Text="{Binding Interface.Data.ReferenceSensor}" Foreground="#FF5722" FontSize="18" FontWeight="Bold" />
-                            <TextBlock Text="ADC" Foreground="#5C6D8C" FontSize="12" />
+                            <TextBlock Text="{Binding Interface.Data.ReferenceSensor}" Foreground="#FF5722" FontSize="16" FontWeight="Bold" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0">
+                                <TextBlock Text="Max: " Foreground="#5C6D8C" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Interface.Data.ReferenceSensorMaxValue}" Foreground="#4CAF50" FontSize="11" FontWeight="Bold" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0">
+                                <TextBlock Text="Min: " Foreground="#5C6D8C" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Interface.Data.ReferenceSensorMinValue}" Foreground="#4CAF50" FontSize="11" FontWeight="Bold" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 
@@ -103,7 +117,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Sıcaklık" Foreground="#5C6D8C" FontSize="12" Width="40" Margin="0 0 5 0"/>
                                 <TextBlock Text="{Binding Interface.Data.Temperature, StringFormat=F2}" Foreground="#FF231F1F" FontSize="12" Width="60" FontWeight="Bold" />
-                                <TextBlock Text="°" Foreground="#5C6D8C" FontSize="12" />
+                                <TextBlock Text="°C" Foreground="#5C6D8C" FontSize="12" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Nem " Foreground="#5C6D8C" FontSize="12" Width="40" Margin="0 0 5 0"/>
@@ -115,7 +129,7 @@
                 </StackPanel>
 
                 <!-- Veri Örnekleme Ayarları -->
-                <Border  Grid.Row="2" Grid.Column="0" Background="#F1F3FA" Margin="0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_1_Status}">
+                <Border  Grid.Row="2" Grid.Column="0" Background="#F1F3FA" Margin="0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                         <TextBlock Text="Örnekleme Ayarları" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold"/>
                         <Grid>

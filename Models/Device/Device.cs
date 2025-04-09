@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +23,7 @@ namespace CapnoAnalyzer.Models.Device
         #region Komutlar
         public ICommand SendMessageCommand { get; }
         public ICommand AutoSendMessageCommand { get; }        
+        public ICommand AutoSaveDataCommand { get; }        
         #endregion
 
         #region Constructor
@@ -27,6 +31,7 @@ namespace CapnoAnalyzer.Models.Device
         {
             _portManager = manager;
             _portManager.DeviceDisconnected += OnDeviceDisconnected;
+            _portManager.MessageReceived += OnMessageReceived;
 
             Properties = new DeviceProperties
             {
@@ -36,6 +41,7 @@ namespace CapnoAnalyzer.Models.Device
 
             SendMessageCommand = new DeviceRelayCommand(SendMessage, CanSendMessage);
             AutoSendMessageCommand = new DeviceRelayCommand(ToggleAutoSend);
+            AutoSaveDataCommand = new DeviceRelayCommand(ToggleAutoSaveData);
 
             // İşlemi başlat
             InitializeDeviceAsync();
@@ -58,8 +64,118 @@ namespace CapnoAnalyzer.Models.Device
         }
         #endregion
 
+        #region Otomatik Veri Kaydetme
+
+        // Otomatik veri kaydetme için gerekli alanlar
+        private StreamWriter _autoSaveWriter;
+        private string _autoSaveFilePath;
+        private bool _autoSaveDataActive;
+
+        // "Save Data" aktif mi?
+        public bool AutoSaveDataActive
+        {
+            get => _autoSaveDataActive;
+            set => SetProperty(ref _autoSaveDataActive, value);
+        }
+
+        /// <summary>
+        /// Kullanıcı arayüzündeki "Save Data" (AutoSaveData) CheckBox’ı
+        /// işaretlenip/işareti kaldırıldığında tetiklenir.
+        /// </summary>
+        public void ToggleAutoSaveData()
+        {
+            if (AutoSaveDataActive)
+            {
+                // Şu anda aktifse kapat
+                StopAutoSaveData();
+            }
+            else
+            {
+                // Kapalıysa başlat
+                StartAutoSaveData();
+            }
+        }
+
+        /// <summary>
+        /// Yeni bir .txt dosyası oluşturur ve yazıma hazırlar.
+        /// </summary>
+        private void StartAutoSaveData()
+        {
+            if (AutoSaveDataActive) return;  // Zaten aktifse tekrar yapma
+
+            AutoSaveDataActive = true;
+
+            // Masaüstünde klasör ve dosya yolunu oluştur
+            SetAutoSaveFilePath();
+
+            // Dosyayı aç (append:false => yeni)
+            _autoSaveWriter = new StreamWriter(_autoSaveFilePath, append: false);
+
+            // Başlangıç notu (isteğe bağlı)
+            _autoSaveWriter.WriteLine($"=== Log Start for {Properties.PortName} at {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
+            _autoSaveWriter.Flush();
+        }
+
+        /// <summary>
+        /// Açık dosyayı "Log End" satırı yazarak kapatır, kaynakları temizler.
+        /// </summary>
+        private void StopAutoSaveData()
+        {
+            if (!AutoSaveDataActive) return; // Zaten kapalıysa çık
+
+            AutoSaveDataActive = false;
+
+            if (_autoSaveWriter != null)
+            {
+                // Bitiş notu (isteğe bağlı)
+                _autoSaveWriter.WriteLine($"=== Log End at {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
+                _autoSaveWriter.Flush();
+                _autoSaveWriter.Close();
+                _autoSaveWriter.Dispose();
+                _autoSaveWriter = null;
+            }
+        }
+
+        /// <summary>
+        /// Masaüstünde "CapnoLogs" klasörü içinde
+        /// "PortName_yyyyMMdd_HHmmss.txt" formatında bir log dosyası belirler.
+        /// </summary>
+        private void SetAutoSaveFilePath()
+        {
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string logFolder = Path.Combine(desktopPath, "CapnoLogs");
+            Directory.CreateDirectory(logFolder);
+
+            // Örnek dosya adı: "COM3_20250409_153000.txt"
+            string fileName = $"{Properties.PortName}_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+            _autoSaveFilePath = Path.Combine(logFolder, fileName);
+        }
+
+        /// <summary>
+        /// SerialPortsManager tarafından herhangi bir porttan veri geldiğinde
+        /// tetiklenen olaydır. Bu veri gerçekten bu cihaza (this.PortName) aitse 
+        /// ve Save Data aktifse, dosyaya yazar.
+        /// </summary>
+        private void OnMessageReceived(string receivedPortName, string data)
+        {
+            // Bu cihazın portu mu?
+            if (Properties.PortName == receivedPortName)
+            {
+                // "Save Data" aktifse ve dosya açıksa
+                if (AutoSaveDataActive && _autoSaveWriter != null)
+                {
+                    // Zaman damgası ekleyerek log
+                    string timeStamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                    _autoSaveWriter.WriteLine($"[{timeStamp}] {data}");
+                    _autoSaveWriter.Flush();  // Her satırda flush ederseniz anlık yazılır
+                }
+            }
+        }
+        #endregion
+
+
         #region Otomatik Mesaj Gönderme
-        private bool _autoSendActive;
+        private bool _autoSendActive = false;
         public bool AutoSendActive
         {
             get => _autoSendActive;

@@ -114,7 +114,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             // Veri tamponlarını sıfırla
             _refDataBuffer.Clear();
             _gasDataBuffer.Clear();
-
+            MainSampleMaxTimeCount = 0;
             foreach (var device in Devices.IdentifiedDevices)
             {
                 _refDataBuffer[device.Properties.ProductId] = new List<double>();

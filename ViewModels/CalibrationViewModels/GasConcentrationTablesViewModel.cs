@@ -6,8 +6,14 @@ using CapnoAnalyzer.Helpers;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.Optimization;
+using Microsoft.Office.Interop.Excel;
+using System.Collections.ObjectModel;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using System.IO;
 using OxyPlot;
 using OxyPlot.Series;
+using System.Text;
+using System.Globalization;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
@@ -36,6 +42,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         }
 
         public ICommand CalculateCommand { get; }
+        public ICommand ExportCommand { get; }
 
         public string DeviceName { get; }
 
@@ -47,8 +54,196 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
             PlotModel = new PlotModel { Title = $"Cihaz: {deviceName} - Model: y = a(1 - e^{{-bx^c}})" };
             CalculateCommand = new RelayCommand(_ => CalculateCoefficients(), _ => CanCalculate());
+            ExportCommand = new RelayCommand(_ => ExportToFile(), _ => DeviceData.Any());
+
         }
 
+        // TXT ve CSV dosyasına çıktı
+        private void ExportToFile()
+        {
+            // Sadece bir kez klasör seçme diyaloğu açalım
+            using (var dialog = new CommonOpenFileDialog())
+            {
+                dialog.Title = "Dosyaların kaydedileceği klasörü seçiniz.";
+                dialog.IsFolderPicker = true; // Klasör seçimi olsun
+                dialog.EnsurePathExists = true;
+                dialog.Multiselect = false;
+
+                var result = dialog.ShowDialog();
+
+                // CommonFileDialogResult.Ok
+                if (result == CommonFileDialogResult.Ok && !string.IsNullOrWhiteSpace(dialog.FileName))
+                {
+                    // Seçilen klasör yolu
+                    string folderPath = dialog.FileName;
+
+                    // Seçilen klasöre hem txt hem de csv çıkartmak için
+                    try
+                    {
+                        ExportToTxt(folderPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"Txt dosyası oluşturulurken hata oluştu: {ex.Message}",
+                            "Hata",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Error
+                        );
+                    }
+
+                    try
+                    {
+                        ExportToCsv(folderPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"CSV dosyası oluşturulurken hata oluştu: {ex.Message}",
+                            "Hata",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Error
+                        );
+                    }
+                }
+                else
+                {
+                    // Kullanıcı klasör seçmediyse veya iptal ettiyse
+                    System.Windows.MessageBox.Show(
+                        "Klasör seçilmedi. Kayıt işlemi iptal edildi.",
+                        "Uyarı",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning
+                    );
+                }
+            }
+        }
+
+        // TXT oluşturma metodu
+        private void ExportToTxt(string folderPath)
+        {
+            // TXT dosya adı
+            string fileName = $"{DeviceName}_CalibrationData.txt";
+            // Tam dosya yolu
+            string filePath = Path.Combine(folderPath, fileName);
+
+            // Eğer aynı isimde dosya varsa önce silelim
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+
+            // Dosya içeriğini oluştur
+            var sb = new StringBuilder();
+
+            // -- Cihaz Bilgileri ve Katsayılar
+            sb.AppendLine("Cihaz Bilgileri ve Katsayılar");
+            sb.AppendLine($"Cihaz Adı\t{DeviceName}");
+            sb.AppendLine($"A\t{Coefficients.A}");
+            sb.AppendLine($"B\t{Coefficients.B}");
+            sb.AppendLine($"C\t{Coefficients.C}");
+            sb.AppendLine($"R Kare\t{Coefficients.R}");
+            sb.AppendLine();  // Boş satır
+
+            // -- Ölçüm Verileri
+            sb.AppendLine("Ölçüm Verileri");
+            sb.AppendLine("Gaz Konsantrasyonu\tGaz\tReferans\tOran\tTransmittans\tAbsorpsiyon\tTahmin Edilen Absorpsiyon\tTahmin Edilen Gaz Konsantrasyonu");
+
+            foreach (var data in DeviceData)
+            {
+                sb.AppendLine(
+                    $"{data.GasConcentration}\t" +
+                    $"{data.Gas}\t" +
+                    $"{data.Ref}\t" +
+                    $"{data.Ratio}\t" +
+                    $"{data.Transmittance}\t" +
+                    $"{data.Absorption}\t" +
+                    $"{data.PredictedAbsorption}\t" +
+                    $"{data.PredictedGasConcentration}"
+                );
+            }
+
+            // Dosyayı UTF-8 olarak yazma
+            File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+
+            // Başarılı mesajı
+            System.Windows.MessageBox.Show(
+                $"Txt dosyası başarıyla oluşturuldu:\n{filePath}",
+                "Başarılı",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information
+            );
+        }
+
+        // CSV oluşturma metodu (noktalı virgül, UTF-8, InvariantCulture)
+        private void ExportToCsv(string folderPath)
+        {
+            // CSV dosya adı
+            string fileName = $"{DeviceName}_CalibrationData.csv";
+            // Tam dosya yolu
+            string filePath = Path.Combine(folderPath, fileName);
+
+            // Eğer aynı isimde dosya varsa önce silelim
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+
+            // CSV içeriğini oluşturma
+            var sb = new StringBuilder();
+
+            // Ondalıklar için InvariantCulture
+            var ci = CultureInfo.InvariantCulture;
+
+            // CSV standardına uygun şekilde hücreleri tırnaklamak için yardımcı fonksiyon
+            string CsvEscape(string val)
+            {
+                if (val == null) return "\"\"";
+                val = val.Replace("\"", "\"\""); // İçerideki tırnakları çift tırnak ile kaçır
+                return $"\"{val}\"";
+            }
+
+            // -- Cihaz Bilgileri ve Katsayılar
+            sb.AppendLine("Cihaz Bilgileri ve Katsayılar");
+            sb.AppendLine($"Cihaz Adı;{CsvEscape(DeviceName)}");
+            sb.AppendLine($"A;{CsvEscape(Coefficients.A.ToString(ci))}");
+            sb.AppendLine($"B;{CsvEscape(Coefficients.B.ToString(ci))}");
+            sb.AppendLine($"C;{CsvEscape(Coefficients.C.ToString(ci))}");
+            sb.AppendLine($"R Kare;{CsvEscape(Coefficients.R.ToString(ci))}");
+            sb.AppendLine(); // Boşluk bırak
+
+            // -- Ölçüm Verileri
+            sb.AppendLine("Ölçüm Verileri");
+            sb.AppendLine("Gaz Konsantrasyonu;Gaz;Referans;Oran;Transmittans;Absorpsiyon;Tahmin Edilen Absorpsiyon;Tahmin Edilen Gaz Konsantrasyonu");
+
+            foreach (var data in DeviceData)
+            {
+                // Her bir değeri string'e dönüştürüp tırnaklıyoruz
+                string gc = CsvEscape(data.GasConcentration.ToString(ci));
+                string gas = CsvEscape(data.Gas.ToString(ci));
+                string r = CsvEscape(data.Ref.ToString(ci));
+                double ratio_temp = data.Ratio ?? 0.0;
+                string ratio = CsvEscape(ratio_temp.ToString(ci));
+                double transmittance_temp = data.Ratio ?? 0.0;
+                string trans = CsvEscape(transmittance_temp.ToString(ci));
+                string abs = CsvEscape((data.Absorption ?? 0.0).ToString(ci));
+                string predAbs = CsvEscape((data.PredictedAbsorption ?? 0.0).ToString(ci));
+                string predGas = CsvEscape((data.PredictedGasConcentration ?? 0.0).ToString(ci));
+
+                sb.AppendLine($"{gc};{gas};{r};{ratio};{trans};{abs};{predAbs};{predGas}");
+            }
+
+            // Dosyayı UTF-8 olarak yazma
+            File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+
+            // Başarılı mesajı
+            System.Windows.MessageBox.Show(
+                $"CSV dosyası başarıyla oluşturuldu:\n{filePath}",
+                "Başarılı",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Information
+            );
+        }
         public void AddDeviceData(DeviceData data)
         {
             DeviceData.Add(data);
@@ -58,9 +253,22 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         {
             try
             {
-                double zero = DeviceData.First(d => d.GasConcentration == 0.00).Gas /
-                     DeviceData.First(d => d.GasConcentration == 0.00).Ref;
+                // (1) Hesaplamalara başlamadan önce veri setinizi sıralayın:
+                SortDeviceDataByGasConcentration();
 
+                // (2) Sıfır konsantrasyonlu ölçümü bulma (örneğin 0.00)
+                // Burada .First(...) yerine .FirstOrDefault(...) kullanarak hata almaktan kaçınabilirsiniz.
+                var zeroData = DeviceData.FirstOrDefault(d => Math.Abs(d.GasConcentration) < 1e-9);
+                if (zeroData == null)
+                {
+                    // 0.00 konsantrasyonlu veri yoksa hesaplamadan çıkabilirsiniz veya uyarı verebilirsiniz
+                    System.Windows.MessageBox.Show("0.00 konsantrasyonlu satır bulunamadı!");
+                    return;
+                }
+
+                double zero = zeroData.Gas / zeroData.Ref;
+
+                // (3) Ratio, Transmittance, Absorption hesaplamaları
                 foreach (var data in DeviceData)
                 {
                     data.Ratio = data.Gas / data.Ref;
@@ -68,18 +276,23 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                     data.Absorption = 1 - data.Transmittance;
                 }
 
+                // (4) Optimize etmek üzere dizi haline getirelim
                 var gasConcentration = DeviceData.Select(d => d.GasConcentration).ToArray();
                 var absorption = DeviceData.Select(d => d.Absorption ?? 0.0).ToArray();
 
+                // (5) NelderMeadSimplex optimizasyonu + Plot çizimi
                 PlotAndOptimize(gasConcentration, absorption);
 
+                // (6) Optimize sonuçları ile tahmini değerler
                 foreach (var data in DeviceData)
                 {
                     data.PredictedAbsorption = model(
                         Vector<double>.Build.DenseOfArray(new[] { Coefficients.A, Coefficients.B, Coefficients.C }),
                         data.GasConcentration);
 
-                    if (data.Absorption.HasValue && data.Absorption.Value > 0 && data.Absorption.Value < Coefficients.A)
+                    if (data.Absorption.HasValue &&
+                        data.Absorption.Value > 0 &&
+                        data.Absorption.Value < Coefficients.A)
                     {
                         data.PredictedGasConcentration = Math.Pow(
                             -Math.Log(1 - (data.Absorption.Value / Coefficients.A)) / Coefficients.B,
@@ -91,6 +304,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                     }
                 }
 
+                // (7) R² hesaplama
                 double meanGasConc = DeviceData.Average(d => d.GasConcentration);
                 double sst = DeviceData.Sum(d => Math.Pow(d.GasConcentration - meanGasConc, 2));
                 double sse = DeviceData
@@ -99,7 +313,27 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
                 Coefficients.R = 1 - (sse / sst);
             }
-            catch (Exception){}       
+            catch (Exception ex)
+            {
+                // İster loglayın, ister mesaj kutusunda gösterin:
+                // System.Windows.MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void SortDeviceDataByGasConcentration()
+        {
+            // ObservableCollection üzerinde sıralama yapabilmek için önce List'e çeviriyoruz
+            var sortedList = DeviceData.OrderBy(d => d.GasConcentration).ToList();
+
+            // Eski verileri temizle
+            DeviceData.Clear();
+
+            // Sıralanmış verileri yeniden ekle
+            foreach (var item in sortedList)
+            {
+                DeviceData.Add(item);
+            }
+            // DataGrid, ItemsSource = DeviceData şeklinde bağlıysa anında güncellenecektir.
         }
 
         private void PlotAndOptimize(double[] x, double[] y)

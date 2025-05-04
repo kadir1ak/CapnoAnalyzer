@@ -9,7 +9,6 @@ using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.Optimization;
 using OxyPlot;
 using OxyPlot.Series;
-using static CapnoAnalyzer.Models.Device.DeviceData;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
@@ -25,7 +24,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         };
 
         // Özellikler
-        public ObservableCollection<DeviceData> DeviceData { get; set; }
+        public ObservableCollection<Data> DeviceData { get; set; }
         public Coefficients Coefficients { get; set; }
 
         private PlotModel _plotModel;
@@ -44,7 +43,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         public SampleGasConcentrationTableViewModel()
         {
-            DeviceData = new ObservableCollection<DeviceData>();
+            DeviceData = new ObservableCollection<Data>();
             Coefficients = new Coefficients();
             PlotModel = new PlotModel { Title = "Nonlineer Model Fit: y = a(1 - e^{-bx^c})" };
             LoadData();
@@ -56,21 +55,21 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         {
             var deviceData = new[]
             {
-                new DeviceData { Sample = "1", GasConcentration = 0.00, Ref = 2688.4988, Gas = 4912.5496 },
-                new DeviceData { Sample = "2", GasConcentration = 0.50, Ref = 2686.8541, Gas = 4653.6383 },
-                new DeviceData { Sample = "3", GasConcentration = 1.00, Ref = 2698.5712, Gas = 4482.9614 },
-                new DeviceData { Sample = "4", GasConcentration = 1.50, Ref = 2691.1024, Gas = 4324.9308 },
-                new DeviceData { Sample = "5", GasConcentration = 2.00, Ref = 2698.5963, Gas = 4199.9262 },
-                new DeviceData { Sample = "6", GasConcentration = 2.50, Ref = 2702.6907, Gas = 4104.1672 },
-                new DeviceData { Sample = "7", GasConcentration = 3.00, Ref = 2691.3517, Gas = 3937.3630 },
-                new DeviceData { Sample = "8", GasConcentration = 3.50, Ref = 2690.0622, Gas = 3833.1201 },
-                new DeviceData { Sample = "9", GasConcentration = 4.00, Ref = 2692.0327, Gas = 3692.6704 },
-                new DeviceData { Sample = "10", GasConcentration = 4.50, Ref = 2700.4150, Gas = 3643.4684 },
-                new DeviceData { Sample = "11", GasConcentration = 5.00, Ref = 2690.9841, Gas = 3534.8201 },
-                new DeviceData { Sample = "12", GasConcentration = 5.50, Ref = 2690.0577, Gas = 3456.5425 },
-                new DeviceData { Sample = "13", GasConcentration = 6.00, Ref = 2695.2707, Gas = 3405.8441 },
-                new DeviceData { Sample = "14", GasConcentration = 6.50, Ref = 2693.2138, Gas = 3341.9859 },
-                new DeviceData { Sample = "15", GasConcentration = 7.00, Ref = 2697.0889, Gas = 3300.5941 }
+                new Data { Sample = "1", GasConcentration = 0.00, Ref = 2688.4988, Gas = 4912.5496 },
+                new Data { Sample = "2", GasConcentration = 0.50, Ref = 2686.8541, Gas = 4653.6383 },
+                new Data { Sample = "3", GasConcentration = 1.00, Ref = 2698.5712, Gas = 4482.9614 },
+                new Data { Sample = "4", GasConcentration = 1.50, Ref = 2691.1024, Gas = 4324.9308 },
+                new Data { Sample = "5", GasConcentration = 2.00, Ref = 2698.5963, Gas = 4199.9262 },
+                new Data { Sample = "6", GasConcentration = 2.50, Ref = 2702.6907, Gas = 4104.1672 },
+                new Data { Sample = "7", GasConcentration = 3.00, Ref = 2691.3517, Gas = 3937.3630 },
+                new Data { Sample = "8", GasConcentration = 3.50, Ref = 2690.0622, Gas = 3833.1201 },
+                new Data { Sample = "9", GasConcentration = 4.00, Ref = 2692.0327, Gas = 3692.6704 },
+                new Data { Sample = "10", GasConcentration = 4.50, Ref = 2700.4150, Gas = 3643.4684 },
+                new Data { Sample = "11", GasConcentration = 5.00, Ref = 2690.9841, Gas = 3534.8201 },
+                new Data { Sample = "12", GasConcentration = 5.50, Ref = 2690.0577, Gas = 3456.5425 },
+                new Data { Sample = "13", GasConcentration = 6.00, Ref = 2695.2707, Gas = 3405.8441 },
+                new Data { Sample = "14", GasConcentration = 6.50, Ref = 2693.2138, Gas = 3341.9859 },
+                new Data { Sample = "15", GasConcentration = 7.00, Ref = 2697.0889, Gas = 3300.5941 }
             };
 
             foreach (var data in deviceData)
@@ -186,9 +185,9 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
     }
 
     // Veri model sınıfı
-    public class DeviceData: BindableBase
+    public class Data: BindableBase
     {
-        public DeviceData()
+        public Data()
         {
             Sample = string.Empty;
             GasConcentration = 0.0;

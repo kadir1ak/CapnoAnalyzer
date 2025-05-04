@@ -88,16 +88,14 @@ namespace CapnoAnalyzer.Models.PlotModels
             OnPropertyChanged(nameof(PlotModel));
         }
 
-        public void AddDataPoint(double time, double gasValue, double referenceValue)
+        public void AddDataPoint(double time, double gasValue)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
                 _gasSeries.Points.Add(new DataPoint(time, gasValue));
-                _referenceSeries.Points.Add(new DataPoint(time, referenceValue));
 
                 // 10 saniyeden eski verileri sil (1000 ms * 10) (Zaman bazlı silme)
                 _gasSeries.Points.RemoveAll((p => p.X < time - PlotTime));
-                _referenceSeries.Points.RemoveAll((p => p.X < time - PlotTime));
 
                 PlotModel.InvalidatePlot(true);
                 OnPropertyChanged(nameof(PlotModel));

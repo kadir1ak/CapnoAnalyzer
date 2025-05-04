@@ -31,7 +31,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             return a * (1 - Math.Exp(-b * Math.Pow(xVal, c)));
         };
 
-        public ObservableCollection<DeviceData> DeviceData { get; set; }
+        public ObservableCollection<Data> DeviceData { get; set; }
         public Coefficients Coefficients { get; set; }
 
         private PlotModel _plotModel;
@@ -53,7 +53,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         public GasConcentrationTablesViewModel(Device devices)
         {
             DeviceName = devices.Properties.ProductId;
-            DeviceData = new ObservableCollection<DeviceData>();
+            DeviceData = new ObservableCollection<Data>();
             Coefficients = new Coefficients();
 
             PlotModel = new PlotModel { Title = $"Cihaz: {DeviceName} - Model: y = a(1 - e^{{-bx^c}})" };
@@ -248,7 +248,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 System.Windows.MessageBoxImage.Information
             );
         }
-        public void AddDeviceData(DeviceData data)
+        public void AddDeviceData(Data data)
         {
             DeviceData.Add(data);
         }

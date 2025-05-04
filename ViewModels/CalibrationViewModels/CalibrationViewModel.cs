@@ -242,7 +242,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 var lastSample = table.DeviceData.LastOrDefault();
                 int newSampleNumber = lastSample != null ? int.Parse(lastSample.Sample) + 1 : 1;
 
-                var newDeviceData = new DeviceData
+                var newDeviceData = new Data
                 {
                     Sample = newSampleNumber.ToString(),
                     GasConcentration = (double)AppliedGasConcentration,

@@ -13,6 +13,13 @@ namespace CapnoAnalyzer.Models.Device
             get => _time;
             set => SetProperty(ref _time, value);
         }
+        // GasSensorBandValue Özelliği
+        private double _gasSensorBandValue;
+        public double GasSensorBandValue
+        {
+            get => _gasSensorBandValue;
+            set => SetProperty(ref _gasSensorBandValue, value);
+        }
 
         // GasSensorMaxValue Özelliği
         private double _gasSensorMaxValue;
@@ -28,6 +35,14 @@ namespace CapnoAnalyzer.Models.Device
         {
             get => _gasSensorMinValue;
             set => SetProperty(ref _gasSensorMinValue, value);
+        }
+
+        // ReferenceSensorBandValue Özelliği
+        private double _referenceSensorBandValue;
+        public double ReferenceSensorBandValue
+        {
+            get => _referenceSensorBandValue;
+            set => SetProperty(ref _referenceSensorBandValue, value);
         }
 
         // ReferenceSensorMaxValue Özelliği

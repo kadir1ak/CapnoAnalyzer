@@ -52,15 +52,15 @@
 
         <!-- NDIRGas Coefficients -->
         <Border Grid.Row="0" Grid.Column="0" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="3">
-                <GroupBox Header="Uygulanan Gaz Konsantrasyonu" FontWeight="Bold" FontSize="16" Margin="0,0,0,0" Padding="0">
+            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2">
+                <GroupBox Header="Uygulanan Gaz Konsantrasyonu" FontWeight="Bold" FontSize="14" Margin="0,0,0,0" Padding="0">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <TextBox x:Name="AppliedGasConcentration"  IsEnabled="{Binding IsInputEnabled}"
                                     Text="{Binding AppliedGasConcentration, Mode=TwoWay, StringFormat=F2, UpdateSourceTrigger=PropertyChanged}" 
                                     Foreground="#FF009E4B" 
                                     FontSize="24" 
-                                    Height="36" 
+                                    Height="32" 
                                     Width="150" 
                                     FontWeight="Bold" TextChanged="AppliedGasConcentration_TextChanged"/>
                             <TextBlock 
@@ -77,7 +77,7 @@
 
         <Border Grid.Row="0" Grid.Column="1" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
-                <Button Width="150" Height="50" FontWeight="Bold" Command="{Binding AppliedGasCommand}" IsEnabled="{Binding IsInputEnabled}">
+                <Button Width="150" Height="36" FontWeight="Bold" Command="{Binding AppliedGasCommand}" IsEnabled="{Binding IsInputEnabled}">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border CornerRadius="10" Background="{TemplateBinding Background}" BorderBrush="Black" BorderThickness="1">

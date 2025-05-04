@@ -254,8 +254,8 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _incomingMessage, value);
         }
         
-        private DeviceData _deviceData = new();
-        public DeviceData DeviceData
+        private DeviceDataType _deviceData = new();
+        public DeviceDataType DeviceData
         {
             get => _deviceData;
             set => SetProperty(ref _deviceData, value);
@@ -370,12 +370,14 @@ namespace CapnoAnalyzer.Models.Device
                         {
                             Interface.Data.GasSensorMaxValue = gasSensorValues.Max();
                             Interface.Data.GasSensorMinValue = gasSensorValues.Min();
+                            Interface.Data.GasSensorBandValue = Math.Abs(gasSensorValues.Max() - gasSensorValues.Min());
                         }
 
                         if (referenceSensorValues.Any())
                         {
                             Interface.Data.ReferenceSensorMaxValue = referenceSensorValues.Max();
                             Interface.Data.ReferenceSensorMinValue = referenceSensorValues.Min();
+                            Interface.Data.ReferenceSensorBandValue = Math.Abs(referenceSensorValues.Max() - referenceSensorValues.Min());
                         }
                     }
                 }, cancellationTokenSource.Token);

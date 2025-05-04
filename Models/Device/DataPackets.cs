@@ -208,48 +208,24 @@ namespace CapnoAnalyzer.Models.Device
     }
 
     // Cihaz Veri Paketi 
-    public class DeviceData : BindableBase
+    public class DeviceDataType : BindableBase
     {
-        // Constructor
-        public DeviceData()
+        // Özellikler
+        // 🔧 Constructor
+        public DeviceDataType()
         {
-            SensorDataType SensorData = new SensorDataType();
-            CalibrationDataType CalibrationData = new CalibrationDataType();
-            CoefficientsType CalibrationCoefficients = new CoefficientsType();
+            SensorData = new SensorDataType();
+            CalibrationData = new CalibrationDataType();
+            CalibrationCoefficients = new CoefficientsType();
         }
 
         // Özellikler
-        private SensorDataType _sensorData;
-        public SensorDataType SensorData
-        {
-            get => _sensorData;
-            set => SetProperty(ref _sensorData, value);
-        }
-
-        private CalibrationDataType _calibrationData;
-        public CalibrationDataType CalibrationData
-        {
-            get => _calibrationData;
-            set => SetProperty(ref _calibrationData, value);
-        }
-            
-        private CoefficientsType _calibrationCoefficients;
-        public CoefficientsType CalibrationCoefficients
-        {
-            get => _calibrationCoefficients;
-            set => SetProperty(ref _calibrationCoefficients, value);
-        }
+        public SensorDataType SensorData { get; set; }
+        public CalibrationDataType CalibrationData { get; set; }
+        public CoefficientsType CalibrationCoefficients { get; set; }
         // Veri model sınıfı
         public class SensorDataType : BindableBase
-        {
-            public SensorDataType()
-            {
-                Time = 0.0;
-                IIR_Gas_Voltage = 0.0;
-                IIR_Ref_Voltage = 0.0;
-                IR_Status = 0.0;
-            }
-
+        {          
             private double _time;
             public double Time
             {
@@ -283,19 +259,6 @@ namespace CapnoAnalyzer.Models.Device
         // Veri model sınıfı
         public class CalibrationDataType : BindableBase
         {
-            public CalibrationDataType()
-            {
-                Sample = string.Empty;
-                GasConcentration = 0.0;
-                Ref = 0.0;
-                Gas = 0.0;
-                Ratio = null;
-                Transmittance = null;
-                Absorption = null;
-                PredictedAbsorption = null;
-                PredictedGasConcentration = null;
-            }
-
             private string _sample;
             public string Sample
             {
@@ -399,14 +362,6 @@ namespace CapnoAnalyzer.Models.Device
         // Katsayılar sınıfı
         public class CoefficientsType : BindableBase
         {
-            public CoefficientsType()
-            {
-                A = 0.0;
-                B = 0.0;
-                C = 0.0;
-                R = 0.0;
-            }   
-
             private double _a;
             public double A
             {

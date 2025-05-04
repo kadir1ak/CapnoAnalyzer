@@ -17,7 +17,7 @@ namespace CapnoAnalyzer.Models.Device
             SensorPlot = new SensorChartModel(); // **Her cihaz için yeni bir `PlotModel`**
             CalculatedGasPlot = new CalculatedGasChartModel(); // **Her cihaz için yeni bir `PlotModel`**
             Data = new AllDataPaket();
-            DeviceData = new DeviceData();
+            DeviceData = new DeviceDataType();
             IncomingMessage = new ObservableCollection<string>();
         }
 
@@ -51,8 +51,8 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _data, value);
         }
 
-        private DeviceData _deviceData;
-        public DeviceData DeviceData
+        private DeviceDataType _deviceData;
+        public DeviceDataType DeviceData
         {
             get => _deviceData;
             set => SetProperty(ref _deviceData, value);
@@ -176,11 +176,20 @@ namespace CapnoAnalyzer.Models.Device
         /// <summary>
         /// Sensör verilerini grafik modeline ekler.
         /// </summary>
-        public void UpdatePlot()
+        public void UpdateSensorPlot()
         {
             if (SensorPlot != null)
             {
                 SensorPlot.AddDataPoint(Data.Time, Data.GasSensor, Data.ReferenceSensor);
+               
+            }
+        }
+        public void UpdateCalculatedGasPlot()
+        {
+            if (CalculatedGasPlot != null)
+            {
+                //CalculatedGasPlot.AddDataPoint(Data.Time, Data.GasSensor);
+                CalculatedGasPlot.AddDataPoint(DeviceData.SensorData.Time, DeviceData.SensorData.IIR_Gas_Voltage);
             }
         }
 
@@ -203,6 +212,11 @@ namespace CapnoAnalyzer.Models.Device
                         Data.ReferenceSensor = device.DataPacket_1.ReferenceSensor;
                         Data.Temperature = device.DataPacket_1.Temperature;
                         Data.Humidity = device.DataPacket_1.Humidity;
+
+                        DeviceData.SensorData.Time = device.DeviceData.SensorData.Time;
+                        DeviceData.SensorData.IIR_Gas_Voltage = device.DeviceData.SensorData.IIR_Gas_Voltage;
+                        DeviceData.SensorData.IIR_Ref_Voltage = device.DeviceData.SensorData.IIR_Ref_Voltage;
+                        DeviceData.SensorData.IR_Status = device.DeviceData.SensorData.IR_Status;
                     }
                     else if (device.Properties.DataPacketType == "2")
                     {
@@ -216,6 +230,26 @@ namespace CapnoAnalyzer.Models.Device
                         Data.GainAdsVoltagesF = device.DataPacket_2.GainAdsVoltagesF;
                         Data.GainAdsVoltagesIIR = device.DataPacket_2.GainAdsVoltagesIIR;
                         Data.IrStatus = device.DataPacket_2.IrStatus;
+
+                        DeviceData.SensorData.Time = device.DeviceData.SensorData.Time;
+                        DeviceData.SensorData.IIR_Gas_Voltage = device.DeviceData.SensorData.IIR_Gas_Voltage;
+                        DeviceData.SensorData.IIR_Ref_Voltage = device.DeviceData.SensorData.IIR_Ref_Voltage;
+                        DeviceData.SensorData.IR_Status = device.DeviceData.SensorData.IR_Status;
+
+                        DeviceData.CalibrationCoefficients.A = device.DeviceData.CalibrationCoefficients.A;
+                        DeviceData.CalibrationCoefficients.B = device.DeviceData.CalibrationCoefficients.B;
+                        DeviceData.CalibrationCoefficients.C = device.DeviceData.CalibrationCoefficients.C;
+                        DeviceData.CalibrationCoefficients.R = device.DeviceData.CalibrationCoefficients.R;
+
+                        DeviceData.CalibrationData.Sample = device.DeviceData.CalibrationData.Sample;
+                        DeviceData.CalibrationData.GasConcentration = device.DeviceData.CalibrationData.GasConcentration;
+                        DeviceData.CalibrationData.Ref = device.DeviceData.CalibrationData.Ref;
+                        DeviceData.CalibrationData.Gas = device.DeviceData.CalibrationData.Gas;
+                        DeviceData.CalibrationData.Ratio = device.DeviceData.CalibrationData.Ratio;
+                        DeviceData.CalibrationData.Transmittance = device.DeviceData.CalibrationData.Transmittance;
+                        DeviceData.CalibrationData.Absorption = device.DeviceData.CalibrationData.Absorption;
+                        DeviceData.CalibrationData.PredictedAbsorption = device.DeviceData.CalibrationData.PredictedAbsorption;
+                        DeviceData.CalibrationData.PredictedGasConcentration = device.DeviceData.CalibrationData.PredictedGasConcentration;
                     }
                     else if (device.Properties.DataPacketType == "3")
                     {
@@ -227,6 +261,11 @@ namespace CapnoAnalyzer.Models.Device
                         Data.Ch1 = device.DataPacket_3.Ch1;
                         Data.Frame = device.DataPacket_3.Frame;
                         Data.Emitter = device.DataPacket_3.Emitter;
+
+                        DeviceData.SensorData.Time = device.DeviceData.SensorData.Time;
+                        DeviceData.SensorData.IIR_Gas_Voltage = device.DeviceData.SensorData.IIR_Gas_Voltage;
+                        DeviceData.SensorData.IIR_Ref_Voltage = device.DeviceData.SensorData.IIR_Ref_Voltage;
+                        DeviceData.SensorData.IR_Status = device.DeviceData.SensorData.IR_Status;
                     }
 
                     // 
@@ -254,26 +293,16 @@ namespace CapnoAnalyzer.Models.Device
                         Data.DataPacket_2_Status = Visibility.Collapsed;
                         Data.DataPacket_3_Status = Visibility.Collapsed;
                     }
-
-                    try
-                    {
-                        // TODO: Cihaz kalibrasyon değelerini göster
-
-                        DeviceData.CalibrationCoefficients.A = device.DeviceData.CalibrationCoefficients.A;
-                        DeviceData.CalibrationCoefficients.B = device.DeviceData.CalibrationCoefficients.B;
-                        DeviceData.CalibrationCoefficients.C = device.DeviceData.CalibrationCoefficients.C;
-                        DeviceData.CalibrationCoefficients.R = device.DeviceData.CalibrationCoefficients.R;
-                        DeviceData.CalibrationData.GasConcentration = device.DeviceData.CalibrationData.GasConcentration;
-                    }
-                    catch (Exception)
-                    {
-                        
-                    }
-      
-
                     // Grafiği güncelle
-                    UpdatePlot();
-                });            
+                    UpdateSensorPlot();
+                    UpdateCalculatedGasPlot();
+                });
+                /*
+                DeviceData.SensorData.Time = device.DeviceData.SensorData.Time;
+                DeviceData.SensorData.IIR_Gas_Voltage = device.DeviceData.SensorData.IIR_Gas_Voltage;
+                DeviceData.SensorData.IIR_Ref_Voltage = device.DeviceData.SensorData.IIR_Ref_Voltage;
+                DeviceData.SensorData.IR_Status = device.DeviceData.SensorData.IR_Status;
+                */
             }
             catch (Exception) { }
         }

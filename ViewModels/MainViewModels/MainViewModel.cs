@@ -102,7 +102,9 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
             foreach (var device in DevicesVM.IdentifiedDevices)
             {
                 device.Interface.SensorPlot.PlotTime = SettingVM.CurrentSetting.PlotTime;
-                device.Interface.UpdatePlot();
+                device.Interface.CalculatedGasPlot.PlotTime = SettingVM.CurrentSetting.PlotTime;
+                device.Interface.UpdateSensorPlot();
+                device.Interface.UpdateCalculatedGasPlot();
             }
         }
 

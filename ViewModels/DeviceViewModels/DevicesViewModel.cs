@@ -14,6 +14,7 @@ using CapnoAnalyzer.Views.DevicesViews.Devices;
 using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
 using System;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
+using MathNet.Numerics.Distributions;
 namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 {
     public class DevicesViewModel : BindableBase
@@ -31,8 +32,27 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         //public CalibrationViewModel CalibrationVM = new CalibrationViewModel();
 
         // -- 1) Bağlı Cihazların Listesi --
-        public ObservableCollection<Device> ConnectedDevices { get; } = new ObservableCollection<Device>();
-        public ObservableCollection<Device> IdentifiedDevices { get; } = new ObservableCollection<Device>();
+        private ObservableCollection<Device> _connectedDevices = new();
+        public ObservableCollection<Device> ConnectedDevices
+        {
+            get => _connectedDevices;
+            set
+            {
+                _connectedDevices = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private ObservableCollection<Device> _identifiedDevices = new();
+        public ObservableCollection<Device> IdentifiedDevices
+        {
+            get => _identifiedDevices;
+            set
+            {
+                _identifiedDevices = value;
+                OnPropertyChanged();
+            }
+        }
 
         // -- 2) Manager'dan gelen port listeleri -- 
         public ObservableCollection<SerialPort> ConnectedPorts => PortManager.ConnectedPorts;
@@ -612,33 +632,6 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             }
         }
 
-        private void UpdateDeviceData(Device device, double time, double iirGas, double iirRRef, double irStatus)
-        {
-            try
-            {
-                if (Application.Current?.Dispatcher.CheckAccess() == true)
-                {
-                    // Verileri güncelle
-                    device.DeviceData.SensorData.Time = time;
-                    device.DeviceData.SensorData.IIR_Gas_Voltage = iirGas;
-                    device.DeviceData.SensorData.IIR_Ref_Voltage = iirRRef;
-                    device.DeviceData.SensorData.IR_Status = irStatus;
-                }
-                else
-                {
-                    // Dispatcher kullanarak verileri güncelle
-                    Application.Current?.Dispatcher.Invoke(() =>
-                    {
-                        device.DeviceData.SensorData.Time = time;
-                        device.DeviceData.SensorData.IIR_Gas_Voltage = iirGas;
-                        device.DeviceData.SensorData.IIR_Ref_Voltage = iirRRef;
-                        device.DeviceData.SensorData.IR_Status = irStatus;
-                    });
-                }
-            }
-            catch (Exception){ }          
-        }
-    
         private void UpdateDeviceDataPacket_1(Device device, string data)
         {
             // Veriyi ayrıştır ve UI güncellemesini yap
@@ -658,6 +651,11 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     device.DataPacket_1.ReferenceSensor = ch2;
                     device.DataPacket_1.Temperature = temp;
                     device.DataPacket_1.Humidity = hum;
+
+                    device.DeviceData.SensorData.Time = time;
+                    device.DeviceData.SensorData.IIR_Gas_Voltage = ch1;
+                    device.DeviceData.SensorData.IIR_Ref_Voltage = ch2;
+                    device.DeviceData.SensorData.IR_Status = 0.0;
                 }
                 else
                 {
@@ -669,9 +667,13 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DataPacket_1.ReferenceSensor = ch2;
                         device.DataPacket_1.Temperature = temp;
                         device.DataPacket_1.Humidity = hum;
+
+                        device.DeviceData.SensorData.Time = time;
+                        device.DeviceData.SensorData.IIR_Gas_Voltage = ch1;
+                        device.DeviceData.SensorData.IIR_Ref_Voltage = ch2;
+                        device.DeviceData.SensorData.IR_Status = 0.0;
                     });
                 }
-                UpdateDeviceData(device, time, ch1, ch2, 0.0); 
             }
         }
         private void UpdateDeviceDataPacket_2(Device device, string data)
@@ -717,6 +719,11 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2 * 10.0, voltF3 * 10.0 };
                     device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2 * 10.0, voltIIR3 * 10.0 };
                     device.DataPacket_2.IrStatus = irStatus;
+
+                    device.DeviceData.SensorData.Time = time;
+                    device.DeviceData.SensorData.IIR_Gas_Voltage = voltIIR2 * 10.0;
+                    device.DeviceData.SensorData.IIR_Ref_Voltage = voltIIR3 * 10.0;
+                    device.DeviceData.SensorData.IR_Status = irStatus;
                 }
                 else
                 {
@@ -730,9 +737,13 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2 * 10.0, voltF3 * 10.0 };
                         device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2 * 10.0, voltIIR3 * 10.0 };
                         device.DataPacket_2.IrStatus = irStatus;
+
+                        device.DeviceData.SensorData.Time = time;
+                        device.DeviceData.SensorData.IIR_Gas_Voltage = voltIIR2 * 10.0;
+                        device.DeviceData.SensorData.IIR_Ref_Voltage = voltIIR3 * 10.0;
+                        device.DeviceData.SensorData.IR_Status = irStatus;
                     });
                 }
-                UpdateDeviceData(device, time, voltIIR2 * 10.0, voltIIR3 * 10.0, irStatus); // IIR voltajlarını güncelle
             }
         }
 
@@ -754,6 +765,11 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     device.DataPacket_3.Ch1 = ch1;
                     device.DataPacket_3.Frame = frame;
                     device.DataPacket_3.Emitter = emitter;
+
+                    device.DeviceData.SensorData.Time = time;
+                    device.DeviceData.SensorData.IIR_Gas_Voltage = ch0;
+                    device.DeviceData.SensorData.IIR_Ref_Voltage = ch1;
+                    device.DeviceData.SensorData.IR_Status = emitter;
                 }
                 else
                 {
@@ -764,9 +780,13 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DataPacket_3.Ch1 = ch1;
                         device.DataPacket_3.Frame = frame;
                         device.DataPacket_3.Emitter = emitter;
+
+                        device.DeviceData.SensorData.Time = time;
+                        device.DeviceData.SensorData.IIR_Gas_Voltage = ch0;
+                        device.DeviceData.SensorData.IIR_Ref_Voltage = ch1;
+                        device.DeviceData.SensorData.IR_Status = emitter;
                     });
                 }
-                UpdateDeviceData(device, time, ch0, ch1, emitter);
             }
         }
     }

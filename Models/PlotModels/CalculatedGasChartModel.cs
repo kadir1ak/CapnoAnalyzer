@@ -1,15 +1,18 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Windows;
-using OxyPlot;
-using OxyPlot.Axes;
-using OxyPlot.Legends;
-using OxyPlot.Series;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using CapnoAnalyzer.Helpers;
+using OxyPlot.Axes;
+using OxyPlot.Series;
+using OxyPlot;
+using System.Windows;
 
 namespace CapnoAnalyzer.Models.PlotModels
 {
-    public class DevicePlot : BindableBase
+
+    public class CalculatedGasChartModel : BindableBase
     {
         private PlotModel _plotModel;
         private LineSeries _gasSeries;
@@ -35,14 +38,14 @@ namespace CapnoAnalyzer.Models.PlotModels
             set => SetProperty(ref _plotTime, value);
         }
 
-        public DevicePlot()
+        public CalculatedGasChartModel()
         {
             InitializePlotModel();
         }
 
         public void InitializePlotModel()
         {
-            PlotModel = new PlotModel {TitleFontSize = 12, Title = "Sensör Verileri" };
+            PlotModel = new PlotModel { TitleFontSize = 12, Title = "Hesaplanan Sensör Verileri" };
 
             // X Ekseni (Zaman)
             PlotModel.Axes.Add(new LinearAxis
@@ -58,33 +61,22 @@ namespace CapnoAnalyzer.Models.PlotModels
             PlotModel.Axes.Add(new LinearAxis
             {
                 Position = AxisPosition.Left,
-                Title = "ADC Değeri",
+                Title = "% Gaz Değeri",
                 FontSize = 10,
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot
             });
 
-            // Gaz Sensörü Serisi
+            // Hesaplanmış Gaz Değeri Serisi
             _gasSeries = new LineSeries
             {
-                Title = "Gas Sensor",
+                Title = "Calculated Gas Value",
                 FontSize = 10,
                 TrackerFormatString = "{0}\nTime: {2:0.000}\nValue: {4:0.000}",
                 Color = OxyColor.Parse("#4CAF50"),
                 StrokeThickness = 2
             };
             PlotModel.Series.Add(_gasSeries);
-
-            // Referans Sensörü Serisi 
-            _referenceSeries = new LineSeries
-            {
-                Title = "Reference Sensor",
-                FontSize = 10,
-                TrackerFormatString = "{0}\nTime: {2:0.000}\nValue: {4:0.000}",
-                Color = OxyColor.Parse("#FF5722"), 
-                StrokeThickness = 2
-            };
-            PlotModel.Series.Add(_referenceSeries);
 
             // Legend (Açıklama)
             //PlotModel.Legends.Add(new Legend

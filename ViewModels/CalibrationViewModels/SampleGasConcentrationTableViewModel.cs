@@ -9,6 +9,7 @@ using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.Optimization;
 using OxyPlot;
 using OxyPlot.Series;
+using static CapnoAnalyzer.Models.Device.DeviceData;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
@@ -187,6 +188,18 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
     // Veri model sınıfı
     public class DeviceData: BindableBase
     {
+        public DeviceData()
+        {
+            Sample = string.Empty;
+            GasConcentration = 0.0;
+            Ref = 0.0;
+            Gas = 0.0;
+            Ratio = null;
+            Transmittance = null;
+            Absorption = null;
+            PredictedAbsorption = null;
+            PredictedGasConcentration = null;                
+        }
 
         private string _sample;
         public string Sample
@@ -291,6 +304,14 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
     // Katsayılar sınıfı
     public class Coefficients : BindableBase
     {
+        public Coefficients()
+        {
+            A = 1.0;
+            B = 1.0;
+            C = 1.0;
+            R = 1.0;
+        }
+
         private double _a;
         public double A
         {

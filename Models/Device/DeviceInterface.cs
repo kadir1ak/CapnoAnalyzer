@@ -14,8 +14,10 @@ namespace CapnoAnalyzer.Models.Device
         public DeviceInterface()
         {
             SampleMode = SampleMode.RMS;
-            SensorPlot = new DevicePlot(); // **Her cihaz için yeni bir `PlotModel`**
+            SensorPlot = new SensorChartModel(); // **Her cihaz için yeni bir `PlotModel`**
+            CalculatedGasPlot = new CalculatedGasChartModel(); // **Her cihaz için yeni bir `PlotModel`**
             Data = new AllDataPaket();
+            DeviceData = new DeviceData();
             IncomingMessage = new ObservableCollection<string>();
         }
 
@@ -47,13 +49,20 @@ namespace CapnoAnalyzer.Models.Device
         {
             get => _data;
             set => SetProperty(ref _data, value);
-        }   
+        }
+
+        private DeviceData _deviceData;
+        public DeviceData DeviceData
+        {
+            get => _deviceData;
+            set => SetProperty(ref _deviceData, value);
+        }
 
         /// <summary>
         /// Grafik modeli (Her cihaz için ayrı bir `DevicePlot` oluşturuluyor).
         /// </summary>
-        private DevicePlot _sensorPlot;
-        public DevicePlot SensorPlot
+        private SensorChartModel _sensorPlot;
+        public SensorChartModel SensorPlot
         {
             get => _sensorPlot;
             set
@@ -61,6 +70,20 @@ namespace CapnoAnalyzer.Models.Device
                 if (_sensorPlot != value)
                 {
                     _sensorPlot = value;
+                    OnPropertyChanged();
+                }
+            }
+        }    
+        
+        private CalculatedGasChartModel _calculatedGasPlot;
+        public CalculatedGasChartModel CalculatedGasPlot
+        {
+            get => _calculatedGasPlot;
+            set
+            {
+                if (_calculatedGasPlot != value)
+                {
+                    _calculatedGasPlot = value;
                     OnPropertyChanged();
                 }
             }
@@ -166,74 +189,94 @@ namespace CapnoAnalyzer.Models.Device
         /// </summary>
         public void SyncWithDevice(Device device)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            try
             {
-                if (device == null) return;
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (device == null) return;
 
-                // Arayüzde gösterilecek verileri güncelle
-                if (device.Properties.DataPacketType == "1")
-                {
-                    Data.Time = device.DataPacket_1.Time;
-                    Data.GasSensor = device.DataPacket_1.GasSensor;
-                    Data.ReferenceSensor = device.DataPacket_1.ReferenceSensor;
-                    Data.Temperature = device.DataPacket_1.Temperature;
-                    Data.Humidity = device.DataPacket_1.Humidity;
-                }
-                else if (device.Properties.DataPacketType == "2")
-                {
-                    Data.Time = device.DataPacket_2.Time;
-                    Data.GasSensor = device.DataPacket_2.GainAdsVoltagesIIR[0];
-                    Data.ReferenceSensor = device.DataPacket_2.GainAdsVoltagesIIR[1];
+                    // Arayüzde gösterilecek verileri güncelle
+                    if (device.Properties.DataPacketType == "1")
+                    {
+                        Data.Time = device.DataPacket_1.Time;
+                        Data.GasSensor = device.DataPacket_1.GasSensor;
+                        Data.ReferenceSensor = device.DataPacket_1.ReferenceSensor;
+                        Data.Temperature = device.DataPacket_1.Temperature;
+                        Data.Humidity = device.DataPacket_1.Humidity;
+                    }
+                    else if (device.Properties.DataPacketType == "2")
+                    {
+                        Data.Time = device.DataPacket_2.Time;
+                        Data.GasSensor = device.DataPacket_2.GainAdsVoltagesIIR[0];
+                        Data.ReferenceSensor = device.DataPacket_2.GainAdsVoltagesIIR[1];
 
-                    Data.AngVoltages = device.DataPacket_2.AngVoltages;
-                    Data.AdsRawValues = device.DataPacket_2.AdsRawValues;
-                    Data.AdsVoltages = device.DataPacket_2.AdsVoltages;
-                    Data.GainAdsVoltagesF = device.DataPacket_2.GainAdsVoltagesF;
-                    Data.GainAdsVoltagesIIR = device.DataPacket_2.GainAdsVoltagesIIR;
-                    Data.IrStatus = device.DataPacket_2.IrStatus;
-                }
-                else if (device.Properties.DataPacketType == "3")
-                {
-                    Data.Time = device.DataPacket_3.Time;
-                    Data.GasSensor = device.DataPacket_3.Ch0;
-                    Data.ReferenceSensor = device.DataPacket_3.Ch1;
+                        Data.AngVoltages = device.DataPacket_2.AngVoltages;
+                        Data.AdsRawValues = device.DataPacket_2.AdsRawValues;
+                        Data.AdsVoltages = device.DataPacket_2.AdsVoltages;
+                        Data.GainAdsVoltagesF = device.DataPacket_2.GainAdsVoltagesF;
+                        Data.GainAdsVoltagesIIR = device.DataPacket_2.GainAdsVoltagesIIR;
+                        Data.IrStatus = device.DataPacket_2.IrStatus;
+                    }
+                    else if (device.Properties.DataPacketType == "3")
+                    {
+                        Data.Time = device.DataPacket_3.Time;
+                        Data.GasSensor = device.DataPacket_3.Ch0;
+                        Data.ReferenceSensor = device.DataPacket_3.Ch1;
 
-                    Data.Ch0 = device.DataPacket_3.Ch0;
-                    Data.Ch1 = device.DataPacket_3.Ch1;
-                    Data.Frame = device.DataPacket_3.Frame;
-                    Data.Emitter = device.DataPacket_3.Emitter;
-                }
+                        Data.Ch0 = device.DataPacket_3.Ch0;
+                        Data.Ch1 = device.DataPacket_3.Ch1;
+                        Data.Frame = device.DataPacket_3.Frame;
+                        Data.Emitter = device.DataPacket_3.Emitter;
+                    }
 
-                // 
-                if (device.Properties.DataPacketType == "1")
-                {
-                    Data.DataPacket_1_Status = Visibility.Visible;
-                    Data.DataPacket_3_Status = Visibility.Collapsed;
-                    Data.DataPacket_3_Status = Visibility.Collapsed;
-                }
-                else if (device.Properties.DataPacketType == "2")
-                {
-                    Data.DataPacket_1_Status = Visibility.Collapsed;
-                    Data.DataPacket_2_Status = Visibility.Visible;
-                    Data.DataPacket_3_Status = Visibility.Collapsed;
-                }
-                else if (device.Properties.DataPacketType == "3")
-                {
-                    Data.DataPacket_1_Status = Visibility.Collapsed;
-                    Data.DataPacket_2_Status = Visibility.Collapsed;
-                    Data.DataPacket_3_Status = Visibility.Visible;
-                }
-                else
-                {
-                    Data.DataPacket_1_Status = Visibility.Collapsed;
-                    Data.DataPacket_2_Status = Visibility.Collapsed;
-                    Data.DataPacket_3_Status = Visibility.Collapsed;
-                }
+                    // 
+                    if (device.Properties.DataPacketType == "1")
+                    {
+                        Data.DataPacket_1_Status = Visibility.Visible;
+                        Data.DataPacket_3_Status = Visibility.Collapsed;
+                        Data.DataPacket_3_Status = Visibility.Collapsed;
+                    }
+                    else if (device.Properties.DataPacketType == "2")
+                    {
+                        Data.DataPacket_1_Status = Visibility.Collapsed;
+                        Data.DataPacket_2_Status = Visibility.Visible;
+                        Data.DataPacket_3_Status = Visibility.Collapsed;
+                    }
+                    else if (device.Properties.DataPacketType == "3")
+                    {
+                        Data.DataPacket_1_Status = Visibility.Collapsed;
+                        Data.DataPacket_2_Status = Visibility.Collapsed;
+                        Data.DataPacket_3_Status = Visibility.Visible;
+                    }
+                    else
+                    {
+                        Data.DataPacket_1_Status = Visibility.Collapsed;
+                        Data.DataPacket_2_Status = Visibility.Collapsed;
+                        Data.DataPacket_3_Status = Visibility.Collapsed;
+                    }
 
-                // Grafiği güncelle
-                UpdatePlot();
-            });         
-        }       
+                    try
+                    {
+                        // TODO: Cihaz kalibrasyon değelerini göster
+
+                        DeviceData.CalibrationCoefficients.A = device.DeviceData.CalibrationCoefficients.A;
+                        DeviceData.CalibrationCoefficients.B = device.DeviceData.CalibrationCoefficients.B;
+                        DeviceData.CalibrationCoefficients.C = device.DeviceData.CalibrationCoefficients.C;
+                        DeviceData.CalibrationCoefficients.R = device.DeviceData.CalibrationCoefficients.R;
+                        DeviceData.CalibrationData.GasConcentration = device.DeviceData.CalibrationData.GasConcentration;
+                    }
+                    catch (Exception)
+                    {
+                        
+                    }
+      
+
+                    // Grafiği güncelle
+                    UpdatePlot();
+                });            
+            }
+            catch (Exception) { }
+        }
     }
     public enum SampleMode
     {

@@ -331,8 +331,17 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 return;
             }
 
-            var table = new GasConcentrationTablesViewModel(deviceName);
-            DeviceTables.Add(table);
+            // Cihazı bul (Varsayım: Devices içinde Device nesneleri var)
+            var matchedDevice = Devices.IdentifiedDevices.FirstOrDefault(device => device.Properties.ProductId == deviceName);
+            if (matchedDevice != null)
+            {
+                var table = new GasConcentrationTablesViewModel(matchedDevice);
+                DeviceTables.Add(table);
+            }
+            else
+            {
+                Console.WriteLine("❌ Cihaz bulunamadı.");
+            }
         }
 
         private void RemoveDeviceTable(string deviceName)

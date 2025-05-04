@@ -14,11 +14,15 @@ using OxyPlot;
 using OxyPlot.Series;
 using System.Text;
 using System.Globalization;
+using CapnoAnalyzer.ViewModels.DeviceViewModels;
+using CapnoAnalyzer.Models.Device;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
     public class GasConcentrationTablesViewModel : BindableBase
     {
+        public DevicesViewModel Devices { get; private set; }
+
         private readonly Func<Vector<double>, double, double> model = (parameters, xVal) =>
         {
             double a = parameters[0];
@@ -46,13 +50,13 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         public string DeviceName { get; }
 
-        public GasConcentrationTablesViewModel(string deviceName)
+        public GasConcentrationTablesViewModel(Device devices)
         {
-            DeviceName = deviceName;
+            DeviceName = devices.Properties.ProductId;
             DeviceData = new ObservableCollection<DeviceData>();
             Coefficients = new Coefficients();
 
-            PlotModel = new PlotModel { Title = $"Cihaz: {deviceName} - Model: y = a(1 - e^{{-bx^c}})" };
+            PlotModel = new PlotModel { Title = $"Cihaz: {DeviceName} - Model: y = a(1 - e^{{-bx^c}})" };
             CalculateCommand = new RelayCommand(_ => CalculateCoefficients(), _ => CanCalculate());
             ExportCommand = new RelayCommand(_ => ExportToFile(), _ => DeviceData.Any());
 
@@ -312,6 +316,23 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                     .Sum(d => Math.Pow(d.GasConcentration - (d.PredictedGasConcentration ?? 0), 2));
 
                 Coefficients.R = 1 - (sse / sst);
+
+
+                // (8) Kalibrasyon Katsayılarını ve Denklemini Cihaza Aktar
+                var matchedDevice = Devices?.IdentifiedDevices?.FirstOrDefault(d => d.Properties.ProductId == DeviceName);
+                if (matchedDevice != null)
+                {
+                    matchedDevice.DeviceData.CalibrationCoefficients.A = Coefficients.A;
+                    matchedDevice.DeviceData.CalibrationCoefficients.B = Coefficients.B;
+                    matchedDevice.DeviceData.CalibrationCoefficients.C = Coefficients.C;
+                    matchedDevice.DeviceData.CalibrationCoefficients.R = Coefficients.R;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"❗ '{DeviceName}' ID'li cihaz bulunamadı, kalibrasyon değerleri atanamadı.");
+                }
+
+
             }
             catch (Exception ex)
             {

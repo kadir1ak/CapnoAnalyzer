@@ -13,6 +13,7 @@ using System.ComponentModel;
 using CapnoAnalyzer.Views.DevicesViews.Devices;
 using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
 using System;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 {
     public class DevicesViewModel : BindableBase
@@ -599,8 +600,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     case "3":
                         UpdateDeviceDataPacket_3(device, data);
                         break;
-                }
-                UpdateDeviceDataPacket_1(device, data);
+                }                
             }
             catch (OperationCanceledException)
             {
@@ -612,6 +612,33 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             }
         }
 
+        private void UpdateDeviceData(Device device, double time, double iirGas, double iirRRef, double irStatus)
+        {
+            try
+            {
+                if (Application.Current?.Dispatcher.CheckAccess() == true)
+                {
+                    // Verileri güncelle
+                    device.DeviceData.SensorData.Time = time;
+                    device.DeviceData.SensorData.IIR_Gas_Voltage = iirGas;
+                    device.DeviceData.SensorData.IIR_Ref_Voltage = iirRRef;
+                    device.DeviceData.SensorData.IR_Status = irStatus;
+                }
+                else
+                {
+                    // Dispatcher kullanarak verileri güncelle
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        device.DeviceData.SensorData.Time = time;
+                        device.DeviceData.SensorData.IIR_Gas_Voltage = iirGas;
+                        device.DeviceData.SensorData.IIR_Ref_Voltage = iirRRef;
+                        device.DeviceData.SensorData.IR_Status = irStatus;
+                    });
+                }
+            }
+            catch (Exception){ }          
+        }
+    
         private void UpdateDeviceDataPacket_1(Device device, string data)
         {
             // Veriyi ayrıştır ve UI güncellemesini yap
@@ -644,6 +671,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DataPacket_1.Humidity = hum;
                     });
                 }
+                UpdateDeviceData(device, time, ch1, ch2, 0.0); 
             }
         }
         private void UpdateDeviceDataPacket_2(Device device, string data)
@@ -686,8 +714,8 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                     device.DataPacket_2.AngVoltages = new[] { ang1, ang2, ang3 };
                     device.DataPacket_2.AdsRawValues = new[] { raw1, raw2, raw3, raw4 };
                     device.DataPacket_2.AdsVoltages = new[] { volt1, volt2, volt3, volt4 };
-                    device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2, voltF3 };
-                    device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2, voltIIR3 };
+                    device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2 * 10.0, voltF3 * 10.0 };
+                    device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2 * 10.0, voltIIR3 * 10.0 };
                     device.DataPacket_2.IrStatus = irStatus;
                 }
                 else
@@ -699,11 +727,12 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DataPacket_2.AngVoltages = new[] { ang1, ang2, ang3 };
                         device.DataPacket_2.AdsRawValues = new[] { raw1, raw2, raw3, raw4 };
                         device.DataPacket_2.AdsVoltages = new[] { volt1, volt2, volt3, volt4 };
-                        device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2 * 10, voltF3 * 10 };
-                        device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2 * 10, voltIIR3 * 10 };
+                        device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2 * 10.0, voltF3 * 10.0 };
+                        device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2 * 10.0, voltIIR3 * 10.0 };
                         device.DataPacket_2.IrStatus = irStatus;
                     });
                 }
+                UpdateDeviceData(device, time, voltIIR2 * 10.0, voltIIR3 * 10.0, irStatus); // IIR voltajlarını güncelle
             }
         }
 
@@ -737,6 +766,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DataPacket_3.Emitter = emitter;
                     });
                 }
+                UpdateDeviceData(device, time, ch0, ch1, emitter);
             }
         }
     }

@@ -24,7 +24,7 @@
         
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3">
-                <ProgressBar Height="30" Width="500" Value="{Binding MainSampleTimeProgressBar, Mode=OneWay}" Minimum="0" Maximum="100">
+                <ProgressBar Height="20" Width="500" Value="{Binding MainSampleTimeProgressBar, Mode=OneWay}" Minimum="0" Maximum="100">
                     <ProgressBar.Template>
                         <ControlTemplate TargetType="ProgressBar">
                             <Grid>
@@ -53,7 +53,7 @@
         <!-- NDIRGas Coefficients -->
         <Border Grid.Row="0" Grid.Column="0" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
             <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="3">
-                <GroupBox Header="Uygulanan Gaz Konsantrasyonu" FontWeight="Bold" FontSize="16" Margin="0,0,0,0" Padding="10">
+                <GroupBox Header="Uygulanan Gaz Konsantrasyonu" FontWeight="Bold" FontSize="16" Margin="0,0,0,0" Padding="0">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <TextBox x:Name="AppliedGasConcentration"  IsEnabled="{Binding IsInputEnabled}"

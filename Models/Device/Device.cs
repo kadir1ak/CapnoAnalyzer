@@ -173,7 +173,6 @@ namespace CapnoAnalyzer.Models.Device
         }
         #endregion
 
-
         #region Otomatik Mesaj Gönderme
         private bool _autoSendActive = false;
         public bool AutoSendActive
@@ -253,6 +252,13 @@ namespace CapnoAnalyzer.Models.Device
         {
             get => _incomingMessage;
             set => SetProperty(ref _incomingMessage, value);
+        }
+        
+        private DeviceData _deviceData = new();
+        public DeviceData DeviceData
+        {
+            get => _deviceData;
+            set => SetProperty(ref _deviceData, value);
         }
 
         private DeviceInterface _interface = new();

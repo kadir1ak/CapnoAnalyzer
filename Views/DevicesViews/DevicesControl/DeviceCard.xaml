@@ -101,15 +101,15 @@
                             <TextBlock Text="{Binding Interface.Data.ReferenceSensor, StringFormat={}{0:F3}}" Foreground="#FF5722" FontSize="16" FontWeight="Bold" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0">
                                 <TextBlock Text="Band: " Foreground="#5C6D8C" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding Interface.Data.ReferenceSensorBandValue, StringFormat={}{0:F3}}" Foreground="#4CAF50" FontSize="11" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Interface.Data.ReferenceSensorBandValue, StringFormat={}{0:F3}}" Foreground="#FF5722" FontSize="11" FontWeight="Bold" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0">
                                 <TextBlock Text="Max: " Foreground="#5C6D8C" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding Interface.Data.ReferenceSensorMaxValue, StringFormat={}{0:F3}}" Foreground="#4CAF50" FontSize="11" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Interface.Data.ReferenceSensorMaxValue, StringFormat={}{0:F3}}" Foreground="#FF5722" FontSize="11" FontWeight="Bold" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0">
                                 <TextBlock Text="Min: " Foreground="#5C6D8C" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding Interface.Data.ReferenceSensorMinValue, StringFormat={}{0:F3}}" Foreground="#4CAF50" FontSize="11" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Interface.Data.ReferenceSensorMinValue, StringFormat={}{0:F3}}" Foreground="#FF5722" FontSize="11" FontWeight="Bold" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -348,62 +348,76 @@ Width="150"/>
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                         <TextBlock Text="Kalibrasyon Verileri" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold"/>
                         <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
-
                             <StackPanel Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0 0 0 0">
                                 <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
                                     <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="-----------------------------------------------------------------------" Foreground="#5C6D8C" FontSize="12" Width="180" Margin="0 0 5 0"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="A: " Foreground="#5C6D8C" FontSize="12" Width="30" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationCoefficients.A, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationCoefficients.A, StringFormat={}{0:F9}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold" />
                                         <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="B: " Foreground="#5C6D8C" FontSize="12" Width="30" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationCoefficients.B, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationCoefficients.B, StringFormat={}{0:F9}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold" />
                                         <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="C: " Foreground="#5C6D8C" FontSize="12" Width="30" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationCoefficients.C, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationCoefficients.C, StringFormat={}{0:F9}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold" />
                                         <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="R: " Foreground="#5C6D8C" FontSize="12" Width="30" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationCoefficients.R, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationCoefficients.R, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold" />
                                         <TextBlock Text=" " Foreground="#5C6D8C" FontSize="12" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="-----------------------------------------------------------------------" Foreground="#5C6D8C" FontSize="12" Width="180" Margin="0 0 5 0"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="GasConcentration: " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.GasConcentration, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.GasConcentration, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Ref: " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Ref, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold"/>
+                                        <TextBlock Text="-----------------------------------------------------------------------" Foreground="#5C6D8C" FontSize="12" Width="180" Margin="0 0 5 0"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Gas: " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Gas, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold"/>
+                                        <TextBlock Text="Ref: " Foreground="#5C6D8C" FontSize="12" Width="30" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Ref, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Ratio: " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Ratio, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold"/>
+                                        <TextBlock Text="Gas: " Foreground="#5C6D8C" FontSize="12" Width="30" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Gas, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="120" FontWeight="Bold"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Transmittance: " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Transmittance, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold"/>
+                                        <TextBlock Text="-----------------------------------------------------------------------" Foreground="#5C6D8C" FontSize="12" Width="180" Margin="0 0 5 0"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Absorption: " Foreground="#5C6D8C" FontSize="12" Width="100" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Absorption, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="80" FontWeight="Bold"/>
+                                        <TextBlock Text="Zero: " Foreground="#5C6D8C" FontSize="12" Width="80" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Zero, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="100" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Ratio: " Foreground="#5C6D8C" FontSize="12" Width="80" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Ratio, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="100" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Transmittance: " Foreground="#5C6D8C" FontSize="12" Width="80" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Transmittance, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="100" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Absorption: " Foreground="#5C6D8C" FontSize="12" Width="80" Margin="0 0 5 0"/>
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.Absorption, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="100" FontWeight="Bold"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Predicted Absorption: " Foreground="#5C6D8C" FontSize="12" Width="120" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.PredictedAbsorption, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="60" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.PredictedAbsorption, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="60" FontWeight="Bold"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Predicted Gas Conc.: " Foreground="#5C6D8C" FontSize="12" Width="120" Margin="0 0 5 0"/>
-                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.PredictedGasConcentration, StringFormat={}{0:F3}}" Foreground="#FF231F1F" FontSize="12" Width="60" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.PredictedGasConcentration, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="60" FontWeight="Bold"/>
                                     </StackPanel>
-
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>

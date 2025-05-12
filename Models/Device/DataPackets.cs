@@ -303,8 +303,19 @@ namespace CapnoAnalyzer.Models.Device
                 }
             }
 
-            private double? _ratio;
-            public double? Ratio
+            private double _zero;
+            public double Zero
+            {
+                get => _zero;
+                set
+                {
+                    _zero = value;
+                    OnPropertyChanged();
+                }
+            }
+
+            private double _ratio;
+            public double Ratio
             {
                 get => _ratio;
                 set
@@ -314,8 +325,8 @@ namespace CapnoAnalyzer.Models.Device
                 }
             }
 
-            private double? _transmittance;
-            public double? Transmittance
+            private double _transmittance;
+            public double Transmittance
             {
                 get => _transmittance;
                 set
@@ -325,8 +336,8 @@ namespace CapnoAnalyzer.Models.Device
                 }
             }
 
-            private double? _absorption;
-            public double? Absorption
+            private double _absorption;
+            public double Absorption
             {
                 get => _absorption;
                 set
@@ -336,8 +347,8 @@ namespace CapnoAnalyzer.Models.Device
                 }
             }
 
-            private double? _predictedAbsorption;
-            public double? PredictedAbsorption
+            private double _predictedAbsorption;
+            public double PredictedAbsorption
             {
                 get => _predictedAbsorption;
                 set
@@ -347,8 +358,8 @@ namespace CapnoAnalyzer.Models.Device
                 }
             }
 
-            private double? _predictedGasConcentration;
-            public double? PredictedGasConcentration
+            private double _predictedGasConcentration;
+            public double PredictedGasConcentration
             {
                 get => _predictedGasConcentration;
                 set

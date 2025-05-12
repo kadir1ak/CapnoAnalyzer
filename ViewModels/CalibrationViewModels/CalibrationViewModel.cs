@@ -14,7 +14,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
     public class CalibrationViewModel : BindableBase
     {
-        public DevicesViewModel Devices { get; private set; }
+        public DevicesViewModel DevicesVM { get; private set; }
         public ObservableCollection<GasConcentrationTablesViewModel> DeviceTables { get; set; }
 
         public ICommand AppliedGasCommand { get; private set; }
@@ -72,17 +72,17 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         private Dictionary<string, List<double>> _refDataBuffer;
         private Dictionary<string, List<double>> _gasDataBuffer;
 
-        public CalibrationViewModel(DevicesViewModel devices)
+        public CalibrationViewModel(DevicesViewModel devicesVM)
         {
-            Devices = devices;
+            DevicesVM = devicesVM;
             DeviceTables = new ObservableCollection<GasConcentrationTablesViewModel>();
 
             AppliedGasCommand = new RelayCommand(StartSamplingCalculation);
 
-            Devices.DeviceAdded += OnDeviceAdded;
-            Devices.DeviceRemoved += OnDeviceRemoved;
+            DevicesVM.DeviceAdded += OnDeviceAdded;
+            DevicesVM.DeviceRemoved += OnDeviceRemoved;
 
-            foreach (var device in Devices.IdentifiedDevices)
+            foreach (var device in DevicesVM.IdentifiedDevices)
             {
                 AddDeviceTable(device.Properties.ProductId);
             }
@@ -115,7 +115,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             _refDataBuffer.Clear();
             _gasDataBuffer.Clear();
             MainSampleMaxTimeCount = 0;
-            foreach (var device in Devices.IdentifiedDevices)
+            foreach (var device in DevicesVM.IdentifiedDevices)
             {
                 _refDataBuffer[device.Properties.ProductId] = new List<double>();
                 _gasDataBuffer[device.Properties.ProductId] = new List<double>();
@@ -149,7 +149,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             }
 
             // Her cihazın zamanlayıcı mantığını kontrol et
-            foreach (var device in Devices.IdentifiedDevices)
+            foreach (var device in DevicesVM.IdentifiedDevices)
             {
                 var productId = device.Properties.ProductId;
 
@@ -208,7 +208,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         private void CompleteCalibration()
         {
-            foreach (var device in Devices.IdentifiedDevices)
+            foreach (var device in DevicesVM.IdentifiedDevices)
             {
                 var productId = device.Properties.ProductId;
 
@@ -332,10 +332,10 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             }
 
             // Cihazı bul (Varsayım: Devices içinde Device nesneleri var)
-            var matchedDevice = Devices.IdentifiedDevices.FirstOrDefault(device => device.Properties.ProductId == deviceName);
-            if (matchedDevice != null)
+            var selectedDevice = DevicesVM.IdentifiedDevices.FirstOrDefault(device => device.Properties.ProductId == deviceName);
+            if (selectedDevice != null)
             {
-                var table = new GasConcentrationTablesViewModel(matchedDevice);
+                var table = new GasConcentrationTablesViewModel(DevicesVM, selectedDevice);
                 DeviceTables.Add(table);
             }
             else

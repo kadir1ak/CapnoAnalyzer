@@ -245,6 +245,7 @@ namespace CapnoAnalyzer.Models.Device
                         DeviceData.CalibrationData.GasConcentration = device.DeviceData.CalibrationData.GasConcentration;
                         DeviceData.CalibrationData.Ref = device.DeviceData.CalibrationData.Ref;
                         DeviceData.CalibrationData.Gas = device.DeviceData.CalibrationData.Gas;
+                        DeviceData.CalibrationData.Zero = device.DeviceData.CalibrationData.Zero;
                         DeviceData.CalibrationData.Ratio = device.DeviceData.CalibrationData.Ratio;
                         DeviceData.CalibrationData.Transmittance = device.DeviceData.CalibrationData.Transmittance;
                         DeviceData.CalibrationData.Absorption = device.DeviceData.CalibrationData.Absorption;

@@ -16,12 +16,14 @@ using System.Text;
 using System.Globalization;
 using CapnoAnalyzer.ViewModels.DeviceViewModels;
 using CapnoAnalyzer.Models.Device;
+using CapnoAnalyzer.Views.DevicesViews.Devices;
+using System.Windows;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
     public class GasConcentrationTablesViewModel : BindableBase
     {
-        public DevicesViewModel Devices { get; private set; }
+        public DevicesViewModel DevicesVM { get; private set; }
 
         private readonly Func<Vector<double>, double, double> model = (parameters, xVal) =>
         {
@@ -50,9 +52,10 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         public string DeviceName { get; }
 
-        public GasConcentrationTablesViewModel(Device devices)
+        public GasConcentrationTablesViewModel(DevicesViewModel devicesVM, Device selectedDevice)
         {
-            DeviceName = devices.Properties.ProductId;
+            DevicesVM = devicesVM;
+            DeviceName = selectedDevice.Properties.ProductId;
             DeviceData = new ObservableCollection<Data>();
             Coefficients = new Coefficients();
 
@@ -319,20 +322,32 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
 
                 // (8) Kalibrasyon Katsayılarını ve Denklemini Cihaza Aktar
-                var matchedDevice = Devices?.IdentifiedDevices?.FirstOrDefault(d => d.Properties.ProductId == DeviceName);
-                if (matchedDevice != null)
+                var device = DevicesVM?.IdentifiedDevices?.FirstOrDefault(d => d.Properties.ProductId == DeviceName);
+                if (device != null)
                 {
-                    matchedDevice.DeviceData.CalibrationCoefficients.A = Coefficients.A;
-                    matchedDevice.DeviceData.CalibrationCoefficients.B = Coefficients.B;
-                    matchedDevice.DeviceData.CalibrationCoefficients.C = Coefficients.C;
-                    matchedDevice.DeviceData.CalibrationCoefficients.R = Coefficients.R;
+                    device.DeviceData.CalibrationCoefficients.A = Coefficients.A;
+                    device.DeviceData.CalibrationCoefficients.B = Coefficients.B;
+                    device.DeviceData.CalibrationCoefficients.C = Coefficients.C;
+                    device.DeviceData.CalibrationCoefficients.R = Coefficients.R;
+                    device.DeviceData.CalibrationData.Zero = zero;
+                    MessageBox.Show(
+                        $"Kalibrasyon katsayıları '{DeviceName}' cihazına aktarıldı.\n" +
+                        $"A: {Coefficients.A}, B: {Coefficients.B}, C: {Coefficients.C}, R²: {Coefficients.R}",
+                        "Başarılı",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information
+                    );
                 }
                 else
                 {
+                    MessageBox.Show(
+                        $"'{DeviceName}' cihazı bulunamadı, kalibrasyon değerleri atanamadı.",
+                        "Hata",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
                     System.Diagnostics.Debug.WriteLine($"❗ '{DeviceName}' ID'li cihaz bulunamadı, kalibrasyon değerleri atanamadı.");
                 }
-
-
             }
             catch (Exception ex)
             {

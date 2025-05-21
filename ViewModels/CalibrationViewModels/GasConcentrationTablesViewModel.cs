@@ -325,11 +325,12 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 var device = DevicesVM?.IdentifiedDevices?.FirstOrDefault(d => d.Properties.ProductId == DeviceName);
                 if (device != null)
                 {
-                    device.DeviceData.CalibrationCoefficients.A = Coefficients.A;
-                    device.DeviceData.CalibrationCoefficients.B = Coefficients.B;
-                    device.DeviceData.CalibrationCoefficients.C = Coefficients.C;
-                    device.DeviceData.CalibrationCoefficients.R = Coefficients.R;
-                    device.DeviceData.CalibrationData.Zero = zero;
+                    device.Interface.DeviceData.CalibrationCoefficients.A = Coefficients.A;
+                    device.Interface.DeviceData.CalibrationCoefficients.B = Coefficients.B;
+                    device.Interface.DeviceData.CalibrationCoefficients.C = Coefficients.C;
+                    device.Interface.DeviceData.CalibrationCoefficients.R = Coefficients.R;
+                    device.Interface.DeviceData.CalibrationData.Zero = zero;
+                   
                     MessageBox.Show(
                         $"Kalibrasyon katsayıları '{DeviceName}' cihazına aktarıldı.\n" +
                         $"A: {Coefficients.A}, B: {Coefficients.B}, C: {Coefficients.C}, R²: {Coefficients.R}",

@@ -3,6 +3,7 @@ using System.Diagnostics.Eventing.Reader;
 using System.Windows;
 using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Models.PlotModels;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace CapnoAnalyzer.Models.Device
 {
@@ -217,6 +218,8 @@ namespace CapnoAnalyzer.Models.Device
                         DeviceData.SensorData.IIR_Gas_Voltage = device.DeviceData.SensorData.IIR_Gas_Voltage;
                         DeviceData.SensorData.IIR_Ref_Voltage = device.DeviceData.SensorData.IIR_Ref_Voltage;
                         DeviceData.SensorData.IR_Status = device.DeviceData.SensorData.IR_Status;
+
+                        UpdateCalibrationData(DeviceData, Data.GasSensor, Data.ReferenceSensor);
                     }
                     else if (device.Properties.DataPacketType == "2")
                     {
@@ -236,21 +239,7 @@ namespace CapnoAnalyzer.Models.Device
                         DeviceData.SensorData.IIR_Ref_Voltage = device.DeviceData.SensorData.IIR_Ref_Voltage;
                         DeviceData.SensorData.IR_Status = device.DeviceData.SensorData.IR_Status;
 
-                        DeviceData.CalibrationCoefficients.A = device.DeviceData.CalibrationCoefficients.A;
-                        DeviceData.CalibrationCoefficients.B = device.DeviceData.CalibrationCoefficients.B;
-                        DeviceData.CalibrationCoefficients.C = device.DeviceData.CalibrationCoefficients.C;
-                        DeviceData.CalibrationCoefficients.R = device.DeviceData.CalibrationCoefficients.R;
-
-                        DeviceData.CalibrationData.Sample = device.DeviceData.CalibrationData.Sample;
-                        DeviceData.CalibrationData.GasConcentration = device.DeviceData.CalibrationData.GasConcentration;
-                        DeviceData.CalibrationData.Ref = device.DeviceData.CalibrationData.Ref;
-                        DeviceData.CalibrationData.Gas = device.DeviceData.CalibrationData.Gas;
-                        DeviceData.CalibrationData.Zero = device.DeviceData.CalibrationData.Zero;
-                        DeviceData.CalibrationData.Ratio = device.DeviceData.CalibrationData.Ratio;
-                        DeviceData.CalibrationData.Transmittance = device.DeviceData.CalibrationData.Transmittance;
-                        DeviceData.CalibrationData.Absorption = device.DeviceData.CalibrationData.Absorption;
-                        DeviceData.CalibrationData.PredictedAbsorption = device.DeviceData.CalibrationData.PredictedAbsorption;
-                        DeviceData.CalibrationData.PredictedGasConcentration = device.DeviceData.CalibrationData.PredictedGasConcentration;
+                        UpdateCalibrationData(DeviceData, Data.GasSensor, Data.ReferenceSensor);
                     }
                     else if (device.Properties.DataPacketType == "3")
                     {
@@ -267,6 +256,8 @@ namespace CapnoAnalyzer.Models.Device
                         DeviceData.SensorData.IIR_Gas_Voltage = device.DeviceData.SensorData.IIR_Gas_Voltage;
                         DeviceData.SensorData.IIR_Ref_Voltage = device.DeviceData.SensorData.IIR_Ref_Voltage;
                         DeviceData.SensorData.IR_Status = device.DeviceData.SensorData.IR_Status;
+
+                        UpdateCalibrationData(DeviceData, Data.GasSensor, Data.ReferenceSensor);
                     }
 
                     // 
@@ -306,6 +297,78 @@ namespace CapnoAnalyzer.Models.Device
                 */
             }
             catch (Exception) { }
+        }
+
+        /// <summary>
+        /// Kalibrasyonu önceden yapılmış bir cihazın A, B, C ve Zero katsayılarını kullanarak
+        /// gelen anlık sensör verilerine göre gaz konsantrasyonu hesaplar ve tüm ara değerleri günceller.
+        /// </summary>
+        /// <param name="deviceData">Cihaza ait kalibrasyon ve sensör bilgilerini içeren veri yapısı</param>
+        /// <param name="gasSensor">Anlık gaz sensörü (ölçüm kanalı) voltajı</param>
+        /// <param name="referenceSensor">Anlık referans sensörü (karşılaştırma kanalı) voltajı</param>
+        public void UpdateCalibrationData(DeviceDataType deviceData, double gasSensor, double referenceSensor)
+        {
+            try
+            {
+                // 1. Geçersiz veya eksik veri kontrolü
+                if (referenceSensor == 0 || deviceData?.CalibrationData == null ||
+                    deviceData?.CalibrationCoefficients == null || deviceData.CalibrationData.Zero == 0)
+                {
+                    // Geçersiz değer varsa işlemi durdur
+                    return;
+                }
+
+                // 2. Kısa yol referanslar
+                var calData = deviceData.CalibrationData;            // Kalibrasyon verileri (Zero, Ratio, Absorption vb.)
+                var coeff = deviceData.CalibrationCoefficients;      // Kalibrasyon katsayıları (A, B, C)
+
+                // 3. Anlık sensör voltajlarını güncelle
+                calData.Gas = gasSensor;
+                calData.Ref = referenceSensor;
+
+                // 4. Ratio = Gas / Ref
+                calData.Ratio = gasSensor / referenceSensor;
+
+                // 5. Transmittance = Ratio / Zero
+                // Zero, daha önce 0 ppm gaz konsantrasyonunda elde edilen referans oranıdır.
+                calData.Transmittance = calData.Ratio / calData.Zero;
+
+                // 6. Absorption = 1 - Transmittance
+                // Bu, ışığın ne kadarının emildiğini gösterir.
+                calData.Absorption = 1 - calData.Transmittance;
+
+                // 7. Opsiyonel: Kalibrasyon datası içinde saklanan örnek gaz konsantrasyonu üzerinden
+                // modelin ne kadar iyi tahmin yaptığını gösteren "PredictedAbsorption"
+                if (calData.GasConcentration > 0)
+                {
+                    // model: A * (1 - e^(-B * x^C))
+                    calData.PredictedAbsorption = coeff.A * (1 - Math.Exp(-coeff.B * Math.Pow(calData.GasConcentration, coeff.C)));
+                }
+                else
+                {
+                    calData.PredictedAbsorption = 0;
+                }
+
+                // 8. Tahmini Gaz Konsantrasyonu Hesabı (ters model)
+                // Modelin tersi: x = [ -ln(1 - Abs/A) / B ] ^ (1/C)
+                calData.PredictedGasConcentration = double.NaN; // Başlangıçta geçersiz yap
+
+                if (calData.Absorption > 0 && calData.Absorption < coeff.A)
+                {
+                    // Aksi takdirde log() negatif olur ve hata verir
+                    calData.PredictedGasConcentration = Math.Pow(
+                        -Math.Log(1 - (calData.Absorption / coeff.A)) / coeff.B,
+                        1 / coeff.C);
+                }
+
+                // 9. Bu değeri GasConcentration'a yaz (görselde gösterilmek üzere kullanılabilir)
+                calData.GasConcentration = calData.PredictedGasConcentration;
+            }
+            catch (Exception ex)
+            {
+                // Geliştirme sırasında loglama için kullanılır
+                System.Diagnostics.Debug.WriteLine("Kalibrasyon güncelleme hatası: " + ex.Message);
+            }
         }
     }
     public enum SampleMode

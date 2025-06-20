@@ -115,7 +115,8 @@ namespace CapnoAnalyzer.Services
         {
             return ConnectedPorts.Select(p => p.PortName);
         }
-        private readonly ConcurrentDictionary<string, StringBuilder> _buffers = new();
+
+        /*
         private void OnDataReceived(SerialPort serialPort)
         {
             try
@@ -159,6 +160,61 @@ namespace CapnoAnalyzer.Services
                                 "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        */
+        private readonly ConcurrentDictionary<string, StringBuilder> _buffers = new();
+        private void OnDataReceived(SerialPort serialPort)
+        {
+            try
+            {
+                // Seri porttan gelen tüm veriyi oku
+                string incomingData = serialPort.ReadExisting();
+                if (string.IsNullOrEmpty(incomingData))
+                    return;
+
+                // Port’a ait buffer (thread-safe kontrol)
+                var buffer = _buffers.GetOrAdd(serialPort.PortName, _ => new StringBuilder());
+
+                lock (buffer) // StringBuilder thread-safe değildir, o yüzden lock!
+                {
+                    buffer.Append(incomingData);
+
+                    // Satır sonu bazlı bölme (Hem \n hem \r\n destekler)
+                    string bufferContent = buffer.ToString();
+                    string[] lines = bufferContent.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+
+                    // Son eleman eksik olabilir, onu tekrar buffer’da tut!
+                    int fullLinesCount = bufferContent.EndsWith("\n") || bufferContent.EndsWith("\r\n")
+                        ? lines.Length
+                        : lines.Length - 1;
+
+                    for (int i = 0; i < fullLinesCount; i++)
+                    {
+                        string cleanLine = lines[i].Trim();
+                        if (!string.IsNullOrEmpty(cleanLine))
+                        {
+                            // Kuyruğa ekle (varsa)
+                            if (_portDataQueues.TryGetValue(serialPort.PortName, out var queue))
+                                queue.Add(cleanLine);
+                        }
+                    }
+
+                    // Son incomplete satırı tekrar buffer’a al
+                    buffer.Clear();
+                    if (fullLinesCount < lines.Length)
+                        buffer.Append(lines[^1]);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Hata yönetimi
+                Application.Current.Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    MessageBox.Show($"Error reading data from port {serialPort.PortName}: {ex.Message}",
+                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }));
+            }
+        }
+
 
         private void StartProcessingPortData(SerialPort serialPort)
         {

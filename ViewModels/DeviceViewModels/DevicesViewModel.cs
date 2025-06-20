@@ -678,17 +678,15 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         }
         private void UpdateDeviceDataPacket_2(Device device, string data)
         {
-            // Veri paketinin "GV" ile başladığını kontrol et
             if (!data.StartsWith("GV"))
-            {
-                // Veri doğru formatta değilse işlemi sonlandır
                 return;
-            }
 
-            // "GV," kısmını kaldır ve veriyi ayrıştır
-            string[] dataParts = data.Substring(3).Split(',');
+            // Temiz split
+            var dataParts = data.Substring(3)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .ToArray();
 
-            // Veri parça sayısını ve türlerini kontrol et
             if (dataParts.Length == 17 &&
                 double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
                 double.TryParse(dataParts[1].Replace('.', ','), out double ang1) &&
@@ -744,7 +742,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
                         device.DeviceData.SensorData.IR_Status = irStatus;
                     });
                 }
-            }
+            } 
         }
 
         private void UpdateDeviceDataPacket_3(Device device, string data)

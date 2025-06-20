@@ -181,8 +181,9 @@ namespace CapnoAnalyzer.Models.Device
         {
             if (SensorPlot != null)
             {
-                SensorPlot.AddDataPoint(Data.Time, Data.GasSensor, Data.ReferenceSensor);
-               
+                // SensorPlot.AddDataPoint(Data.Time, Data.GasSensor, Data.ReferenceSensor);
+                // DeviceDataUpdater
+                SensorPlot.AddDataPoint(Data.Time, Data.GasSensor, Data.IrStatus);
             }
         }
         public void UpdateCalculatedGasPlot()
@@ -190,6 +191,7 @@ namespace CapnoAnalyzer.Models.Device
             if (CalculatedGasPlot != null)
             {
                 //CalculatedGasPlot.AddDataPoint(Data.Time, Data.GasSensor);
+                // TODO: Hesaplanan gaz konsantrasyonunu ekle
                 CalculatedGasPlot.AddDataPoint(DeviceData.SensorData.Time, DeviceData.SensorData.IIR_Gas_Voltage);
             }
         }

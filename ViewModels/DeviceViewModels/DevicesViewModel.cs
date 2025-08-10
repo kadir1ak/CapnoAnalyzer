@@ -127,12 +127,14 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         public ICommand DisconnectCommand { get; }
         public ICommand IdentifyDeviceCommand { get; }
 
+        private readonly SerialPortDataParser _dataParser = new SerialPortDataParser();
+
         // -- 6) Yapıcı Metot --
         public DevicesViewModel()
         {
             PortManager = new SerialPortsManager();
             // Serial port değişikliklerini dinle
-            PortManager.MessageReceived += OnMessageReceived;
+            PortManager.MessageReceivedEx += OnMessageReceivedEx;
 
             ConnectedDevices = new ObservableCollection<Device>();
             IdentifiedDevices = new ObservableCollection<Device>();
@@ -342,38 +344,44 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
             }
         }
         // ========== Gelen Veri Yakalama (Event) ==========
-        private void OnMessageReceived(string portName, string data)
+        private void OnMessageReceivedEx(object sender, SerialMessageEventArgs e)
         {
-            // Mesajları UI Thread üzerinde eklemek için:
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var device = ConnectedDevices.FirstOrDefault(d => d.Properties.PortName == portName);
-                if (device != null)
-                {
-                    device.IncomingMessage.Add(data);
-                    while (device.IncomingMessage.Count > 10)
-                    {
-                        device.IncomingMessage.RemoveAt(0);
-                    }
+                var device = ConnectedDevices.FirstOrDefault(d => d.Properties.PortName == e.PortName);
+                if (device == null)
+                    return;
 
-                    DeviceDataParsing(device, data);
-                    CalculateSampleRate(device);
-                }
+                // Son gelen mesajı ekle, en fazla 10 mesajı tut
+                device.IncomingMessage.Add(e.Message);
+                if (device.IncomingMessage.Count > 10)
+                    device.IncomingMessage.RemoveAt(0);
+
+                // Yüksek performanslı parser ile veriyi işle
+                _dataParser.TryParsePacket(device, e.Message);
+
+                CalculateSampleRate(device);
             });
         }
+
         private void CalculateSampleRate(Device device)
         {
+            if (device?.Properties == null)
+                return;
+
             device.Properties.SampleCount++;
             var now = DateTime.Now;
             var elapsed = now - device.Properties.LastUpdate;
 
-            if (elapsed.TotalSeconds >= 1) // Her saniyede bir hesapla
+            // Her 1 saniyede bir örnekleme frekansını güncelle
+            if (elapsed.TotalSeconds >= 1)
             {
                 device.Properties.DataSamplingFrequency = device.Properties.SampleCount;
                 device.Properties.SampleCount = 0;
                 device.Properties.LastUpdate = now;
             }
         }
+
         private void DeviceIdentification(Device device)
         {
             try
@@ -603,189 +611,6 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
 
             // Portları yönetim nesnesinden de temizle
             PortManager.ConnectedPorts.Clear();
-        }
-
-        private void DeviceDataParsing(Device device, string data)
-        {
-            try
-            {
-                switch (device.Properties.DataPacketType)
-                {
-                    case "1":
-                        UpdateDeviceDataPacket_1(device, data);
-                        break;
-                    case "2":
-                        UpdateDeviceDataPacket_2(device, data);
-                        break;
-                    case "3":
-                        UpdateDeviceDataPacket_3(device, data);
-                        break;
-                }                
-            }
-            catch (OperationCanceledException)
-            {
-                // İşlem iptal edildiğinde hata fırlatmayı önle
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Unexpected Error in Data Processing: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void UpdateDeviceDataPacket_1(Device device, string data)
-        {
-            // Veriyi ayrıştır ve UI güncellemesini yap
-            string[] dataParts = data.Split(',');
-            if (dataParts.Length == 5 &&
-                double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
-                double.TryParse(dataParts[1].Replace('.', ','), out double ch1) &&
-                double.TryParse(dataParts[2].Replace('.', ','), out double ch2) &&
-                double.TryParse(dataParts[3].Replace('.', ','), out double temp) &&
-                double.TryParse(dataParts[4].Replace('.', ','), out double hum))
-            {
-                if (Application.Current?.Dispatcher.CheckAccess() == true)
-                {
-                    // UI iş parçacığında isek doğrudan çalıştır
-                    device.DataPacket_1.Time = time;
-                    device.DataPacket_1.GasSensor = ch1;
-                    device.DataPacket_1.ReferenceSensor = ch2;
-                    device.DataPacket_1.Temperature = temp;
-                    device.DataPacket_1.Humidity = hum;
-
-                    device.DeviceData.SensorData.Time = time;
-                    device.DeviceData.SensorData.IIR_Gas_Voltage = ch1;
-                    device.DeviceData.SensorData.IIR_Ref_Voltage = ch2;
-                    device.DeviceData.SensorData.IR_Status = 0.0;
-                }
-                else
-                {
-                    // UI iş parçacığında değilsek Dispatcher kullan
-                    Application.Current?.Dispatcher.Invoke(() =>
-                    {
-                        device.DataPacket_1.Time = time;
-                        device.DataPacket_1.GasSensor = ch1;
-                        device.DataPacket_1.ReferenceSensor = ch2;
-                        device.DataPacket_1.Temperature = temp;
-                        device.DataPacket_1.Humidity = hum;
-
-                        device.DeviceData.SensorData.Time = time;
-                        device.DeviceData.SensorData.IIR_Gas_Voltage = ch1;
-                        device.DeviceData.SensorData.IIR_Ref_Voltage = ch2;
-                        device.DeviceData.SensorData.IR_Status = 0.0;
-                    });
-                }
-            }
-        }
-        private void UpdateDeviceDataPacket_2(Device device, string data)
-        {
-            if (!data.StartsWith("GV"))
-                return;
-
-            // Temiz split
-            var dataParts = data.Substring(3)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Trim())
-                .ToArray();
-
-            if (dataParts.Length == 17 &&
-                double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
-                double.TryParse(dataParts[1].Replace('.', ','), out double ang1) &&
-                double.TryParse(dataParts[2].Replace('.', ','), out double ang2) &&
-                double.TryParse(dataParts[3].Replace('.', ','), out double ang3) &&
-                double.TryParse(dataParts[4].Replace('.', ','), out double raw1) &&
-                double.TryParse(dataParts[5].Replace('.', ','), out double raw2) &&
-                double.TryParse(dataParts[6].Replace('.', ','), out double raw3) &&
-                double.TryParse(dataParts[7].Replace('.', ','), out double raw4) &&
-                double.TryParse(dataParts[8].Replace('.', ','), out double volt1) &&
-                double.TryParse(dataParts[9].Replace('.', ','), out double volt2) &&
-                double.TryParse(dataParts[10].Replace('.', ','), out double volt3) &&
-                double.TryParse(dataParts[11].Replace('.', ','), out double volt4) &&
-                double.TryParse(dataParts[12].Replace('.', ','), out double voltF2) &&
-                double.TryParse(dataParts[13].Replace('.', ','), out double voltF3) &&
-                double.TryParse(dataParts[14].Replace('.', ','), out double voltIIR2) &&
-                double.TryParse(dataParts[15].Replace('.', ','), out double voltIIR3) &&
-                int.TryParse(dataParts[16], out int irStatus))
-            {
-                // UI güncellemesi için Dispatcher kontrolü
-                if (Application.Current?.Dispatcher.CheckAccess() == true)
-                {
-                    // Verileri güncelle
-                    device.DataPacket_2.Time = time;
-                    device.DataPacket_2.AngVoltages = new[] { ang1, ang2, ang3 };
-                    device.DataPacket_2.AdsRawValues = new[] { raw1, raw2, raw3, raw4 };
-                    device.DataPacket_2.AdsVoltages = new[] { volt1, volt2, volt3, volt4 };
-                    device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2 * 10.0, voltF3 * 10.0 };
-                    device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2 * 10.0, voltIIR3 * 10.0 };
-                    device.DataPacket_2.IrStatus = irStatus;
-
-                    device.DeviceData.SensorData.Time = time;
-                    device.DeviceData.SensorData.IIR_Gas_Voltage = voltIIR2 * 10.0;
-                    device.DeviceData.SensorData.IIR_Ref_Voltage = voltIIR3 * 10.0;
-                    device.DeviceData.SensorData.IR_Status = irStatus;
-                }
-                else
-                {
-                    // Dispatcher kullanarak verileri güncelle
-                    Application.Current?.Dispatcher.Invoke(() =>
-                    {
-                        device.DataPacket_2.Time = time;
-                        device.DataPacket_2.AngVoltages = new[] { ang1, ang2, ang3 };
-                        device.DataPacket_2.AdsRawValues = new[] { raw1, raw2, raw3, raw4 };
-                        device.DataPacket_2.AdsVoltages = new[] { volt1, volt2, volt3, volt4 };
-                        device.DataPacket_2.GainAdsVoltagesF = new[] { voltF2 * 10.0, voltF3 * 10.0 };
-                        device.DataPacket_2.GainAdsVoltagesIIR = new[] { voltIIR2 * 10.0, voltIIR3 * 10.0 };
-                        device.DataPacket_2.IrStatus = irStatus;
-
-                        device.DeviceData.SensorData.Time = time;
-                        device.DeviceData.SensorData.IIR_Gas_Voltage = voltIIR2 * 10.0;
-                        device.DeviceData.SensorData.IIR_Ref_Voltage = voltIIR3 * 10.0;
-                        device.DeviceData.SensorData.IR_Status = irStatus;
-                    });
-                }
-            } 
-        }
-
-        private void UpdateDeviceDataPacket_3(Device device, string data)
-        {
-            // Veriyi ayrıştır ve UI güncellemesini yap
-            string[] dataParts = data.Split(',');
-            if (dataParts.Length == 5 &&
-                double.TryParse(dataParts[0].Replace('.', ','), out double time) &&
-                double.TryParse(dataParts[2].Replace('.', ','), out double ch0) &&
-                double.TryParse(dataParts[3].Replace('.', ','), out double ch1) &&
-                int.TryParse(dataParts[4], out int frame) &&
-                int.TryParse(dataParts[4], out int emitter))
-            {
-                if (Application.Current?.Dispatcher.CheckAccess() == true)
-                {
-                    device.DataPacket_3.Time = time;
-                    device.DataPacket_3.Ch0 = ch0;
-                    device.DataPacket_3.Ch1 = ch1;
-                    device.DataPacket_3.Frame = frame;
-                    device.DataPacket_3.Emitter = emitter;
-
-                    device.DeviceData.SensorData.Time = time;
-                    device.DeviceData.SensorData.IIR_Gas_Voltage = ch0;
-                    device.DeviceData.SensorData.IIR_Ref_Voltage = ch1;
-                    device.DeviceData.SensorData.IR_Status = emitter;
-                }
-                else
-                {
-                    Application.Current?.Dispatcher.Invoke(() =>
-                    {
-                        device.DataPacket_3.Time = time;
-                        device.DataPacket_3.Ch0 = ch0;
-                        device.DataPacket_3.Ch1 = ch1;
-                        device.DataPacket_3.Frame = frame;
-                        device.DataPacket_3.Emitter = emitter;
-
-                        device.DeviceData.SensorData.Time = time;
-                        device.DeviceData.SensorData.IIR_Gas_Voltage = ch0;
-                        device.DeviceData.SensorData.IIR_Ref_Voltage = ch1;
-                        device.DeviceData.SensorData.IR_Status = emitter;
-                    });
-                }
-            }
         }
     }
 }

@@ -1,394 +1,496 @@
-﻿using CapnoAnalyzer.Views.DevicesViews.DevicesControl;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO.Ports;
 using System.Linq;
 using System.Management;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
-using System.Windows;
+using System.Windows.Threading;
 
 namespace CapnoAnalyzer.Services
 {
-    public class SerialPortsManager : IDisposable
+    public sealed class SerialPortErrorEventArgs : EventArgs
     {
-        private ManagementEventWatcher _serialPortsRemovedWatcher;
-        private ManagementEventWatcher _serialPortsAddedWatcher;
+        public string PortName { get; }
+        public Exception Exception { get; }
+        public string Operation { get; }
+        public SerialPortErrorEventArgs(string portName, string operation, Exception ex)
+        {
+            PortName = portName;
+            Operation = operation;
+            Exception = ex;
+        }
+    }
+    public sealed class SerialMessageEventArgs : EventArgs
+    {
+        public string PortName { get; }
+        public string Message { get; }
+        public DateTime TimestampUtc { get; }
+        public SerialMessageEventArgs(string portName, string message)
+        {
+            PortName = portName;
+            Message = message;
+            TimestampUtc = DateTime.UtcNow;
+        }
+    }
 
-        public ObservableCollection<string> AvailablePorts { get; } = new ObservableCollection<string>();
-        public ObservableCollection<SerialPort> ConnectedPorts { get; } = new ObservableCollection<SerialPort>();
+    public sealed class SerialPortsManager : IDisposable
+    {
+        private readonly object _connectLock = new();
+        private readonly Encoding _encoding;
+        private readonly string _lineSeparator;
+        private readonly int _readBufferSize;
+        private readonly int _maxLineLength;
+        private readonly Dispatcher _dispatcher;
 
-        private readonly ConcurrentDictionary<string, BlockingCollection<string>> _portDataQueues = new();
-        private readonly ConcurrentDictionary<string, Task> _portProcessingTasks = new();
-        private readonly ConcurrentDictionary<string, CancellationTokenSource> _portCancellationTokens = new();
+        private ManagementEventWatcher _creationWatcher;
+        private ManagementEventWatcher _deletionWatcher;
+
+        public ObservableCollection<string> AvailablePorts { get; } = new();
+        public ObservableCollection<SerialPort> ConnectedPorts { get; } = new();
+
+        private readonly ConcurrentDictionary<string, Channel<string>> _portChannels = new();
+        private readonly ConcurrentDictionary<string, Task> _portConsumerTasks = new();
+        private readonly ConcurrentDictionary<string, CancellationTokenSource> _portCancellation = new();
+        private readonly ConcurrentDictionary<string, Task> _portReadLoops = new();
+        private readonly ConcurrentDictionary<string, StringBuilder> _lineBuffers = new();
+
+        // GERİYE DÖNÜK UYUMLULUK: Eski event (Action<string,string>)
+        public event Action<string, string> MessageReceived;
+
+        // Yeni, zengin event
+        public event EventHandler<SerialMessageEventArgs> MessageReceivedEx;
 
         public event Action<string> SerialPortAdded;
         public event Action<string> SerialPortRemoved;
-        public event Action<string> DeviceDisconnected; 
-        public event Action<string, string> MessageReceived;
+        public event Action<string> DeviceDisconnected;
+        public event EventHandler<SerialPortErrorEventArgs> ErrorOccurred;
 
-        public SerialPortsManager()
+        public SerialPortsManager(
+            Dispatcher dispatcher = null,
+            Encoding encoding = null,
+            string lineSeparator = "\n",
+            int readBufferSize = 4096,
+            int maxLineLength = 32 * 1024
+        )
         {
-            InitializeEventWatchers();
+            _dispatcher = dispatcher ?? Dispatcher.CurrentDispatcher;
+            _encoding = encoding ?? Encoding.ASCII;
+            _lineSeparator = lineSeparator;
+            _readBufferSize = readBufferSize;
+            _maxLineLength = maxLineLength;
+
+            InitializeWatchers();
             ScanSerialPorts();
         }
 
+        #region Public API
+
         public void ConnectToPort(string portName, int baudRate = 9600)
         {
-            try
+            lock (_connectLock)
             {
-                if (ConnectedPorts.Any(p => p.PortName == portName))
-                    throw new InvalidOperationException($"Port {portName} is already connected.");
+                if (ConnectedPorts.Any(p => p.PortName.Equals(portName, StringComparison.OrdinalIgnoreCase)))
+                    return;
 
-                var serialPort = new SerialPort
+                SerialPort sp = null;
+                try
                 {
-                    PortName = portName,
-                    BaudRate = baudRate,
-                    DataBits = 8,
-                    Parity = Parity.None,
-                    StopBits = StopBits.One,
-                    Handshake = Handshake.None,
-                    ReadTimeout = 5000,
-                    WriteTimeout = 5000,
-                    ReadBufferSize = 4096,
-                    WriteBufferSize = 2048
-                };
-
-                serialPort.DataReceived += (s, e) => OnDataReceived(serialPort);
-                serialPort.Open();
-
-                // ConnectedPorts koleksiyonunu güncelle
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    if (!ConnectedPorts.Any(p => p.PortName == portName))
+                    sp = new SerialPort(portName, baudRate)
                     {
-                        ConnectedPorts.Add(serialPort);
-                    }
-                });
-                StartProcessingPortData(serialPort);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error connecting to port {portName}: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        DataBits = 8,
+                        Parity = Parity.None,
+                        StopBits = StopBits.One,
+                        Handshake = Handshake.None,
+                        ReadTimeout = 500,
+                        WriteTimeout = 1000,
+                        ReadBufferSize = _readBufferSize,
+                        WriteBufferSize = 2048,
+                        NewLine = _lineSeparator
+                    };
+
+                    sp.Open();
+
+                    InvokeOnUi(() =>
+                    {
+                        if (!ConnectedPorts.Contains(sp))
+                            ConnectedPorts.Add(sp);
+                    });
+
+                    StartPortPipelines(sp);
+                }
+                catch (Exception ex)
+                {
+                    sp?.Dispose();
+                    RaiseError(portName, "Connect", ex);
+                }
             }
         }
 
         public void DisconnectFromPort(string portName)
         {
-            try
+            lock (_connectLock)
             {
-                var serialPort = ConnectedPorts.FirstOrDefault(p => p.PortName == portName);
-                if (serialPort == null) return;
+                var sp = ConnectedPorts.FirstOrDefault(p => p.PortName.Equals(portName, StringComparison.OrdinalIgnoreCase));
+                if (sp == null) return;
 
-                StopProcessingPortData(portName);
-                serialPort.DataReceived -= (s, e) => OnDataReceived(serialPort);
-                serialPort.Close();
-                ConnectedPorts.Remove(serialPort);         
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error disconnecting from port {portName}: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        public void SendMessage(string portName, string message)
-        {
-            // Cihaza veri göndermek için eklediğimiz metot:
-            var serialPort = ConnectedPorts.FirstOrDefault(p => p.PortName == portName);
-            if (serialPort != null && serialPort.IsOpen)
-            {
-                // Protokol gerektiriyorsa \r\n ekleyebilirsiniz: e.g. serialPort.WriteLine(message);
-                serialPort.WriteLine(message);
-            }
-            else
-            {
-                // Port kapalıysa uyarı verebilir veya Exception fırlatabilirsiniz
-                // throw new InvalidOperationException($"Port {portName} not connected.");
-            }
-        }
-
-        public IEnumerable<string> GetConnectedPorts()
-        {
-            return ConnectedPorts.Select(p => p.PortName);
-        }
-
-        /*
-        private void OnDataReceived(SerialPort serialPort)
-        {
-            try
-            {
-                string data = serialPort.ReadExisting();
-                if (!string.IsNullOrEmpty(data))
-                {
-                    // Tampon bellekte veriyi biriktir
-                    if (!_buffers.ContainsKey(serialPort.PortName))
-                    {
-                        _buffers[serialPort.PortName] = new StringBuilder();
-                    }
-
-                    var buffer = _buffers[serialPort.PortName];
-                    buffer.Append(data);
-
-                    // Tam mesajları ayır ve kuyruğa ekle
-                    string bufferContent = buffer.ToString();
-                    string[] messages = bufferContent.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-                    buffer.Clear();
-                    if (!bufferContent.EndsWith("\r\n") && !bufferContent.EndsWith("\n"))
-                    {
-                        buffer.Append(messages[^1]); // Eksik mesajı tekrar tampon belleğe ekle
-                        messages = messages.Take(messages.Length - 1).ToArray();
-                    }
-
-                    // Mesajları işleme kuyruğuna ekle
-                    if (_portDataQueues.TryGetValue(serialPort.PortName, out var queue))
-                    {
-                        foreach (var message in messages)
-                        {
-                            queue.Add(message);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error reading data from port {serialPort.PortName}: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        */
-        private readonly ConcurrentDictionary<string, StringBuilder> _buffers = new();
-        private void OnDataReceived(SerialPort serialPort)
-        {
-            try
-            {
-                // Seri porttan gelen tüm veriyi oku
-                string incomingData = serialPort.ReadExisting();
-                if (string.IsNullOrEmpty(incomingData))
-                    return;
-
-                // Port’a ait buffer (thread-safe kontrol)
-                var buffer = _buffers.GetOrAdd(serialPort.PortName, _ => new StringBuilder());
-
-                lock (buffer) // StringBuilder thread-safe değildir, o yüzden lock!
-                {
-                    buffer.Append(incomingData);
-
-                    // Satır sonu bazlı bölme (Hem \n hem \r\n destekler)
-                    string bufferContent = buffer.ToString();
-                    string[] lines = bufferContent.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-
-                    // Son eleman eksik olabilir, onu tekrar buffer’da tut!
-                    int fullLinesCount = bufferContent.EndsWith("\n") || bufferContent.EndsWith("\r\n")
-                        ? lines.Length
-                        : lines.Length - 1;
-
-                    for (int i = 0; i < fullLinesCount; i++)
-                    {
-                        string cleanLine = lines[i].Trim();
-                        if (!string.IsNullOrEmpty(cleanLine))
-                        {
-                            // Kuyruğa ekle (varsa)
-                            if (_portDataQueues.TryGetValue(serialPort.PortName, out var queue))
-                                queue.Add(cleanLine);
-                        }
-                    }
-
-                    // Son incomplete satırı tekrar buffer’a al
-                    buffer.Clear();
-                    if (fullLinesCount < lines.Length)
-                        buffer.Append(lines[^1]);
-                }
-            }
-            catch (Exception ex)
-            {
-                // Hata yönetimi
-                Application.Current.Dispatcher.BeginInvoke((Action)(() =>
-                {
-                    MessageBox.Show($"Error reading data from port {serialPort.PortName}: {ex.Message}",
-                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }));
-            }
-        }
-
-
-        private void StartProcessingPortData(SerialPort serialPort)
-        {
-            var portName = serialPort.PortName;
-            var cancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = cancellationTokenSource.Token;
-
-            // Her port için bir veri kuyruğu oluştur
-            var dataQueue = new BlockingCollection<string>();
-            _portDataQueues[portName] = dataQueue;
-            _portCancellationTokens[portName] = cancellationTokenSource;
-
-            // Veri işleme görevini başlat
-            var processingTask = Task.Run(async () =>
-            {
                 try
                 {
-                    foreach (var data in dataQueue.GetConsumingEnumerable(cancellationToken))
-                    {
-                        await ProcessDataAsync(portName, data);
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    // Görev iptal edildiğinde sessizce çık
+                    StopPortPipelines(portName);
+
+                    if (sp.IsOpen)
+                        sp.Close();
+
+                    InvokeOnUi(() => ConnectedPorts.Remove(sp));
+                    sp.Dispose();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error processing data for port {portName}: {ex.Message}",
-                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    RaiseError(portName, "Disconnect", ex);
                 }
-            }, cancellationToken);
-
-            _portProcessingTasks[portName] = processingTask;
-        }
-        private async Task ProcessDataAsync(string portName, string data)
-        {
-            try
-            {
-                // UI güncellemesini asenkron olarak yap
-                await Application.Current.Dispatcher.InvokeAsync(() =>
+                finally
                 {
-                    // Mesaj alındı olayını tetikleyin
-                    MessageReceived?.Invoke(portName, data);
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error processing data for port {portName}: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    DeviceDisconnected?.Invoke(portName);
+                }
             }
         }
 
-        private void StopProcessingPortData(string portName)
+        public void SendMessage(string portName, string message, bool appendLineSeparator = true)
         {
-            if (_portCancellationTokens.TryRemove(portName, out var cancellationTokenSource))
-            {
-                cancellationTokenSource.Cancel();
-                cancellationTokenSource.Dispose();
-            }
+            var sp = ConnectedPorts.FirstOrDefault(p => p.PortName.Equals(portName, StringComparison.OrdinalIgnoreCase));
+            if (sp == null || !sp.IsOpen) return;
 
-            if (_portDataQueues.TryRemove(portName, out var dataQueue))
-            {
-                dataQueue.CompleteAdding();
-            }
-
-            if (_portProcessingTasks.TryRemove(portName, out var processingTask))
-            {
-                processingTask.Wait();
-            }
-        }
-
-        private void InitializeEventWatchers()
-        {
             try
             {
-                _serialPortsRemovedWatcher = CreateEventWatcher(
-                    "SELECT * FROM Win32_DeviceChangeEvent WHERE EventType = 3",
-                    OnSerialPortRemoved
-                );
-
-                _serialPortsAddedWatcher = CreateEventWatcher(
-                    "SELECT * FROM __InstanceOperationEvent WITHIN 5 WHERE TargetInstance ISA 'Win32_SerialPort'",
-                    OnSerialPortAdded
-                );
+                if (appendLineSeparator)
+                {
+                    sp.Write(message);
+                    sp.Write(_lineSeparator);
+                }
+                else
+                {
+                    sp.Write(message);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error initializing event watchers: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                RaiseError(portName, "SendMessage", ex);
             }
         }
 
-        private ManagementEventWatcher CreateEventWatcher(string query, EventArrivedEventHandler eventHandler)
-        {
-            var watcher = new ManagementEventWatcher(new ManagementScope("root\\CIMV2"), new WqlEventQuery(query));
-            watcher.EventArrived += eventHandler;
-            watcher.Start();
-            return watcher;
-        }
-
-        private void OnSerialPortRemoved(object sender, EventArrivedEventArgs e)
-        {
-            Application.Current.Dispatcher.BeginInvoke((Action)(() =>
-            {
-                ScanSerialPorts(); // Port listesini güncelle
-            }));
-        }
-
-        // Port çıkarıldığında, ilgili cihaza haber veriyoruz.
-        public void NotifyDeviceIfPortRemoved(string portName)
-        {
-            if (!AvailablePorts.Contains(portName)) // Eğer port artık mevcut değilse
-            {
-                DeviceDisconnected?.Invoke(portName); // Cihazın bağlantısının koptuğunu bildir.
-            }
-        }
-
-        private void OnSerialPortAdded(object sender, EventArrivedEventArgs e)
-        {
-            Application.Current.Dispatcher.BeginInvoke((Action)(() =>
-            {
-                ScanSerialPorts(); // Port listesini güncelle
-            }));           
-        }
+        public IEnumerable<string> GetConnectedPorts() =>
+            ConnectedPorts.Select(p => p.PortName).ToArray();
 
         public void ScanSerialPorts()
         {
             try
             {
-                var existingPorts = AvailablePorts.ToList();
-                var currentPorts = SerialPort.GetPortNames().ToList();
+                var current = SerialPort.GetPortNames().OrderBy(n => n).ToList();
+                var existing = AvailablePorts.ToList();
 
-                foreach (var port in currentPorts.Except(existingPorts))
+                foreach (var added in current.Except(existing))
                 {
-                    AvailablePorts.Add(port);
-                    SerialPortAdded?.Invoke(port);
+                    InvokeOnUi(() => AvailablePorts.Add(added));
+                    SerialPortAdded?.Invoke(added);
                 }
 
-                foreach (var port in existingPorts.Except(currentPorts))
+                foreach (var removed in existing.Except(current))
                 {
-                    AvailablePorts.Remove(port);
-                    SerialPortRemoved?.Invoke(port);
+                    InvokeOnUi(() => AvailablePorts.Remove(removed));
+                    SerialPortRemoved?.Invoke(removed);
+
+                    if (ConnectedPorts.Any(p => p.PortName == removed))
+                    {
+                        DisconnectFromPort(removed);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error scanning serial ports: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                RaiseError(null, "ScanSerialPorts", ex);
             }
         }
 
-        public void Dispose()
+        public void NotifyDeviceIfPortRemoved(string portName)
         {
-            foreach (var portName in ConnectedPorts.Select(p => p.PortName).ToList())
+            if (!AvailablePorts.Contains(portName))
             {
-                DisconnectFromPort(portName);
+                DeviceDisconnected?.Invoke(portName);
             }
-            DisposeWatcher(_serialPortsRemovedWatcher);
-            DisposeWatcher(_serialPortsAddedWatcher);
         }
 
-        private void DisposeWatcher(ManagementEventWatcher watcher)
+        #endregion
+
+        #region Pipelines
+
+        private void StartPortPipelines(SerialPort sp)
+        {
+            var portName = sp.PortName;
+
+            var cts = new CancellationTokenSource();
+            _portCancellation[portName] = cts;
+
+            var channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = true,
+                AllowSynchronousContinuations = false
+            });
+            _portChannels[portName] = channel;
+
+            var consumerTask = Task.Run(() => ConsumeMessagesAsync(portName, channel.Reader, cts.Token), cts.Token);
+            _portConsumerTasks[portName] = consumerTask;
+
+            var readLoopTask = Task.Run(() => ReadLoopAsync(sp, channel.Writer, cts.Token), cts.Token);
+            _portReadLoops[portName] = readLoopTask;
+        }
+
+        private async Task ReadLoopAsync(SerialPort sp, ChannelWriter<string> writer, CancellationToken ct)
+        {
+            var portName = sp.PortName;
+            var lineBuffer = _lineBuffers.GetOrAdd(portName, _ => new StringBuilder(256));
+            byte[] rawBuffer = new byte[_readBufferSize];
+            try
+            {
+                while (!ct.IsCancellationRequested && sp.IsOpen)
+                {
+                    int bytesRead;
+                    try
+                    {
+                        bytesRead = await sp.BaseStream
+                                            .ReadAsync(rawBuffer.AsMemory(0, rawBuffer.Length), ct)
+                                            .ConfigureAwait(false);
+
+                        if (bytesRead == 0)
+                        {
+                            await Task.Delay(10, ct).ConfigureAwait(false);
+                            continue;
+                        }
+                    }
+                    catch (OperationCanceledException) { break; }
+                    catch (TimeoutException) { continue; }
+
+                    var text = _encoding.GetString(rawBuffer, 0, bytesRead);
+                    lineBuffer.Append(text);
+
+                    if (lineBuffer.Length > _maxLineLength)
+                    {
+                        lineBuffer.Clear();
+                        RaiseError(portName, "LineBufferOverflow",
+                            new InvalidOperationException("Maksimum satır uzunluğu aşıldı."));
+                        continue;
+                    }
+
+                    // Bir seferde çıkarılacak satırlar için lokal liste
+                    List<string> completedLines = null;
+
+                    while (true)
+                    {
+                        int idx = lineBuffer.ToString().IndexOf(_lineSeparator, StringComparison.Ordinal);
+                        if (idx < 0) break;
+
+                        string line = lineBuffer.ToString(0, idx);
+                        lineBuffer.Remove(0, idx + _lineSeparator.Length);
+
+                        string clean = line.Trim();
+                        if (clean.Length > 0)
+                        {
+                            completedLines ??= new List<string>();
+                            completedLines.Add(clean);
+                        }
+                    }
+
+                    if (completedLines != null)
+                    {
+                        foreach (var line in completedLines)
+                        {
+                            if (!writer.TryWrite(line))
+                                await writer.WriteAsync(line, ct).ConfigureAwait(false);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                RaiseError(portName, "ReadLoop", ex);
+            }
+            finally
+            {
+                writer.TryComplete();
+                if (!ct.IsCancellationRequested)
+                {
+                    InvokeOnUi(() =>
+                    {
+                        var found = ConnectedPorts.FirstOrDefault(p => p.PortName == portName);
+                        if (found != null)
+                        {
+                            ConnectedPorts.Remove(found);
+                            try { found.Close(); found.Dispose(); } catch { }
+                        }
+                    });
+                    DeviceDisconnected?.Invoke(portName);
+                }
+            }
+        }
+
+        private async Task ConsumeMessagesAsync(string portName, ChannelReader<string> reader, CancellationToken ct)
         {
             try
             {
-                watcher?.Stop();
-                watcher?.Dispose();
+                await foreach (var msg in reader.ReadAllAsync(ct).ConfigureAwait(false))
+                {
+                    InvokeOnUi(() => RaiseMessage(portName, msg));
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                RaiseError(portName, "ConsumeMessages", ex);
+            }
+        }
+
+        private void StopPortPipelines(string portName)
+        {
+            if (_portCancellation.TryRemove(portName, out var cts))
+            {
+                try { cts.Cancel(); } catch { }
+                cts.Dispose();
+            }
+
+            if (_portChannels.TryRemove(portName, out var channel))
+                channel.Writer.TryComplete();
+
+            if (_portReadLoops.TryRemove(portName, out var readTask))
+                SafeWait(readTask, portName, "ReadLoopStop");
+
+            if (_portConsumerTasks.TryRemove(portName, out var consumer))
+                SafeWait(consumer, portName, "ConsumerStop");
+
+            _lineBuffers.TryRemove(portName, out _);
+        }
+
+        private void SafeWait(Task task, string portName, string op)
+        {
+            try
+            {
+                if (task == null) return;
+                if (!task.IsCompleted)
+                    task.Wait(500);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error disposing watcher: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                RaiseError(portName, op, ex);
             }
         }
+
+        #endregion
+
+        #region WMI
+
+        private void InitializeWatchers()
+        {
+            try
+            {
+                _creationWatcher = CreateWatcher(
+                    "SELECT * FROM __InstanceCreationEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_SerialPort'",
+                    OnPortCreated);
+
+                _deletionWatcher = CreateWatcher(
+                    "SELECT * FROM __InstanceDeletionEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_SerialPort'",
+                    OnPortDeleted);
+            }
+            catch (Exception ex)
+            {
+                RaiseError(null, "InitializeWatchers", ex);
+            }
+        }
+
+        private ManagementEventWatcher CreateWatcher(string query, EventArrivedEventHandler handler)
+        {
+            var scope = new ManagementScope("root\\CIMV2");
+            var watcher = new ManagementEventWatcher(scope, new WqlEventQuery(query));
+            watcher.EventArrived += handler;
+            watcher.Start();
+            return watcher;
+        }
+
+        private void OnPortCreated(object sender, EventArrivedEventArgs e) => InvokeOnUi(ScanSerialPorts);
+        private void OnPortDeleted(object sender, EventArrivedEventArgs e) => InvokeOnUi(ScanSerialPorts);
+
+        #endregion
+
+        #region Helpers
+
+        // TEK NOKTA: Mesaj yayınlama (hem eski hem yeni event)
+        private void RaiseMessage(string portName, string message)
+        {
+            try
+            {
+                MessageReceived?.Invoke(portName, message);                 // Eski API
+                MessageReceivedEx?.Invoke(this, new SerialMessageEventArgs(portName, message)); // Yeni API
+            }
+            catch { /* Event handler hatası yutulur */ }
+        }
+
+        private void InvokeOnUi(Action action)
+        {
+            if (_dispatcher == null || _dispatcher.CheckAccess()) action();
+            else _dispatcher.BeginInvoke(action);
+        }
+
+        private void RaiseError(string portName, string operation, Exception ex)
+        {
+            try
+            {
+                ErrorOccurred?.Invoke(this, new SerialPortErrorEventArgs(portName, operation, ex));
+            }
+            catch { }
+        }
+
+        #endregion
+
+        #region Dispose
+
+        private bool _disposed;
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+
+            try
+            {
+                foreach (var port in ConnectedPorts.Select(p => p.PortName).ToList())
+                    DisconnectFromPort(port);
+
+                DisposeWatcher(_creationWatcher, OnPortCreated);
+                DisposeWatcher(_deletionWatcher, OnPortDeleted);
+            }
+            catch (Exception ex)
+            {
+                RaiseError(null, "Dispose", ex);
+            }
+        }
+
+        private void DisposeWatcher(ManagementEventWatcher watcher, EventArrivedEventHandler handler)
+        {
+            if (watcher == null) return;
+            try
+            {
+                watcher.EventArrived -= handler;
+                watcher.Stop();
+                watcher.Dispose();
+            }
+            catch (Exception ex)
+            {
+                RaiseError(null, "DisposeWatcher", ex);
+            }
+        }
+
+        #endregion
     }
 }

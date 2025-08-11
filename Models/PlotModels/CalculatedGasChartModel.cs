@@ -1,34 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CapnoAnalyzer.Helpers;
+using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
-using OxyPlot;
 using System.Windows;
 
 namespace CapnoAnalyzer.Models.PlotModels
 {
-
     public class CalculatedGasChartModel : BindableBase
     {
         private PlotModel _plotModel;
         private LineSeries _gasSeries;
-        private LineSeries _referenceSeries;
 
         public PlotModel PlotModel
         {
             get => _plotModel;
-            set
-            {
-                if (_plotModel != value)
-                {
-                    _plotModel = value;
-                    OnPropertyChanged();
-                }
-            }
+            set { if (_plotModel != value) { _plotModel = value; OnPropertyChanged(); } }
         }
 
         private int _plotTime = 10;
@@ -38,16 +25,12 @@ namespace CapnoAnalyzer.Models.PlotModels
             set => SetProperty(ref _plotTime, value);
         }
 
-        public CalculatedGasChartModel()
-        {
-            InitializePlotModel();
-        }
+        public CalculatedGasChartModel() => InitializePlotModel();
 
         public void InitializePlotModel()
         {
             PlotModel = new PlotModel { TitleFontSize = 12, Title = "Hesaplanan Sensör Verileri" };
 
-            // X Ekseni (Zaman)
             PlotModel.Axes.Add(new LinearAxis
             {
                 Position = AxisPosition.Bottom,
@@ -57,7 +40,6 @@ namespace CapnoAnalyzer.Models.PlotModels
                 MinorGridlineStyle = LineStyle.Dot
             });
 
-            // Y Ekseni (Sensör Değerleri)
             PlotModel.Axes.Add(new LinearAxis
             {
                 Position = AxisPosition.Left,
@@ -67,7 +49,6 @@ namespace CapnoAnalyzer.Models.PlotModels
                 MinorGridlineStyle = LineStyle.Dot
             });
 
-            // Hesaplanmış Gaz Değeri Serisi
             _gasSeries = new LineSeries
             {
                 Title = "Calculated Gas Value",
@@ -76,15 +57,8 @@ namespace CapnoAnalyzer.Models.PlotModels
                 Color = OxyColor.Parse("#4CAF50"),
                 StrokeThickness = 2
             };
+
             PlotModel.Series.Add(_gasSeries);
-
-            // Legend (Açıklama)
-            //PlotModel.Legends.Add(new Legend
-            //{
-            //    LegendTitle = "Sensörler",
-            //    LegendPosition = LegendPosition.TopRight
-            //});
-
             OnPropertyChanged(nameof(PlotModel));
         }
 
@@ -93,10 +67,7 @@ namespace CapnoAnalyzer.Models.PlotModels
             Application.Current.Dispatcher.Invoke(() =>
             {
                 _gasSeries.Points.Add(new DataPoint(time, gasValue));
-
-                // 10 saniyeden eski verileri sil (1000 ms * 10) (Zaman bazlı silme)
-                _gasSeries.Points.RemoveAll((p => p.X < time - PlotTime));
-
+                _gasSeries.Points.RemoveAll(p => p.X < time - PlotTime);
                 PlotModel.InvalidatePlot(true);
                 OnPropertyChanged(nameof(PlotModel));
             });

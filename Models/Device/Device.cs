@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Ports;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using CapnoAnalyzer.Helpers;
-using CapnoAnalyzer.Models.PlotModels;
 using CapnoAnalyzer.Services;
 
 namespace CapnoAnalyzer.Models.Device
@@ -22,8 +20,8 @@ namespace CapnoAnalyzer.Models.Device
 
         #region Komutlar
         public ICommand SendMessageCommand { get; }
-        public ICommand AutoSendMessageCommand { get; }        
-        public ICommand AutoSaveDataCommand { get; }        
+        public ICommand AutoSendMessageCommand { get; }
+        public ICommand AutoSaveDataCommand { get; }
         #endregion
 
         #region Constructor
@@ -33,18 +31,25 @@ namespace CapnoAnalyzer.Models.Device
             _portManager.DeviceDisconnected += OnDeviceDisconnected;
             _portManager.MessageReceived += OnMessageReceived;
 
-            Properties = new DeviceProperties
-            {
-                PortName = portName,
-                Status = deviceStatus
-            };
+            Properties = new DeviceProperties { PortName = portName, Status = deviceStatus };
 
             SendMessageCommand = new DeviceRelayCommand(SendMessage, CanSendMessage);
             AutoSendMessageCommand = new DeviceRelayCommand(ToggleAutoSend);
             AutoSaveDataCommand = new DeviceRelayCommand(ToggleAutoSaveData);
 
-            // İşlemi başlat
+            // Not: Grafik kayıt/servisi kaldırıldı. Plot yönetimi DeviceDataParser → SensorPlot.Enqueue ile yapılır.
+
             InitializeDeviceAsync();
+        }
+
+        public void DisposeDevice()
+        {
+            StopAutoSend();
+            _portManager.DeviceDisconnected -= OnDeviceDisconnected;
+            _portManager.MessageReceived -= OnMessageReceived;
+
+            // Plot modelinin timer'ını temizle
+            Interface?.SensorPlot?.Dispose();
         }
         #endregion
 
@@ -65,69 +70,44 @@ namespace CapnoAnalyzer.Models.Device
         #endregion
 
         #region Otomatik Veri Kaydetme
-
-        // Otomatik veri kaydetme için gerekli alanlar
         private StreamWriter _autoSaveWriter;
         private string _autoSaveFilePath;
         private bool _autoSaveDataActive;
 
-        // "Save Data" aktif mi?
         public bool AutoSaveDataActive
         {
             get => _autoSaveDataActive;
             set => SetProperty(ref _autoSaveDataActive, value);
         }
 
-        /// <summary>
-        /// Kullanıcı arayüzündeki "Save Data" (AutoSaveData) CheckBox’ı
-        /// işaretlenip/işareti kaldırıldığında tetiklenir.
-        /// </summary>
         public void ToggleAutoSaveData()
         {
             if (AutoSaveDataActive)
-            {
-                // Şu anda aktifse kapat
                 StopAutoSaveData();
-            }
             else
-            {
-                // Kapalıysa başlat
                 StartAutoSaveData();
-            }
         }
 
-        /// <summary>
-        /// Yeni bir .txt dosyası oluşturur ve yazıma hazırlar.
-        /// </summary>
         private void StartAutoSaveData()
         {
-            if (AutoSaveDataActive) return;  // Zaten aktifse tekrar yapma
+            if (AutoSaveDataActive) return;
 
             AutoSaveDataActive = true;
-
-            // Masaüstünde klasör ve dosya yolunu oluştur
             SetAutoSaveFilePath();
 
-            // Dosyayı aç (append:false => yeni)
             _autoSaveWriter = new StreamWriter(_autoSaveFilePath, append: false);
-
-            // Başlangıç notu (isteğe bağlı)
             _autoSaveWriter.WriteLine($"=== Log Start for {Properties.PortName} at {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
             _autoSaveWriter.Flush();
         }
 
-        /// <summary>
-        /// Açık dosyayı "Log End" satırı yazarak kapatır, kaynakları temizler.
-        /// </summary>
         private void StopAutoSaveData()
         {
-            if (!AutoSaveDataActive) return; // Zaten kapalıysa çık
+            if (!AutoSaveDataActive) return;
 
             AutoSaveDataActive = false;
 
             if (_autoSaveWriter != null)
             {
-                // Bitiş notu (isteğe bağlı)
                 _autoSaveWriter.WriteLine($"=== Log End at {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
                 _autoSaveWriter.Flush();
                 _autoSaveWriter.Close();
@@ -136,38 +116,25 @@ namespace CapnoAnalyzer.Models.Device
             }
         }
 
-        /// <summary>
-        /// Masaüstünde "CapnoLogs" klasörü içinde
-        /// "PortName_yyyyMMdd_HHmmss.txt" formatında bir log dosyası belirler.
-        /// </summary>
         private void SetAutoSaveFilePath()
         {
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string logFolder = Path.Combine(desktopPath, "CapnoLogs");
+            string logFolder = System.IO.Path.Combine(desktopPath, "CapnoLogs");
             Directory.CreateDirectory(logFolder);
 
-            // Örnek dosya adı: "COM3_20250409_153000.txt"
             string fileName = $"{Properties.PortName}_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
-            _autoSaveFilePath = Path.Combine(logFolder, fileName);
+            _autoSaveFilePath = System.IO.Path.Combine(logFolder, fileName);
         }
 
-        /// <summary>
-        /// SerialPortsManager tarafından herhangi bir porttan veri geldiğinde
-        /// tetiklenen olaydır. Bu veri gerçekten bu cihaza (this.PortName) aitse 
-        /// ve Save Data aktifse, dosyaya yazar.
-        /// </summary>
         private void OnMessageReceived(string receivedPortName, string data)
         {
-            // Bu cihazın portu mu?
             if (Properties.PortName == receivedPortName)
             {
-                // "Save Data" aktifse ve dosya açıksa
                 if (AutoSaveDataActive && _autoSaveWriter != null)
                 {
-                    // Zaman damgası ekleyerek log
                     string timeStamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
                     _autoSaveWriter.WriteLine($"[{timeStamp}] {data}");
-                    _autoSaveWriter.Flush();  // Her satırda flush ederseniz anlık yazılır
+                    _autoSaveWriter.Flush();
                 }
             }
         }
@@ -183,14 +150,8 @@ namespace CapnoAnalyzer.Models.Device
 
         public void ToggleAutoSend()
         {
-            if (AutoSendActive)
-            {
-                StopAutoSend();
-            }
-            else
-            {
-                StartAutoSend();
-            }
+            if (AutoSendActive) StopAutoSend();
+            else StartAutoSend();
         }
 
         private async void StartAutoSend()
@@ -206,13 +167,10 @@ namespace CapnoAnalyzer.Models.Device
                 while (AutoSendActive && !token.IsCancellationRequested)
                 {
                     _portManager.SendMessage(Properties.PortName, Interface.OutgoingMessage);
-                    await Task.Delay(10, token); // 10ms bekle
+                    await Task.Delay(10, token); // 10ms
                 }
             }
-            catch (TaskCanceledException)
-            {
-                // Görev iptal edildiğinde bir şey yapmaya gerek yok
-            }
+            catch (TaskCanceledException) { /* ignore */ }
         }
 
         public void StopAutoSend()
@@ -236,14 +194,7 @@ namespace CapnoAnalyzer.Models.Device
         }
 
         public event Action<Device> RemoveDeviceFromUI;
-
         private void NotifyUIForRemoval() => RemoveDeviceFromUI?.Invoke(this);
-
-        public void DisposeDevice()
-        {
-            StopAutoSend();
-            _portManager.DeviceDisconnected -= OnDeviceDisconnected;
-        }
         #endregion
 
         #region Özellikler
@@ -253,7 +204,7 @@ namespace CapnoAnalyzer.Models.Device
             get => _incomingMessage;
             set => SetProperty(ref _incomingMessage, value);
         }
-        
+
         private DeviceDataType _deviceData = new();
         public DeviceDataType DeviceData
         {
@@ -282,7 +233,7 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _dataPacket_2, value);
         }
 
-        private DataPacket_3 _dataPacket_3 = new(); 
+        private DataPacket_3 _dataPacket_3 = new();
         public DataPacket_3 DataPacket_3
         {
             get => _dataPacket_3;
@@ -302,25 +253,22 @@ namespace CapnoAnalyzer.Models.Device
             await StartSensorProcessingAsync();
         }
 
-        private bool isProcessing = false; // İşlem durumu kontrolü için bayrak
-        private CancellationTokenSource cancellationTokenSource = null; // Task iptal mekanizması
+        private bool isProcessing = false;
+        private CancellationTokenSource cancellationTokenSource = null;
 
         public async Task StartSensorProcessingAsync()
         {
-            // Eğer işlem zaten çalışıyorsa yeni bir işlem başlatma
             if (isProcessing)
             {
                 Debug.WriteLine("Sensor processing is already running.");
                 return;
             }
 
-            // İşlem durumu ve iptal mekanizmasını başlat
             isProcessing = true;
             cancellationTokenSource = new CancellationTokenSource();
 
             try
             {
-                // Sonsuz döngü içinde sensör işleme başlat
                 await Task.Run(async () =>
                 {
                     while (!cancellationTokenSource.Token.IsCancellationRequested)
@@ -329,55 +277,45 @@ namespace CapnoAnalyzer.Models.Device
                         var gasSensorValues = new List<double>();
                         var referenceSensorValues = new List<double>();
 
-                        // MaxValueSamplingTime süresi boyunca sensör verilerini topla
                         while ((DateTime.Now - samplingStartTime).TotalSeconds < Interface.MaxValueSamplingTime)
                         {
                             if (cancellationTokenSource.Token.IsCancellationRequested)
-                            {
-                                Debug.WriteLine("Sensor processing canceled.");
                                 break;
-                            }
 
-                            // Gelen verileri kontrol et ve biriktir
                             switch (Properties.DataPacketType)
                             {
                                 case "1":
                                     gasSensorValues.Add(DataPacket_1.GasSensor);
                                     referenceSensorValues.Add(DataPacket_1.ReferenceSensor);
                                     break;
-
                                 case "2":
                                     gasSensorValues.Add(DataPacket_2.GainAdsVoltagesIIR[0]);
                                     referenceSensorValues.Add(DataPacket_2.GainAdsVoltagesIIR[1]);
                                     break;
-
                                 case "3":
                                     gasSensorValues.Add(DataPacket_3.Ch0);
                                     referenceSensorValues.Add(DataPacket_3.Ch1);
                                     break;
-
                                 default:
                                     Debug.WriteLine("Unknown DataPacketType.");
                                     break;
                             }
 
-                            // Küçük bir gecikme ekleyerek CPU kullanımını optimize et
                             await Task.Delay(10, cancellationTokenSource.Token);
                         }
 
-                        // Max ve Min değerleri hesapla ve Interface.Data'ya ata
                         if (gasSensorValues.Any())
                         {
                             Interface.Data.GasSensorMaxValue = gasSensorValues.Max();
                             Interface.Data.GasSensorMinValue = gasSensorValues.Min();
-                            Interface.Data.GasSensorBandValue = Math.Abs(gasSensorValues.Max() - gasSensorValues.Min());
+                            Interface.Data.GasSensorBandValue = Math.Abs(Interface.Data.GasSensorMaxValue - Interface.Data.GasSensorMinValue);
                         }
 
                         if (referenceSensorValues.Any())
                         {
                             Interface.Data.ReferenceSensorMaxValue = referenceSensorValues.Max();
                             Interface.Data.ReferenceSensorMinValue = referenceSensorValues.Min();
-                            Interface.Data.ReferenceSensorBandValue = Math.Abs(referenceSensorValues.Max() - referenceSensorValues.Min());
+                            Interface.Data.ReferenceSensorBandValue = Math.Abs(Interface.Data.ReferenceSensorMaxValue - Interface.Data.ReferenceSensorMinValue);
                         }
                     }
                 }, cancellationTokenSource.Token);
@@ -388,22 +326,19 @@ namespace CapnoAnalyzer.Models.Device
             }
             finally
             {
-                // İşlem durumu sıfırla ve kaynakları temizle
                 isProcessing = false;
-                cancellationTokenSource.Dispose();
+                cancellationTokenSource?.Dispose();
                 cancellationTokenSource = null;
             }
         }
 
         public void StopSensorProcessing()
         {
-            // Eğer işlem çalışıyorsa iptal et
             if (isProcessing && cancellationTokenSource != null)
             {
                 cancellationTokenSource.Cancel();
             }
         }
-
     }
 
     #region DeviceProperties Sınıfı
@@ -428,7 +363,7 @@ namespace CapnoAnalyzer.Models.Device
         public DeviceStatus Status
         {
             get => _status;
-            set => SetProperty(ref _status, value); 
+            set => SetProperty(ref _status, value);
         }
 
         private int _dataSamplingFrequency;

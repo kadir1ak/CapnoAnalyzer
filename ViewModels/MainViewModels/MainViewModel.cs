@@ -15,6 +15,7 @@ using CapnoAnalyzer.Models.Settings;
 using CapnoAnalyzer.ViewModels.CalibrationViewModels;
 using CapnoAnalyzer.Views.DevicesViews.Devices;
 using System.Threading.Tasks;
+using CapnoAnalyzer.Models.PlotModels;  // IHighFreqPlot için
 
 namespace CapnoAnalyzer.ViewModels.MainViewModels
 {
@@ -79,6 +80,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                     break;
             }
         }
+
         private void UpdateDevicesMaxValueSamplingTime()
         {
             // Cihazlara örnekleme süresini güncelle
@@ -87,12 +89,13 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                 device.Interface.MaxValueSamplingTime = SettingVM.CurrentSetting.MaxValueSamplingTime;
             }
         }
+
         private void UpdateDevicesSampleTime()
         {
-            // Cihazlara örnekleme süresini güncelle
+            // (Gerekirse burada cihaz içi başka sample parametreleri güncellenir)
             foreach (var device in DevicesVM.IdentifiedDevices)
             {
-               //device.Interface.SensorSample.SampleTime = SettingVM.CurrentSetting.SampleTime;
+                // device.Interface.SensorSample.SampleTime = SettingVM.CurrentSetting.SampleTime;
             }
         }
 
@@ -101,10 +104,17 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
             // Cihazlara çizim süresini güncelle
             foreach (var device in DevicesVM.IdentifiedDevices)
             {
-                device.Interface.SensorPlot.PlotTime = SettingVM.CurrentSetting.PlotTime;
-                device.Interface.CalculatedGasPlot.PlotTime = SettingVM.CurrentSetting.PlotTime;
-                device.Interface.UpdateSensorPlot();
-                device.Interface.UpdateCalculatedGasPlot();
+                // High-frequency çizim: zaman penceresi (SensorPlot)
+                if (device.Interface?.SensorPlot is IHighFreqPlot hf)
+                    hf.TimeWindowSeconds = SettingVM.CurrentSetting.PlotTime;
+
+                // Hesaplanan gaz grafiği kendi PlotTime’ını kullanıyor
+                if (device.Interface?.CalculatedGasPlot != null)
+                    device.Interface.CalculatedGasPlot.PlotTime = SettingVM.CurrentSetting.PlotTime;
+
+                // ❌ Eski API çağrıları kaldırıldı:
+                // device.Interface.UpdateSensorPlot();
+                // device.Interface.UpdateCalculatedGasPlot();
             }
         }
 
@@ -149,7 +159,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                     "DeviceConnections" => new DeviceConnectionsPage { DataContext = DevicesVM },
                     "Settings" => new SettingsPage(),
                     "Notes" => new NotesPage(),
-                    _ => throw new ArgumentException($"Geçersiz sayfa adı: {pageName}", nameof(pageName)) // Hatalı sayfa adı için
+                    _ => throw new ArgumentException($"Geçersiz sayfa adı: {pageName}", nameof(pageName))
                 };
 
                 // Yeni sayfayı önbelleğe ekle

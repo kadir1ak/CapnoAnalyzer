@@ -127,7 +127,7 @@ namespace CapnoAnalyzer.ViewModels.DeviceViewModels
         public ICommand DisconnectCommand { get; }
         public ICommand IdentifyDeviceCommand { get; }
 
-        private readonly SerialPortDataParser _dataParser = new SerialPortDataParser();
+        private readonly DeviceDataParser _dataParser = new DeviceDataParser();
 
         // -- 6) Yapıcı Metot --
         public DevicesViewModel()

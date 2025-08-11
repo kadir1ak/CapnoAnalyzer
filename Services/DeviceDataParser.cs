@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace CapnoAnalyzer.Services
 {
-    internal class SerialPortDataParser
+    internal class DeviceDataParser
     {
         private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 

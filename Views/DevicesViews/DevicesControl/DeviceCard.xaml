@@ -193,148 +193,108 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Cihaz Ayarları -->
-                <Border  Grid.Row="3" Grid.Column="0" Background="#F1F3FA" Margin="0 5 0 0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
-                        <StackPanel Grid.Row="0"  Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="5 0 0 0">
-                            <!-- İlk Slider -->
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0 0">
-                                <TextBlock Text="Emitter ON time (ms):" VerticalAlignment="Center"
-Foreground="#2E3B4E" 
-FontSize="12" 
-FontWeight="Bold" 
-Margin="0" 
-Width="130"/>
-                                <!-- Slider Değerini Gösteren TextBlock -->
-                                <TextBlock Text="{Binding ElementName=EmitterOnSlider, Path=Value}" 
-Foreground="#2E3B4E" 
-FontSize="12"   VerticalAlignment="Center"
-FontWeight="Bold" 
-Width="30" 
-Margin="5 2 0 0" />                      
-                            </StackPanel>
-                            <!-- Slider -->
-                            <Slider x:Name="EmitterOnSlider" 
-   Minimum="0" 
-   Maximum="100" 
-   Value="50" 
-   TickFrequency="10" 
-   IsSnapToTickEnabled="True" 
-   Orientation="Horizontal" 
-   HorizontalAlignment="Center" 
-   VerticalAlignment="Center" 
-   Margin="0 2" 
-   Width="150"/>
+                <!-- Birleştirilmiş Cihaz Ayarları Paneli -->
+                <Border Grid.Row="3" Grid.RowSpan="2" Grid.Column="0" Background="#F1F3FA" Margin="0 5 0 0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                    <StackPanel Orientation="Vertical" Margin="3">
 
-                            <!-- İkinci Slider -->
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0 0">
-                                <TextBlock Text="Emitter OFF time (ms):" VerticalAlignment="Center"
-                            Foreground="#2E3B4E" 
-                            FontSize="12" 
-                            FontWeight="Bold" 
-                            Margin="0" 
-                            Width="130"/>
-                                <!-- Slider Değerini Gösteren TextBlock -->
-                                <TextBlock Text="{Binding ElementName=EmitterOffSlider, Path=Value}" 
-                            Foreground="#2E3B4E" 
-                            FontSize="12"  VerticalAlignment="Center"
-                            FontWeight="Bold" 
-                            Width="30" 
-                            Margin="5 2 0 0" />                           
-                            </StackPanel>
-                            <!-- Slider -->
-                            <Slider x:Name="EmitterOffSlider" 
-Minimum="0" 
-Maximum="100" 
-Value="50" 
-TickFrequency="10" 
-IsSnapToTickEnabled="True" 
-Orientation="Horizontal" 
-HorizontalAlignment="Center" 
-VerticalAlignment="Center" 
-Margin="0 2" 
-Width="150"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
+                        <!-- 1. BÖLÜM: EMITTER AYARLARI -->
+                        <TextBlock Text="Emitter Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 5"/>
 
-                <!-- Cihaz Ayarları -->
-                <Border  Grid.Row="4" Grid.Column="0" Background="#F1F3FA" Margin="0 5 0 0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Top">
-                        <Grid Grid.Row="1" Grid.RowSpan="4" Grid.Column="1" Grid.ColumnSpan="2" Margin="0" HorizontalAlignment="Left">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
+                        <!-- Emitter ON Time -->
+                        <Grid Margin="0 0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="ON time (ms):" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Width="120"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1"
+                       Text="{Binding Interface.ChannelSettings.EmitterOnTime, StringFormat={}{0:F0}}" 
+                       Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"
+                       Width="30" TextAlignment="Right" Margin="5 0 0 0"/>
+                            <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                    Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                    VerticalAlignment="Center"
+                    Value="{Binding Interface.ChannelSettings.EmitterOnTime, Mode=TwoWay}"/>
+                        </Grid>
+
+                        <!-- Emitter OFF Time -->
+                        <Grid Margin="0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="OFF time (ms):" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Width="120"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1"
+        Text="{Binding Interface.ChannelSettings.EmitterOffTime, StringFormat={}{0:F0}}" 
+        Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"
+        Width="30" TextAlignment="Right" Margin="5 0 0 0"/>
+                            <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                    Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                    VerticalAlignment="Center"
+                    Value="{Binding Interface.ChannelSettings.EmitterOffTime, Mode=TwoWay}"/>
+               
+                        </Grid>
+
+                        <Separator Margin="0 2"/>
+
+                        <!-- 2. BÖLÜM: KANAL AYARLARI -->
+                        <TextBlock Text="Kanal Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 2"/>
+
+                        <Grid HorizontalAlignment="Left">
+                            <!-- Grid.Row/ColumnDefinitions aynı kalabilir -->
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Channel Configuration -->
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Gain" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0"/>
-                            <TextBlock Grid.Row="0" Grid.Column="2" Text="HP Filter"  Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Trans" Foreground="#2E3B4E" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0"/>
-                            <TextBlock Grid.Row="3" Grid.Column="2" Text="LP Filter" Foreground="#2E3B4E" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0"/>
+                            <!-- Başlıklar -->
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Gain" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="1 1"/>
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="HP Filter" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="1 1"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Trans" Foreground="#2E3B4E" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" Margin="1 1"/>
+                            <TextBlock Grid.Row="3" Grid.Column="2" Text="LP Filter" Foreground="#2E3B4E" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" Margin="1 1"/>
 
                             <!-- Channel 0 -->
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Ch0 : " Foreground="#2E3B4E" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0 0 0 8"/>
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Ch0 : " Foreground="#2E3B4E" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0 0 0 8"/>
-                            <ComboBox Grid.Row="1" Grid.Column="1" Width="65" HorizontalAlignment="Center" Margin="0 0 5 5" Height="20">
-                                <ComboBoxItem Content="16" IsSelected="True"/>
-                                <ComboBoxItem Content="8"/>
-                                <ComboBoxItem Content="4"/>
-                            </ComboBox>
-                            <ComboBox Grid.Row="1" Grid.Column="2" Width="65" HorizontalAlignment="Center" Margin="0 0 5 5" Height="20">
-                                <ComboBoxItem Content="1Hz" IsSelected="True"/>
-                                <ComboBoxItem Content="10Hz"/>
-                                <ComboBoxItem Content="100Hz"/>
-                            </ComboBox>
-                            <ComboBox Grid.Row="4" Grid.Column="1" Width="65" HorizontalAlignment="Center" Margin="0 0 5 5" Height="20">
-                                <ComboBoxItem Content="0.15T" IsSelected="True"/>
-                                <ComboBoxItem Content="0.2T"/>
-                                <ComboBoxItem Content="0.3T"/>
-                            </ComboBox>
-                            <ComboBox Grid.Row="4" Grid.Column="2" Width="65" HorizontalAlignment="Center" Margin="0 0 5 5" Height="20">
-                                <ComboBoxItem Content="180Hz" IsSelected="True"/>
-                                <ComboBoxItem Content="200Hz"/>
-                                <ComboBoxItem Content="220Hz"/>
-                            </ComboBox>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Ch0 : " Foreground="#2E3B4E" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Ch0 : " Foreground="#2E3B4E" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                            <ComboBox Grid.Row="1" Grid.Column="1" Width="65" Margin="1 2" Height="22" ItemsSource="{Binding Interface.GainOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch0.Gain}"/>
+                            <ComboBox Grid.Row="1" Grid.Column="2" Width="65" Margin="1 2" Height="22" ItemsSource="{Binding Interface.HpFilterOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch0.HpFilter}"/>
+                            <ComboBox Grid.Row="4" Grid.Column="1" Width="65" Margin="1 2" Height="22" ItemsSource="{Binding Interface.TransmittanceOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch0.Transmittance}"/>
+                            <ComboBox Grid.Row="4" Grid.Column="2" Width="65" Margin="1 2" Height="22" ItemsSource="{Binding Interface.LpFilterOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch0.LpFilter}"/>
 
                             <!-- Channel 1 -->
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ch1 : " Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0 0 0 8"/>
-                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Ch1 : " Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0 0 0 8"/>
-                            <ComboBox Grid.Row="2" Grid.Column="1" Width="65" HorizontalAlignment="Center" Margin="0 0 5 5" Height="20">
-                                <ComboBoxItem Content="16" IsSelected="True"/>
-                                <ComboBoxItem Content="8"/>
-                                <ComboBoxItem Content="4"/>
-                            </ComboBox>
-                            <ComboBox Grid.Row="2" Grid.Column="2" Width="65" HorizontalAlignment="Center" Margin="0 0 5 5" Height="20">
-                                <ComboBoxItem Content="1Hz" IsSelected="True"/>
-                                <ComboBoxItem Content="10Hz"/>
-                                <ComboBoxItem Content="100Hz"/>
-                            </ComboBox>
-                            <ComboBox Grid.Row="5" Grid.Column="1" Width="65" HorizontalAlignment="Center" Margin="0 0 5 5" Height="20">
-                                <ComboBoxItem Content="0.15T" IsSelected="True"/>
-                                <ComboBoxItem Content="0.2T"/>
-                                <ComboBoxItem Content="0.3T"/>
-                            </ComboBox>
-                            <ComboBox Grid.Row="5" Grid.Column="2" Width="65" HorizontalAlignment="Center" Margin="0 0 5 5" Height="20">
-                                <ComboBoxItem Content="180Hz" IsSelected="True"/>
-                                <ComboBoxItem Content="200Hz"/>
-                                <ComboBoxItem Content="220Hz"/>
-                            </ComboBox>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ch1 : " Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Ch1 : " Foreground="#2E3B4E" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                            <ComboBox Grid.Row="2" Grid.Column="1" Width="65" Margin="1 2" Height="22" ItemsSource="{Binding Interface.GainOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch1.Gain}"/>
+                            <ComboBox Grid.Row="2" Grid.Column="2" Width="65" Margin="1 2" Height="22" ItemsSource="{Binding Interface.HpFilterOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch1.HpFilter}"/>
+                            <ComboBox Grid.Row="5" Grid.Column="1" Width="65" Margin="1 2" Height="22" ItemsSource="{Binding Interface.TransmittanceOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch1.Transmittance}"/>
+                            <ComboBox Grid.Row="5" Grid.Column="2" Width="65" Margin="1 2" Height="22" ItemsSource="{Binding Interface.LpFilterOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch1.LpFilter}"/>
                         </Grid>
+
+                        <Separator Margin="0 2"/>
+
+                        <!-- 3. BÖLÜM: GÖNDERME BUTONU -->
+                        <Button Content="Tüm Ayarları Gönder" Command="{Binding SendSettingsCommand}" Margin="10 0" />
+
                     </StackPanel>
                 </Border>
-
+                
                 <!-- Sağ Panel (Grafik) -->
                 <Border Grid.Row="1" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top" Height="300">
                     <plot:SensorPlot Grid.Column="0" DataContext="{Binding Interface.SensorPlot.PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
@@ -419,6 +379,9 @@ Width="150"/>
                                         <TextBlock Text="{Binding Interface.DeviceData.CalibrationData.PredictedGasConcentration, StringFormat={}{0:F6}}" Foreground="#FF231F1F" FontSize="12" Width="60" FontWeight="Bold"/>
                                     </StackPanel>
                                 </StackPanel>
+                            </StackPanel>
+                            <StackPanel Margin="0 10 0 0">
+                                <Button Content="Katsayıları Gönder" Command="{Binding SendCalibrationCoefficientsCommand}" />
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>

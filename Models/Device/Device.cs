@@ -22,6 +22,8 @@ namespace CapnoAnalyzer.Models.Device
         public ICommand SendMessageCommand { get; }
         public ICommand AutoSendMessageCommand { get; }
         public ICommand AutoSaveDataCommand { get; }
+        public ICommand SendCalibrationCoefficientsCommand { get; }
+        public ICommand SendSettingsCommand { get; }
         #endregion
 
         #region Constructor
@@ -36,6 +38,8 @@ namespace CapnoAnalyzer.Models.Device
             SendMessageCommand = new DeviceRelayCommand(SendMessage, CanSendMessage);
             AutoSendMessageCommand = new DeviceRelayCommand(ToggleAutoSend);
             AutoSaveDataCommand = new DeviceRelayCommand(ToggleAutoSaveData);
+            SendCalibrationCoefficientsCommand = new DeviceRelayCommand(SendCalibrationCoefficients, CanSendCalibrationCoefficients);
+            SendSettingsCommand = new DeviceRelayCommand(SendSettings, CanSendSettings);
 
             // Not: Grafik kayıt/servisi kaldırıldı. Plot yönetimi DeviceDataParser → SensorPlot.Enqueue ile yapılır.
 
@@ -138,6 +142,84 @@ namespace CapnoAnalyzer.Models.Device
                 }
             }
         }
+        #endregion
+
+        #region Cihaz Ayarları ve Kalibrasyon Komutları
+
+        // "Ayarları Gönder" butonu için komut. UI'daki tüm ayarları tek bir metin olarak cihaza yollar.
+        private void SendSettings()
+        {
+            var settings = Interface.ChannelSettings;
+
+            // Ayarları modelden oku
+            var emitterOn = settings.EmitterOnTime;
+            var emitterOff = settings.EmitterOffTime;
+            var gain0 = ParseSettingValue(settings.Ch0.Gain);
+            var hpFilter0 = ParseSettingValue(settings.Ch0.HpFilter);
+            var trans0 = ParseSettingValue(settings.Ch0.Transmittance);
+            var lpFilter0 = ParseSettingValue(settings.Ch0.LpFilter);
+            var gain1 = ParseSettingValue(settings.Ch1.Gain);
+            var hpFilter1 = ParseSettingValue(settings.Ch1.HpFilter);
+            var trans1 = ParseSettingValue(settings.Ch1.Transmittance);
+            var lpFilter1 = ParseSettingValue(settings.Ch1.LpFilter);
+
+            // Donanımın anlayacağı "CFG,..." formatında komutu oluştur
+            string commandString = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "CFG,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}",
+                emitterOn, emitterOff,
+                gain0, hpFilter0, trans0, lpFilter0,
+                gain1, hpFilter1, trans1, lpFilter1);
+
+            // Komutu seri porttan gönder
+            _portManager.SendMessage(Properties.PortName, commandString);
+        }
+
+        // "Katsayıları Gönder" butonu için komut. Kalibrasyon verilerini cihaza yollar.
+        private void SendCalibrationCoefficients()
+        {
+            // Kalibrasyon katsayılarını modelden oku
+            var A = Interface.DeviceData.CalibrationCoefficients.A;
+            var B = Interface.DeviceData.CalibrationCoefficients.B;
+            var C = Interface.DeviceData.CalibrationCoefficients.C;
+            var R = Interface.DeviceData.CalibrationCoefficients.R;
+            var Zero = Interface.DeviceData.CalibrationData.Zero;
+
+            // Donanımın anlayacağı "CV,..." formatında komutu oluştur
+            string commandString = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "CV,{0},{1},{2},{3},{4}", A, B, C, R, Zero);
+
+            // Komutu seri porttan gönder
+            _portManager.SendMessage(Properties.PortName, commandString);
+        }
+
+        // Komut gönderme butonlarının aktif olup olmayacağını belirler.
+        private bool CanSendSettings()
+        {
+            return Properties.Status == DeviceStatus.Connected || Properties.Status == DeviceStatus.Identified;
+        }
+
+        // Komut gönderme butonlarının aktif olup olmayacağını belirler.
+        private bool CanSendCalibrationCoefficients()
+        {
+            return Properties.Status == DeviceStatus.Connected || Properties.Status == DeviceStatus.Identified;
+        }
+
+        // "180Hz" gibi metinleri 180.0 gibi sayılara çeviren yardımcı metot.
+        private double ParseSettingValue(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return 0;
+
+            string numericPart = new string(input.Where(c => char.IsDigit(c) || c == '.').ToArray());
+
+            // CultureInfo.InvariantCulture, ondalık ayraç olarak her zaman nokta (.) kullanılmasını sağlar.
+            if (double.TryParse(numericPart, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result))
+            {
+                return result;
+            }
+
+            return 0; // Çevirme başarısız olursa 0 döner.
+        }
+
         #endregion
 
         #region Otomatik Mesaj Gönderme

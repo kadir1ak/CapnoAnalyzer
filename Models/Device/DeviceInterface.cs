@@ -22,6 +22,20 @@ namespace CapnoAnalyzer.Models.Device
             IncomingMessage = new ObservableCollection<string>();
         }
 
+        #region Cihaz Ayarları Modeli
+        /// <summary>
+        /// Tüm cihaz ayarlarını tutan ana nesne. XAML bu nesneye bağlanır.
+        /// </summary>
+        public DeviceChannelSettings ChannelSettings { get; } = new DeviceChannelSettings();
+
+        // ComboBox'ların içini dolduracak seçenek listeleri
+        public List<string> GainOptions { get; } = new List<string> { "16", "8", "4" };
+        public List<string> HpFilterOptions { get; } = new List<string> { "1Hz", "10Hz", "100Hz" };
+        public List<string> TransmittanceOptions { get; } = new List<string> { "0.15T", "0.2T", "0.3T" };
+        public List<string> LpFilterOptions { get; } = new List<string> { "180Hz", "200Hz", "220Hz" };
+
+        #endregion
+
         public ObservableCollection<string> IncomingMessage
         {
             get => _incomingMessage;
@@ -245,4 +259,106 @@ namespace CapnoAnalyzer.Models.Device
     }
 
     public enum SampleMode { RMS, PP, AVG }
+
+    /// <summary>
+    /// Tek bir kanalın (Ch0 veya Ch1) ayarlarını temsil eder.
+    /// Bu sınıf, kanal bazlı yapılandırma verilerini tutar.
+    /// </summary>
+    public class ChannelSettings : BindableBase
+    {
+        public ChannelSettings()
+        {
+            // UI kontrolleri için varsayılan değerleri ayarla
+            Gain = "16";
+            HpFilter = "1Hz";
+            Transmittance = "0.15T";
+            LpFilter = "180Hz";
+        }
+
+        private string _gain;
+        /// <summary>
+        /// Kanalın kazanç (Gain) ayarı.
+        /// </summary>
+        public string Gain
+        {
+            get => _gain;
+            set => SetProperty(ref _gain, value);
+        }
+
+        private string _hpFilter;
+        /// <summary>
+        /// Kanalın Yüksek Geçiren Filtre (High-Pass Filter) ayarı.
+        /// </summary>
+        public string HpFilter
+        {
+            get => _hpFilter;
+            set => SetProperty(ref _hpFilter, value);
+        }
+
+        private string _transmittance;
+        /// <summary>
+        /// Kanalın Geçirgenlik (Transmittance) ayarı.
+        /// </summary>
+        public string Transmittance
+        {
+            get => _transmittance;
+            set => SetProperty(ref _transmittance, value);
+        }
+
+        private string _lpFilter;
+        /// <summary>
+        /// Kanalın Alçak Geçiren Filtre (Low-Pass Filter) ayarı.
+        /// </summary>
+        public string LpFilter
+        {
+            get => _lpFilter;
+            set => SetProperty(ref _lpFilter, value);
+        }
+    }
+
+    /// <summary>
+    /// Cihazın tüm yapılandırılabilir ayarlarını (kanallar ve emitter) bir arada tutan ana model sınıfı.
+    /// Bu sınıf, UI'daki "Cihaz Ayarları" panelinin veri bağlamı (DataContext) olarak kullanılır.
+    /// </summary>
+    public class DeviceChannelSettings : BindableBase
+    {
+        public DeviceChannelSettings()
+        {
+            // UI'daki slider'lar için varsayılan başlangıç değerlerini ayarla
+            EmitterOnTime = 50;
+            EmitterOffTime = 50;
+        }
+
+        private double _emitterOnTime;
+        /// <summary>
+        /// Emitter'ın açık kalma süresi (milisaniye cinsinden).
+        /// UI'daki "Emitter ON time" slider'ına bağlanır.
+        /// </summary>
+        public double EmitterOnTime
+        {
+            get => _emitterOnTime;
+            set => SetProperty(ref _emitterOnTime, value);
+        }
+
+        private double _emitterOffTime;
+        /// <summary>
+        /// Emitter'ın kapalı kalma süresi (milisaniye cinsinden).
+        /// UI'daki "Emitter OFF time" slider'ına bağlanır.
+        /// </summary>
+        public double EmitterOffTime
+        {
+            get => _emitterOffTime;
+            set => SetProperty(ref _emitterOffTime, value);
+        }
+
+        /// <summary>
+        /// Kanal 0 için ayarları içeren nesne.
+        /// </summary>
+        public ChannelSettings Ch0 { get; set; } = new ChannelSettings();
+
+        /// <summary>
+        /// Kanal 1 için ayarları içeren nesne.
+        /// </summary>
+        public ChannelSettings Ch1 { get; set; } = new ChannelSettings();
+    }
 }

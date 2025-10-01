@@ -146,32 +146,104 @@ namespace CapnoAnalyzer.Models.Device
 
         #region Cihaz Ayarları ve Kalibrasyon Komutları
 
-        // "Ayarları Gönder" butonu için komut. UI'daki tüm ayarları tek bir metin olarak cihaza yollar.
+        #region Mapping helpers (UI -> device register codes)
+
+        // ŞEKİL 3: ADS1220 pga gain register kodları
+        private static readonly Dictionary<string, int> GainCodes = new()
+        {
+            ["1"] = 0x00,
+            ["2"] = 0x02,
+            ["4"] = 0x04,
+            ["8"] = 0x06,
+            ["16"] = 0x08,
+            ["32"] = 0x0A,
+            ["64"] = 0x0C,
+            ["128"] = 0x0E,
+        };
+
+        // ŞEKİL 3: ADS1220 sample rate register kodları
+        private static readonly Dictionary<string, int> SpsCodes = new()
+        {
+            ["20"] = 0x00,
+            ["45"] = 0x20,
+            ["90"] = 0x40,
+            ["175"] = 0x60,
+            ["330"] = 0x80,
+            ["600"] = 0xA0,
+            ["1000"] = 0xC0,
+        };
+
+        // ŞEKİL 2: HPF register kodları (Disable dahil)
+        private static readonly Dictionary<string, int> HpfCodes = new()
+        {
+            ["0.0"] = 0x01,  // HPF_DISABLE - istersen UI'ya ekleyebilirsin
+            ["0.1"] = 0x02,
+            ["0.2"] = 0x04,
+            ["0.5"] = 0x06,
+            ["1.0"] = 0x08,
+            ["2.0"] = 0x0A,
+            ["2.5"] = 0x0C,
+        };
+
+        // ŞEKİL 2: LPF register kodları (Disable ve 1..20 Hz; bizim UI 6..20 veriyor)
+        private static readonly Dictionary<string, int> LpfCodes = new()
+        {
+            ["0"] = 0x00, // LPF_DISABLE - istersen UI'ya ekleyebilirsin
+            ["1"] = 0x10,
+            ["2"] = 0x20,
+            ["4"] = 0x40,
+            ["5"] = 0x50,
+            ["6"] = 0x60,
+            ["7"] = 0x75,
+            ["8"] = 0x80,
+            ["10"] = 0xA0,
+            ["11"] = 0xA5,
+            ["12"] = 0xB0,
+            ["13"] = 0xB5,
+            ["14"] = 0xC0,
+            ["15"] = 0xC5,
+            ["16"] = 0xD0,
+            ["17"] = 0xD5,
+            ["18"] = 0xE0,
+            ["19"] = 0xE5,
+            ["20"] = 0xF0,
+        };
+
+        private static int MapOrDefault(Dictionary<string, int> map, string uiValue, int @default)
+            => map.TryGetValue(uiValue?.Trim() ?? "", out var code) ? code : @default;
+
+        #endregion
+
         private void SendSettings()
         {
-            var settings = Interface.ChannelSettings;
+            var s = Interface.ChannelSettings;
 
-            // Ayarları modelden oku
-            var emitterOn = settings.EmitterOnTime;
-            var emitterOff = settings.EmitterOffTime;
-            var gain0 = ParseSettingValue(settings.Ch0.Gain);
-            var hpFilter0 = ParseSettingValue(settings.Ch0.HpFilter);
-            var trans0 = ParseSettingValue(settings.Ch0.Transmittance);
-            var lpFilter0 = ParseSettingValue(settings.Ch0.LpFilter);
-            var gain1 = ParseSettingValue(settings.Ch1.Gain);
-            var hpFilter1 = ParseSettingValue(settings.Ch1.HpFilter);
-            var trans1 = ParseSettingValue(settings.Ch1.Transmittance);
-            var lpFilter1 = ParseSettingValue(settings.Ch1.LpFilter);
+            // 1) IR frekansı (1..20 Hz)
+            int irFreq = Math.Clamp((int)Math.Round(s.EmitterSettings), 1, 20);
 
-            // Donanımın anlayacağı "CFG,..." formatında komutu oluştur
-            string commandString = string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                "CFG,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}",
-                emitterOn, emitterOff,
-                gain0, hpFilter0, trans0, lpFilter0,
-                gain1, hpFilter1, trans1, lpFilter1);
+            // 2) UI → kod
+            string uiGain = s.Ch0.Gain;      // ch0 ve ch1 senkron
+            string uiSps = s.Ch0.SPS;
+            string uiHp0 = s.Ch0.HpFilter;
+            string uiLp0 = s.Ch0.LpFilter;
+            string uiHp1 = s.Ch1.HpFilter;
+            string uiLp1 = s.Ch1.LpFilter;
 
-            // Komutu seri porttan gönder
-            _portManager.SendMessage(Properties.PortName, commandString);
+            int gainCode = MapOrDefault(GainCodes, uiGain, 0x08); // 16x
+            int spsCode = MapOrDefault(SpsCodes, uiSps, 0x80); // 330SPS
+            int hp0Code = MapOrDefault(HpfCodes, uiHp0, 0x02); // 0.1Hz
+            int lp0Code = MapOrDefault(LpfCodes, uiLp0, 0x60); // 6Hz
+            int hp1Code = MapOrDefault(HpfCodes, uiHp1, 0x02);
+            int lp1Code = MapOrDefault(LpfCodes, uiLp1, 0x60);
+
+            // 3) Paket
+            // Donanımın anlayacağı "CFG, irfreq, gain, sps, hpFilter0, lpFilter0, hpFilter1, lpFilter1" formatında komutu oluştur
+            string cmd = string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "CFG,{0},{1},{2},{3},{4},{5},{6}",
+                irFreq, gainCode, spsCode, hp0Code, lp0Code, hp1Code, lp1Code);
+
+            Interface.AddIncomingMessage($"Send: {cmd} // {irFreq}Hz, G={uiGain}, SPS={uiSps}, HP0={uiHp0}, LP0={uiLp0}, HP1={uiHp1}, LP1={uiLp1}");
+            _portManager.SendMessage(Properties.PortName, cmd);
         }
 
         // "Katsayıları Gönder" butonu için komut. Kalibrasyon verilerini cihaza yollar.

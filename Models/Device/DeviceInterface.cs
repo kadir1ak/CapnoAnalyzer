@@ -1,9 +1,10 @@
-﻿using System.Collections.ObjectModel;
-using System.Windows;
-using CapnoAnalyzer.Helpers;
+﻿using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Models.PlotModels;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows;
 
 namespace CapnoAnalyzer.Models.Device
 {
@@ -29,10 +30,26 @@ namespace CapnoAnalyzer.Models.Device
         public DeviceChannelSettings ChannelSettings { get; } = new DeviceChannelSettings();
 
         // ComboBox'ların içini dolduracak seçenek listeleri
-        public List<string> GainOptions { get; } = new List<string> { "16", "8", "4" };
-        public List<string> HpFilterOptions { get; } = new List<string> { "1Hz", "10Hz", "100Hz" };
-        public List<string> TransmittanceOptions { get; } = new List<string> { "0.15T", "0.2T", "0.3T" };
-        public List<string> LpFilterOptions { get; } = new List<string> { "180Hz", "200Hz", "220Hz" };
+        public List<string> GainOptions { get; } = new List<string>
+        {
+            "1", "2", "4", "8", "16", "32", "64", "128"
+        };
+
+        public List<string> SPSOptions { get; } = new List<string>
+        {
+            "20", "45", "90", "175", "330", "600", "1000"
+        };
+
+        public List<string> HpFilterOptions { get; } = new List<string>
+        {
+            "0.1", "0.2", "0.5", "1.0", "2.0", "2.5"
+        };
+
+        public List<string> LpFilterOptions { get; } = new List<string>
+        {
+            "6", "7", "8", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"
+        };
+
 
         #endregion
 
@@ -270,9 +287,9 @@ namespace CapnoAnalyzer.Models.Device
         {
             // UI kontrolleri için varsayılan değerleri ayarla
             Gain = "16";
-            HpFilter = "1Hz";
-            Transmittance = "0.15T";
-            LpFilter = "180Hz";
+            HpFilter = "2.0";
+            SPS = "90";
+            LpFilter = "10";
         }
 
         private string _gain;
@@ -295,14 +312,14 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _hpFilter, value);
         }
 
-        private string _transmittance;
+        private string _sps;
         /// <summary>
-        /// Kanalın Geçirgenlik (Transmittance) ayarı.
+        /// Kanalın Geçirgenlik (SPS) ayarı.
         /// </summary>
-        public string Transmittance
+        public string SPS
         {
-            get => _transmittance;
-            set => SetProperty(ref _transmittance, value);
+            get => _sps;
+            set => SetProperty(ref _sps, value);
         }
 
         private string _lpFilter;
@@ -324,16 +341,76 @@ namespace CapnoAnalyzer.Models.Device
     {
         public DeviceChannelSettings()
         {
-            // UI'daki slider'lar için varsayılan başlangıç değerlerini ayarla
+            // Varsayılanlar
             EmitterOnTime = 50;
             EmitterOffTime = 50;
+            EmitterSettings = 10;
+
+            // Kanallar
+            Ch0 = new ChannelSettings();
+            Ch1 = new ChannelSettings();
+
+            // Değişiklikleri dinle ve eşitle
+            Ch0.PropertyChanged += OnCh0Changed;
+            Ch1.PropertyChanged += OnCh1Changed;
+        }
+
+        private bool _syncing;
+
+        // EŞİTLEME: Ch0 → Ch1
+        private void OnCh0Changed(object? sender, PropertyChangedEventArgs e)
+        {
+            if (_syncing) return;
+            _syncing = true;
+            try
+            {
+                if (e.PropertyName == nameof(ChannelSettings.Gain))
+                {
+                    if (Ch1.Gain != Ch0.Gain)
+                        Ch1.Gain = Ch0.Gain;
+                }
+                else if (e.PropertyName == nameof(ChannelSettings.SPS)) // SPS
+                {
+                    if (Ch1.SPS != Ch0.SPS)
+                        Ch1.SPS = Ch0.SPS;
+                }
+            }
+            finally { _syncing = false; }
+        }
+
+        // EŞİTLEME: Ch1 → Ch0
+        private void OnCh1Changed(object? sender, PropertyChangedEventArgs e)
+        {
+            if (_syncing) return;
+            _syncing = true;
+            try
+            {
+                if (e.PropertyName == nameof(ChannelSettings.Gain))
+                {
+                    if (Ch0.Gain != Ch1.Gain)
+                        Ch0.Gain = Ch1.Gain;
+                }
+                else if (e.PropertyName == nameof(ChannelSettings.SPS)) // SPS
+                {
+                    if (Ch0.SPS != Ch1.SPS)
+                        Ch0.SPS = Ch1.SPS;
+                }
+            }
+            finally { _syncing = false; }
+        }
+
+        // --- mevcut alanlar ---
+        public ChannelSettings Ch0 { get; set; }
+        public ChannelSettings Ch1 { get; set; }
+
+        private double _emitterSetting;
+        public double EmitterSettings
+        {
+            get => _emitterSetting;
+            set => SetProperty(ref _emitterSetting, value);
         }
 
         private double _emitterOnTime;
-        /// <summary>
-        /// Emitter'ın açık kalma süresi (milisaniye cinsinden).
-        /// UI'daki "Emitter ON time" slider'ına bağlanır.
-        /// </summary>
         public double EmitterOnTime
         {
             get => _emitterOnTime;
@@ -341,24 +418,10 @@ namespace CapnoAnalyzer.Models.Device
         }
 
         private double _emitterOffTime;
-        /// <summary>
-        /// Emitter'ın kapalı kalma süresi (milisaniye cinsinden).
-        /// UI'daki "Emitter OFF time" slider'ına bağlanır.
-        /// </summary>
         public double EmitterOffTime
         {
             get => _emitterOffTime;
             set => SetProperty(ref _emitterOffTime, value);
         }
-
-        /// <summary>
-        /// Kanal 0 için ayarları içeren nesne.
-        /// </summary>
-        public ChannelSettings Ch0 { get; set; } = new ChannelSettings();
-
-        /// <summary>
-        /// Kanal 1 için ayarları içeren nesne.
-        /// </summary>
-        public ChannelSettings Ch1 { get; set; } = new ChannelSettings();
     }
 }

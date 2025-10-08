@@ -70,9 +70,11 @@ namespace CapnoAnalyzer.Models.Device
         public DataPacket_2()
         {
             Time = 0.0;
-            AngVoltages = new double[3];
-            AdsRawValues = new double[4];
-            AdsVoltages = new double[4];
+            CO2Value = new double[1];
+            BMEValue = new double[3];
+            AngVoltages = new double[2];
+            AdsRawValues = new double[2];
+            AdsVoltages = new double[2];
             GainAdsVoltagesF = new double[2];
             GainAdsVoltagesIIR = new double[2];
             IrStatus = 0;
@@ -87,6 +89,19 @@ namespace CapnoAnalyzer.Models.Device
         }
 
         // Özellikler
+        private double[] _co2Val;
+        public double[] CO2Value
+        {
+            get => _co2Val;
+            set => SetProperty(ref _co2Val, value);
+        }
+        private double[] _bmeVal;
+        public double[] BMEValue
+        {
+            get => _bmeVal;
+            set => SetProperty(ref _bmeVal, value);
+        }
+
         private double[] _angVoltages;
         public double[] AngVoltages
         {
@@ -225,7 +240,7 @@ namespace CapnoAnalyzer.Models.Device
         public CoefficientsType CalibrationCoefficients { get; set; }
         // Veri model sınıfı
         public class SensorDataType : BindableBase
-        {          
+        {
             private double _time;
             public double Time
             {

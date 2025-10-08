@@ -111,6 +111,18 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _dataPacket_2_Status, value);
         }
 
+        private double[] _co2Val;
+        public double[] CO2Value
+        {
+            get => _co2Val;
+            set => SetProperty(ref _co2Val, value);
+        }
+        private double[] _bmeVal;
+        public double[] BMEValue
+        {
+            get => _bmeVal;
+            set => SetProperty(ref _bmeVal, value);
+        }
         private double[] _angVoltages;
         public double[] AngVoltages
         {
@@ -203,7 +215,7 @@ namespace CapnoAnalyzer.Models.Device
 
             // DataPacket_2 Varsayılan Değerler
             Time = 0.0;
-            DataPacket_2_Status = Visibility.Collapsed;  
+            DataPacket_2_Status = Visibility.Collapsed;
             AngVoltages = new double[3]; // 3 elemanlı sıfır dizisi
             AdsRawValues = new double[4]; // 4 elemanlı sıfır dizisi
             AdsVoltages = new double[4]; // 4 elemanlı sıfır dizisi

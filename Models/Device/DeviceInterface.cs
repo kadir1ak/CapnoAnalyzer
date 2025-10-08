@@ -196,6 +196,11 @@ namespace CapnoAnalyzer.Models.Device
                         Data.GasSensor = device.DataPacket_2.GainAdsVoltagesIIR[0];
                         Data.ReferenceSensor = device.DataPacket_2.GainAdsVoltagesIIR[1];
 
+                        Data.CO2Value = device.DataPacket_2.CO2Value;
+                        Data.Temperature = device.DataPacket_2.BMEValue[0];
+                        Data.Humidity = device.DataPacket_2.BMEValue[1];
+                        Data.Pressure = device.DataPacket_2.BMEValue[2];
+
                         Data.AngVoltages = device.DataPacket_2.AngVoltages;
                         Data.AdsRawValues = device.DataPacket_2.AdsRawValues;
                         Data.AdsVoltages = device.DataPacket_2.AdsVoltages;
@@ -270,6 +275,12 @@ namespace CapnoAnalyzer.Models.Device
                 }
 
                 calData.GasConcentration = calData.PredictedGasConcentration;
+
+                // ✅ PC tarafında hesaplanan gaz konsantrasyonunu grafiğe ekle
+                if (!double.IsNaN(calData.PredictedGasConcentration))
+                {
+                    CalculatedGasPlot?.AddPcCalculatedData(deviceData.SensorData.Time, calData.PredictedGasConcentration);
+                }
             }
             catch { }
         }

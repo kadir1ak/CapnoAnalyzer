@@ -110,7 +110,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
 
                 // Hesaplanan gaz grafiği kendi PlotTime’ını kullanıyor
                 if (device.Interface?.CalculatedGasPlot != null)
-                    device.Interface.CalculatedGasPlot.PlotTime = SettingVM.CurrentSetting.PlotTime;
+                    device.Interface.CalculatedGasPlot.TimeWindowSeconds = SettingVM.CurrentSetting.PlotTime;
 
                 // ❌ Eski API çağrıları kaldırıldı:
                 // device.Interface.UpdateSensorPlot();

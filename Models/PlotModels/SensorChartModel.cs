@@ -14,6 +14,7 @@ namespace CapnoAnalyzer.Models.PlotModels
     /// - Veri geldiği anda Enqueue (lock-free, düşük GC)
     /// - UI tarafında DispatcherTimer ile sabit FPS’te toplu flush
     /// - Zaman penceresi kadar veri saklanır (kaydırmalı görünüm)
+    /// - Y eksenini gelen verilere göre otomatik olarak ölçeklendirir.
     /// - Diğer grafikleri zamanlama konusunda senkronize etmek için "ana" (master) görevi görür.
     /// </summary>
     public class SensorChartModel : BindableBase, IDisposable, IHighFreqPlot
@@ -36,7 +37,6 @@ namespace CapnoAnalyzer.Models.PlotModels
                 if (Math.Abs(_timeWindowSeconds - v) > double.Epsilon)
                 {
                     _timeWindowSeconds = v;
-                    // Senkronize grafiğin de zaman penceresini güncelle
                     if (SyncedGasPlot != null)
                     {
                         SyncedGasPlot.TimeWindowSeconds = v;
@@ -81,8 +81,6 @@ namespace CapnoAnalyzer.Models.PlotModels
 
         // ---- Private fields ----
         private readonly ConcurrentQueue<Sample> _queue = new();
-
-        // İç buffer’lar – render maliyeti düşük
         private readonly List<DataPoint> _gas = new(capacity: 20000);
         private readonly List<DataPoint> _ref = new(capacity: 20000);
 
@@ -161,10 +159,9 @@ namespace CapnoAnalyzer.Models.PlotModels
             _timer.Start();
         }
 
-        // ---- UI tick: toplu flush ve senkronizasyon ----
+        // ---- UI tick: toplu flush, ölçeklendirme ve senkronizasyon ----
         private void OnTick(object? sender, EventArgs e)
         {
-            // Kuyruktaki tüm örnekleri çek
             while (_queue.TryDequeue(out var s))
             {
                 _lastTimeSeen = s.T;
@@ -174,7 +171,6 @@ namespace CapnoAnalyzer.Models.PlotModels
 
             if (_gas.Count == 0 && _ref.Count == 0) return;
 
-            // Eski noktaları kırp (time window)
             double cutoff = _lastTimeSeen - _timeWindowSeconds;
             if (cutoff > 0)
             {
@@ -185,21 +181,21 @@ namespace CapnoAnalyzer.Models.PlotModels
                 if (idxR > 0) _ref.RemoveRange(0, idxR);
             }
 
-            // Serileri tazele
             _gasSeries.Points.Clear();
             _gasSeries.Points.AddRange(_gas);
 
             _refSeries.Points.Clear();
             _refSeries.Points.AddRange(_ref);
 
-            // X eksenini kaydır
             if (_lastTimeSeen > 0)
             {
                 _xAxis.Minimum = Math.Max(0, _lastTimeSeen - _timeWindowSeconds);
                 _xAxis.Maximum = _lastTimeSeen;
             }
 
-            // --- YENİ: Uydu (slave) grafiğin eksenlerini de bu ana grafiğin zamanıyla senkronize et ---
+            // --- YENİ: Y eksenini otomatik olarak ölçeklendir ---
+            AutoScaleYAxis();
+
             if (SyncedGasPlot != null)
             {
                 SyncedGasPlot.UpdateAxes(_lastTimeSeen);
@@ -208,7 +204,44 @@ namespace CapnoAnalyzer.Models.PlotModels
             PlotModel.InvalidatePlot(false);
         }
 
-        // Sorted listte ilk X >= cutoff index'i (binary search)
+        /// <summary>
+        /// Y eksenini, mevcut veri aralığına sığacak şekilde otomatik olarak ayarlar.
+        /// </summary>
+        private void AutoScaleYAxis()
+        {
+            if (_gas.Count == 0 && _ref.Count == 0) return;
+
+            double minY = double.PositiveInfinity;
+            double maxY = double.NegativeInfinity;
+
+            // Her iki serideki min ve max değerleri bul
+            foreach (var point in _gas)
+            {
+                if (point.Y < minY) minY = point.Y;
+                if (point.Y > maxY) maxY = point.Y;
+            }
+            foreach (var point in _ref)
+            {
+                if (point.Y < minY) minY = point.Y;
+                if (point.Y > maxY) maxY = point.Y;
+            }
+
+            // Geçerli bir aralık bulunamadıysa çık
+            if (double.IsInfinity(minY) || double.IsInfinity(maxY)) return;
+
+            // Sinyalin daha rahat görünmesi için %10'luk bir pay (padding) ekle
+            double range = maxY - minY;
+            // Eğer sinyal düz bir çizgiyse (range=0), çökmemesi için sabit bir pay ver
+            if (range < 1e-9)
+            {
+                range = 1.0; // Varsayılan aralık
+            }
+            double padding = range * 0.1;
+
+            _yAxis.Minimum = minY - padding;
+            _yAxis.Maximum = maxY + padding;
+        }
+
         private static int LowerBound(List<DataPoint> list, double cutoff)
         {
             int lo = 0, hi = list.Count;

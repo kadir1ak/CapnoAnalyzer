@@ -18,6 +18,10 @@ namespace CapnoAnalyzer.Models.Device
             SensorPlot = new SensorChartModel(timeWindowSeconds: 10, maxFps: 40);
             CalculatedGasPlot = new CalculatedGasChartModel();
 
+            // --- YENİ KOD: İki grafiği birbirine bağla ---
+            SensorPlot.SyncedGasPlot = CalculatedGasPlot;
+            // ---------------------------------------------
+
             Data = new AllDataPaket();
             DeviceData = new DeviceDataType();
             IncomingMessage = new ObservableCollection<string>();

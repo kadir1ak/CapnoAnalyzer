@@ -10,47 +10,65 @@ using System.Windows.Threading;
 namespace CapnoAnalyzer.Models.PlotModels
 {
     /// <summary>
-    /// 📈 Yüksek frekans veriler için optimize edilmiş, gerçek zamanlı sensör grafiği.
-    /// - Enqueue: thread-safe, düşük GC
-    /// - UI: sabit FPS'te toplu flush
-    /// - Otomatik Y: görünür pencere genliğine ±%Padding
+    /// 📈 Yüksek frekans veriler için optimize edilmiş OxyPlot çizim modeli.
+    /// - Veri geldiği anda Enqueue (lock-free, düşük GC)
+    /// - UI tarafında DispatcherTimer ile sabit FPS’te toplu flush
+    /// - Zaman penceresi kadar veri saklanır (kaydırmalı görünüm)
+    /// - Diğer grafikleri zamanlama konusunda senkronize etmek için "ana" (master) görevi görür.
     /// </summary>
     public class SensorChartModel : BindableBase, IDisposable, IHighFreqPlot
     {
-        // ---- Genel ayarlar ----
+        // ---- Public API ----
+        public PlotModel PlotModel { get; private set; }
+
+        /// <summary>
+        /// Zaman eksenini senkronize etmek için bu grafiğe bağlanacak olan "uydu" (slave) grafik.
+        /// </summary>
+        public CalculatedGasChartModel SyncedGasPlot { get; set; }
+
+        /// <summary>Zaman penceresi (s)</summary>
         public double TimeWindowSeconds
         {
             get => _timeWindowSeconds;
-            set { var v = Math.Max(1, value); if (Math.Abs(_timeWindowSeconds - v) > double.Epsilon) { _timeWindowSeconds = v; OnPropertyChanged(); } }
+            set
+            {
+                var v = Math.Max(1, value);
+                if (Math.Abs(_timeWindowSeconds - v) > double.Epsilon)
+                {
+                    _timeWindowSeconds = v;
+                    // Senkronize grafiğin de zaman penceresini güncelle
+                    if (SyncedGasPlot != null)
+                    {
+                        SyncedGasPlot.TimeWindowSeconds = v;
+                    }
+                    OnPropertyChanged();
+                }
+            }
         }
+
+        /// <summary>UI refresh FPS (5–120)</summary>
         public int MaxFps
         {
             get => _maxFps;
-            set { var v = Clamp(value, 5, 120); if (_maxFps != v) { _maxFps = v; RestartTimer(); OnPropertyChanged(); } }
+            set
+            {
+                var v = Clamp(value, 5, 120);
+                if (_maxFps != v)
+                {
+                    _maxFps = v;
+                    RestartTimer();
+                    OnPropertyChanged();
+                }
+            }
         }
 
-        // Otomatik / Sabit Y
-        public bool UseFixedY
+        /// <summary>Parser bu metodu çağırır (thread-safe)</summary>
+        public void Enqueue(double time, double gas, double reference)
         {
-            get => _useFixedY;
-            set { if (_useFixedY != value) { _useFixedY = value; ApplyY(); } }
-        }
-        public double YMin { get => _yMin; set { _yMin = value; if (UseFixedY) ApplyY(); } }
-        public double YMax { get => _yMax; set { _yMax = value; if (UseFixedY) ApplyY(); } }
-
-        /// <summary>Otomatik Y modunda, görünür penceredeki (min,max) için padding yüzdesi.</summary>
-        public double AutoYPaddingPercent { get => _autoPadPct; set { _autoPadPct = Math.Max(0, value); } }
-
-        /// <summary>Otomatik Y alt sınırını 0’ın altına düşürmemek için true.</summary>
-        public bool ClampYToZero { get; set; } = true;
-
-        // ---- Public API (producer) ----
-        public void Enqueue(double time, double gas, double reference) =>
             _queue.Enqueue(new Sample(time, gas, reference));
+        }
 
-        public PlotModel PlotModel { get; private set; }
-
-        // Geriye dönük uyumluluk: eski çağrılar için
+        /// <summary>Geriye dönük uyumluluk</summary>
         public void AddDataPoint(double time, double gas, double reference) => Enqueue(time, gas, reference);
 
         public SensorChartModel(double timeWindowSeconds = 10, int maxFps = 40)
@@ -63,6 +81,8 @@ namespace CapnoAnalyzer.Models.PlotModels
 
         // ---- Private fields ----
         private readonly ConcurrentQueue<Sample> _queue = new();
+
+        // İç buffer’lar – render maliyeti düşük
         private readonly List<DataPoint> _gas = new(capacity: 20000);
         private readonly List<DataPoint> _ref = new(capacity: 20000);
 
@@ -75,10 +95,6 @@ namespace CapnoAnalyzer.Models.PlotModels
         private int _maxFps;
         private DispatcherTimer? _timer;
         private double _lastTimeSeen;
-
-        private bool _useFixedY = false;
-        private double _yMin = 0, _yMax = 1;
-        private double _autoPadPct = 25.0;
 
         private readonly struct Sample
         {
@@ -105,6 +121,7 @@ namespace CapnoAnalyzer.Models.PlotModels
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineStyle = LineStyle.Dot
             };
+
             PlotModel.Axes.Add(_xAxis);
             PlotModel.Axes.Add(_yAxis);
 
@@ -118,12 +135,12 @@ namespace CapnoAnalyzer.Models.PlotModels
             {
                 Title = "Ref",
                 StrokeThickness = 1.4,
+                LineStyle = LineStyle.Solid,
                 TrackerFormatString = "{0}\nTime: {2:0.000}\nValue: {4:0.000}"
             };
+
             PlotModel.Series.Add(_gasSeries);
             PlotModel.Series.Add(_refSeries);
-
-            ApplyY(); // başlangıç
         }
 
         private void StartTimer()
@@ -135,6 +152,7 @@ namespace CapnoAnalyzer.Models.PlotModels
             _timer.Tick += OnTick;
             _timer.Start();
         }
+
         private void RestartTimer()
         {
             if (_timer == null) return;
@@ -143,74 +161,54 @@ namespace CapnoAnalyzer.Models.PlotModels
             _timer.Start();
         }
 
-        // ---- UI tick: toplu flush ----
+        // ---- UI tick: toplu flush ve senkronizasyon ----
         private void OnTick(object? sender, EventArgs e)
         {
+            // Kuyruktaki tüm örnekleri çek
             while (_queue.TryDequeue(out var s))
             {
                 _lastTimeSeen = s.T;
                 _gas.Add(new DataPoint(s.T, s.G));
                 _ref.Add(new DataPoint(s.T, s.R));
             }
+
             if (_gas.Count == 0 && _ref.Count == 0) return;
 
             // Eski noktaları kırp (time window)
             double cutoff = _lastTimeSeen - _timeWindowSeconds;
             if (cutoff > 0)
             {
-                int iG = LowerBound(_gas, cutoff); if (iG > 0) _gas.RemoveRange(0, iG);
-                int iR = LowerBound(_ref, cutoff); if (iR > 0) _ref.RemoveRange(0, iR);
+                int idxG = LowerBound(_gas, cutoff);
+                if (idxG > 0) _gas.RemoveRange(0, idxG);
+
+                int idxR = LowerBound(_ref, cutoff);
+                if (idxR > 0) _ref.RemoveRange(0, idxR);
             }
 
             // Serileri tazele
-            _gasSeries.Points.Clear(); _gasSeries.Points.AddRange(_gas);
-            _refSeries.Points.Clear(); _refSeries.Points.AddRange(_ref);
+            _gasSeries.Points.Clear();
+            _gasSeries.Points.AddRange(_gas);
 
-            // X ekseni kaydır
+            _refSeries.Points.Clear();
+            _refSeries.Points.AddRange(_ref);
+
+            // X eksenini kaydır
             if (_lastTimeSeen > 0)
             {
                 _xAxis.Minimum = Math.Max(0, _lastTimeSeen - _timeWindowSeconds);
                 _xAxis.Maximum = _lastTimeSeen;
             }
 
-            // Otomatik Y (gaz+ref birlikte)
-            if (!UseFixedY) AutoFitYFromBuffers(_gas, _ref);
+            // --- YENİ: Uydu (slave) grafiğin eksenlerini de bu ana grafiğin zamanıyla senkronize et ---
+            if (SyncedGasPlot != null)
+            {
+                SyncedGasPlot.UpdateAxes(_lastTimeSeen);
+            }
 
             PlotModel.InvalidatePlot(false);
         }
 
-        // ---- Y ekseni hesaplama ----
-        private void AutoFitYFromBuffers(List<DataPoint> a, List<DataPoint> b)
-        {
-            double min = double.PositiveInfinity, max = double.NegativeInfinity;
-
-            if (a.Count > 0) { min = Math.Min(min, a[0].Y); max = Math.Max(max, a[0].Y); }
-            for (int i = 1; i < a.Count; i++) { var y = a[i].Y; if (y < min) min = y; if (y > max) max = y; }
-
-            if (b.Count > 0) { min = Math.Min(min, b[0].Y); max = Math.Max(max, b[0].Y); }
-            for (int i = 1; i < b.Count; i++) { var y = b[i].Y; if (y < min) min = y; if (y > max) max = y; }
-
-            if (double.IsInfinity(min) || double.IsInfinity(max) || min == max) { return; }
-
-            double amp = max - min;
-            double pad = amp * (_autoPadPct / 100.0);
-            double y0 = min - pad;
-            double y1 = max + pad;
-            if (ClampYToZero) y0 = Math.Max(0, y0);
-
-            _yAxis.Minimum = y0;
-            _yAxis.Maximum = y1;
-        }
-
-        private void ApplyY()
-        {
-            if (_yAxis == null) return;
-            if (UseFixedY) { _yAxis.Minimum = YMin; _yAxis.Maximum = YMax; _yAxis.Zoom(YMin, YMax); }
-            else { _yAxis.Minimum = double.NaN; _yAxis.Maximum = double.NaN; }
-            PlotModel?.InvalidatePlot(false);
-        }
-
-        // ---- utils ----
+        // Sorted listte ilk X >= cutoff index'i (binary search)
         private static int LowerBound(List<DataPoint> list, double cutoff)
         {
             int lo = 0, hi = list.Count;
@@ -221,11 +219,22 @@ namespace CapnoAnalyzer.Models.PlotModels
             }
             return lo;
         }
-        private static int Clamp(int v, int mn, int mx) => v < mn ? mn : (v > mx ? mx : v);
+
+        private static int Clamp(int value, int min, int max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
 
         public void Dispose()
         {
-            if (_timer != null) { _timer.Tick -= OnTick; _timer.Stop(); _timer = null; }
+            if (_timer != null)
+            {
+                _timer.Tick -= OnTick;
+                _timer.Stop();
+                _timer = null;
+            }
         }
     }
 }

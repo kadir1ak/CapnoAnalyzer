@@ -185,119 +185,63 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
     }
 
     // Veri model sınıfı
-    public class Data: BindableBase
+    // Bu sınıf, DataGrid'deki TEK BİR SATIRI temsil eder.
+    public class Data : BindableBase
     {
-        public Data()
-        {
-            Sample = string.Empty;
-            GasConcentration = 0.0;
-            Ref = 0.0;
-            Gas = 0.0;
-            Ratio = null;
-            Transmittance = null;
-            Absorption = null;
-            PredictedAbsorption = null;
-            PredictedGasConcentration = null;                
-        }
-
+        // --- Temel Girdiler ---
         private string _sample;
-        public string Sample
-        {
-            get => _sample;
-            set
-            {
-                _sample = value;
-                OnPropertyChanged();
-            }
-        }
+        public string Sample { get => _sample; set => SetProperty(ref _sample, value); }
 
         private double _gasConcentration;
-        public double GasConcentration
-        {
-            get => _gasConcentration;
-            set
-            {
-                _gasConcentration = value;
-                OnPropertyChanged();
-            }
-        }
+        public double GasConcentration { get => _gasConcentration; set => SetProperty(ref _gasConcentration, value); }
 
         private double _ref;
-        public double Ref
-        {
-            get => _ref;
-            set
-            {
-                _ref = value;
-                OnPropertyChanged();
-            }
-        }
+        public double Ref { get => _ref; set => SetProperty(ref _ref, value); }
 
         private double _gas;
-        public double Gas
-        {
-            get => _gas;
-            set
-            {
-                _gas = value;
-                OnPropertyChanged();
-            }
-        }
+        public double Gas { get => _gas; set => SetProperty(ref _gas, value); }
 
+        // Örnek anındaki sensör verileri (Ortalamalar için)
+        public double Temperature { get; set; }
+        public double Pressure { get; set; }
+        public double Humidity { get; set; }
+
+
+        // --- Pembe Sütunlar (Lokal Kalibrasyon) ---
         private double? _ratio;
-        public double? Ratio
-        {
-            get => _ratio;
-            set
-            {
-                _ratio = value;
-                OnPropertyChanged();
-            }
-        }
+        public double? Ratio { get => _ratio; set => SetProperty(ref _ratio, value); }
 
         private double? _transmittance;
-        public double? Transmittance
-        {
-            get => _transmittance;
-            set
-            {
-                _transmittance = value;
-                OnPropertyChanged();
-            }
-        }
+        public double? Transmittance { get => _transmittance; set => SetProperty(ref _transmittance, value); }
 
         private double? _absorption;
-        public double? Absorption
-        {
-            get => _absorption;
-            set
-            {
-                _absorption = value;
-                OnPropertyChanged();
-            }
-        }
+        public double? Absorption { get => _absorption; set => SetProperty(ref _absorption, value); }
 
         private double? _predictedAbsorption;
-        public double? PredictedAbsorption
-        {
-            get => _predictedAbsorption;
-            set
-            {
-                _predictedAbsorption = value;
-                OnPropertyChanged();
-            }
-        }
+        public double? PredictedAbsorption { get => _predictedAbsorption; set => SetProperty(ref _predictedAbsorption, value); }
 
         private double? _predictedGasConcentration;
-        public double? PredictedGasConcentration
-        {
-            get => _predictedGasConcentration;
-            set
-            {
-                _predictedGasConcentration = value;
-                OnPropertyChanged();
-            }
-        }
+        public double? PredictedGasConcentration { get => _predictedGasConcentration; set => SetProperty(ref _predictedGasConcentration, value); }
+
+
+        // --- Yeşil Sütunlar (Sıcaklık Kompanzasyonu) ---
+        private double? _normalizedRatio;
+        public double? NormalizedRatio { get => _normalizedRatio; set => SetProperty(ref _normalizedRatio, value); }
+
+        private double? _normalizedAbsorbance;
+        public double? NormalizedAbsorbance { get => _normalizedAbsorbance; set => SetProperty(ref _normalizedAbsorbance, value); }
+
+        private double? _span;
+        public double? Span { get => _span; set => SetProperty(ref _span, value); }
+
+        private double? _compensatedNormalizedRatio;
+        public double? CompensatedNormalizedRatio { get => _compensatedNormalizedRatio; set => SetProperty(ref _compensatedNormalizedRatio, value); }
+
+        private double? _compensatedSpan;
+        public double? CompensatedSpan { get => _compensatedSpan; set => SetProperty(ref _compensatedSpan, value); }
+
+        private double? _finalCompensatedConcentration;
+        public double? FinalCompensatedConcentration { get => _finalCompensatedConcentration; set => SetProperty(ref _finalCompensatedConcentration, value); }
     }
 
     // Katsayılar sınıfı

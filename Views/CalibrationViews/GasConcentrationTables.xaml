@@ -3,42 +3,41 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"        
-             xmlns:faWPF="clr-namespace:FontAwesome.WPF;assembly=FontAwesome.WPF"
              xmlns:buttons="clr-namespace:CapnoAnalyzer.Views.Components.Buttons"
              xmlns:oxy="http://oxyplot.org/wpf"
-             mc:Ignorable="d" Height="600">
+             xmlns:local="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200">
     <Grid Margin="5">
         <Border Background="#F1F3FA" CornerRadius="10" Padding="3" BorderBrush="#D1D5DB" BorderThickness="1">
-            <Grid>
-                <!-- TabControl for Device Tables -->
-                <TabControl ItemsSource="{Binding DeviceTables}" Margin="5" Background="#F1F3FA">
-                    <TabControl.ItemTemplate>
-                        <!-- Tab header template to show device name -->
-                        <DataTemplate>
-                            <TextBlock Text="{Binding DeviceName}" />
-                        </DataTemplate>
-                    </TabControl.ItemTemplate>
+            <!-- Cihaz sekmelerini yöneten ana TabControl -->
+            <TabControl ItemsSource="{Binding DeviceTables}" Margin="5" Background="#F1F3FA">
+                <TabControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding DeviceName}" />
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
 
-                    <TabControl.ContentTemplate>
-                        <!-- Tab content template to show DataGrid and Right Panel -->
-                        <DataTemplate>
-                            <Grid>
+                <TabControl.ContentTemplate>
+                    <!-- Her bir cihaz sekmesinin içeriği -->
+                    <DataTemplate>
+                        <!-- Ana Layout Grid'i: 2 Satır (üstte ana tablo, altta sıcaklık tabloları) -->
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="3*" />
+                                <RowDefinition Height="2*" />
+                            </Grid.RowDefinitions>
+
+                            <!-- ÜST BÖLÜM (Mevcut İçerik) -->
+                            <Grid Grid.Row="0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="5*" />
                                     <ColumnDefinition Width="2*" />
                                 </Grid.ColumnDefinitions>
 
-                                <!-- DataGrid -->
-                                <DataGrid Grid.Column="0" 
-                                          ItemsSource="{Binding DeviceData}" 
-                                          AutoGenerateColumns="False" 
-                                          Margin="5"  
-                                          VirtualizingStackPanel.IsVirtualizing="True" 
-                                          EnableRowVirtualization="True" 
-                                          HeadersVisibility="Column" 
-                                          CanUserAddRows="False">
+                                <!-- Ana Kalibrasyon DataGrid'i -->
+                                <DataGrid Grid.Column="0" ItemsSource="{Binding DeviceData}" AutoGenerateColumns="False" Margin="5" VirtualizingStackPanel.IsVirtualizing="True" EnableRowVirtualization="True" HeadersVisibility="Column" CanUserAddRows="False">
                                     <DataGrid.Columns>
-                                        <!-- Sample Sütunu -->
                                         <DataGridTemplateColumn Header="Örnek" Width="50">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -46,8 +45,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-
-                                        <!-- Gas Concentration Sütunu -->
                                         <DataGridTemplateColumn Header="Gaz Konst. %" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -55,8 +52,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-
-                                        <!-- Ref Sütunu -->
                                         <DataGridTemplateColumn Header="Ref" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -64,8 +59,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-
-                                        <!-- Gas Sütunu -->
                                         <DataGridTemplateColumn Header="Gaz" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -73,8 +66,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-
-                                        <!-- Ratio Sütunu -->
                                         <DataGridTemplateColumn Header="Gaz/Ref Oran" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -82,8 +73,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-
-                                        <!-- Transmittance Sütunu -->
                                         <DataGridTemplateColumn Header="Geçirgenlik" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -91,8 +80,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-
-                                        <!-- Absorption Sütunu -->
                                         <DataGridTemplateColumn Header="Emilim" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -100,8 +87,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-
-                                        <!-- Predicted Absorption Sütunu -->
                                         <DataGridTemplateColumn Header="Tahmin Edilen Emilim" Width="150">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -109,8 +94,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-
-                                        <!-- Predicted Gas Concentration Sütunu -->
                                         <DataGridTemplateColumn Header="Tahmini Gaz Konsantrasyonu %" Width="200">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -121,57 +104,88 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
 
-                                <!-- Sağ Panel -->
+                                <!-- Sağ Panel (Katsayılar, Butonlar, Grafik) -->
                                 <Grid Grid.Column="1">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-
-                                    <!-- NDIRGas Coefficients -->
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
                                     <Border Grid.Row="0" Grid.Column="0" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                                        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
-                                            <GroupBox Header="Katsayılar" Margin="0,5,0,5" Padding="0">
-                                                <StackPanel Grid.Row="0" Grid.Column="0" Margin="3">
-                                                    <TextBlock Text="Model: y = a(1 - e^(-b x^c))" FontSize="14" FontWeight="Bold" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding Coefficients.A, StringFormat=a: {0:F9}}" FontSize="14" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding Coefficients.B, StringFormat=b: {0:F9}}" FontSize="14" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding Coefficients.C, StringFormat=c: {0:F9}}" FontSize="14" Margin="0,0,0,5"/>
-                                                    <TextBlock Text="{Binding Coefficients.R, StringFormat=R^2: {0:F9}}" FontWeight="Bold" FontSize="14" Margin="0,10,0,5"/>
-                                                </StackPanel>
-                                            </GroupBox>
-                                        </StackPanel>
+                                        <GroupBox Header="Katsayılar" Margin="3,5,3,5">
+                                            <StackPanel>
+                                                <TextBlock Text="Model: y = a(1 - e^(-b x^c))" FontWeight="Bold" Margin="0,0,0,5"/>
+                                                <TextBlock Text="{Binding Coefficients.A, StringFormat=a: {0:F9}}"/>
+                                                <TextBlock Text="{Binding Coefficients.B, StringFormat=b: {0:F9}}"/>
+                                                <TextBlock Text="{Binding Coefficients.C, StringFormat=c: {0:F9}}"/>
+                                                <TextBlock Text="{Binding Coefficients.R, StringFormat=R^2: {0:F9}}" FontWeight="Bold" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </GroupBox>
                                     </Border>
-                                    
-                                    <!-- Hesapla Butonu -->
                                     <Border Grid.Row="0" Grid.Column="1" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
-                                            <!-- CalculateButton Kullanımı -->
-                                            <buttons:CalculateButton 
-                                                    ButtonContent="Hesapla" 
-                                                    ButtonIcon="Calculator" 
-                                                    Command="{Binding CalculateCommand}" />
-                                            <buttons:ExportButton 
-                                                    ButtonContent="Export" 
-                                                    ButtonIcon="SignOut" 
-                                                    Command="{Binding ExportCommand}" />
+                                            <buttons:CalculateButton ButtonContent="Hesapla" Command="{Binding CalculateCommand}" />
+                                            <buttons:ExportButton ButtonContent="Export" Command="{Binding ExportCommand}" Margin="0,5,0,0" />
                                         </StackPanel>
                                     </Border>
-
-                                    <!-- NDIRGas Coefficients -->
                                     <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#F1F3FA" Margin="5" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                                        <oxy:PlotView x:Name="plotView" Model="{Binding PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                        <oxy:PlotView Model="{Binding PlotModel}" Background="#F1F3FA"/>
                                     </Border>
                                 </Grid>
                             </Grid>
-                        </DataTemplate>
-                    </TabControl.ContentTemplate>
-                </TabControl>
-            </Grid>
+
+                            <!-- ALT BÖLÜM (DİNAMİK SICAKLIK KOMPANZASYON TABLOLARI) -->
+                            <TabControl Grid.Row="1" 
+                                        ItemsSource="{Binding TemperatureTests}" 
+                                        SelectedItem="{Binding SelectedTest}"
+                                        Margin="5">
+                                <TabControl.ItemTemplate>
+                                    <!-- Sekme başlığı -->
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Header}" />
+                                    </DataTemplate>
+                                </TabControl.ItemTemplate>
+
+                                <TabControl.ContentTemplate>
+                                    <!-- Her sekmenin içeriği -->
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Referans Test Verileri Başlığı -->
+                                            <Border Grid.Row="0" Background="#E5E7EB" CornerRadius="5" Padding="8" Margin="0,0,0,5">
+                                                <WrapPanel>
+                                                    <TextBlock Text="{Binding ReferenceTestData.TestNo, StringFormat=Test_No: {0}}" FontWeight="Bold" Margin="0,0,15,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.Temperature, StringFormat=Sıcaklık: {0:F3} °C}" Margin="0,0,15,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.Pressure, StringFormat=Basınç: {0:F3}}" Margin="0,0,15,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.Humidity, StringFormat=Nem: {0:F2}}" Margin="0,0,15,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.Zero, StringFormat=ZERO: {0:F9}}" FontWeight="SemiBold" Foreground="DarkRed" Margin="15,0,10,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.SpanA, StringFormat=SPAN(a): {0:F9}}" FontWeight="SemiBold" Foreground="DarkGreen" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.B, StringFormat=b: {0:F6}}" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.C, StringFormat=c: {0:F6}}" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.R, StringFormat=R: {0:F6}}" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.Alpha, StringFormat=Alfa: {0:F5}}" FontWeight="SemiBold" Foreground="DarkBlue" Margin="10,0,10,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.Beta, StringFormat=Beta: {0:F5}}" FontWeight="SemiBold" Foreground="DarkOrchid" Margin="0,0,10,0"/>
+                                                </WrapPanel>
+                                            </Border>
+
+                                            <!-- Sıcaklık Kompanzasyon Tablosu -->
+                                            <local:TemperatureCompensationTable Grid.Row="1" DataContext="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </TabControl.ContentTemplate>
+                            </TabControl>
+                        </Grid>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
         </Border>
     </Grid>
 </UserControl>
+    

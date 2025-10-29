@@ -1,0 +1,84 @@
+﻿<UserControl x:Class="CapnoAnalyzer.Views.CalibrationViews.TemperatureCompensationTable"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="1200">
+    <Grid>
+        <DataGrid ItemsSource="{Binding TestData}" 
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  GridLinesVisibility="All"
+                  HorizontalGridLinesBrush="#D1D5DB"
+                  VerticalGridLinesBrush="#D1D5DB">
+            <DataGrid.Columns>
+                <!-- Temel Veriler -->
+                <DataGridTextColumn Header="Gaz Konst. %" Binding="{Binding GasConcentration, StringFormat=F2}" />
+                <DataGridTextColumn Header="Ref" Binding="{Binding Ref, StringFormat=F4}" />
+                <DataGridTextColumn Header="Gaz" Binding="{Binding Gas, StringFormat=F4}" />
+
+                <!-- Pembe Sütunlar (Lokal Kalibrasyon) -->
+                <DataGridTextColumn Header="Gaz/Ref Oran" Binding="{Binding Ratio, StringFormat=F9}" />
+                <DataGridTextColumn Header="Geçirgenlik" Binding="{Binding Transmittance, StringFormat=F9}" />
+                <DataGridTextColumn Header="Emilim" Binding="{Binding Absorption, StringFormat=F9}" />
+                <DataGridTextColumn Header="Tahmini Emilim" Binding="{Binding PredictedAbsorption, StringFormat=F9}" />
+
+                <!-- Yeşil Sütunlar (Sıcaklık Kompanzasyonu) -->
+                <DataGridTextColumn Header="NR" Binding="{Binding NormalizedRatio, StringFormat=F9}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="Normalized Ratio (NR) = V_act / (V_ref * Zero_ref)"/>
+                            <Setter Property="Background" Value="#D1FAE5"/>
+                            <Setter Property="BorderThickness" Value="1,0,0,1"/>
+                            <Setter Property="BorderBrush" Value="Gray"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="NA" Binding="{Binding NormalizedAbsorbance, StringFormat=F9}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="Normalized Absorbance (NA) = 1 - NR"/>
+                            <Setter Property="Background" Value="#D1FAE5"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Span" Binding="{Binding Span, StringFormat=F9}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="Span = NA / (1 - exp(-b_ref * x^c_ref))"/>
+                            <Setter Property="Background" Value="#D1FAE5"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="NR(comp)" Binding="{Binding CompensatedNormalizedRatio, StringFormat=F9}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="NR_comp = NR * [1 + alfa * (T - T_ref)]"/>
+                            <Setter Property="Background" Value="#A7F3D0"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Span(comp)" Binding="{Binding CompensatedSpan, StringFormat=F9}">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="Span_comp = Span + beta * [(T - T_ref) / T_ref]"/>
+                            <Setter Property="Background" Value="#A7F3D0"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Dengelenmiş Gaz %" Binding="{Binding FinalCompensatedConcentration, StringFormat=F3}" FontWeight="Bold">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="X = {-1/b * ln[1 - (1-NR_comp)/Span_comp]}^(1/c)"/>
+                            <Setter Property="Background" Value="#6EE7B7"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
+    

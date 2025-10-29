@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"        
              xmlns:faWPF="clr-namespace:FontAwesome.WPF;assembly=FontAwesome.WPF"
              xmlns:helpers="clr-namespace:CapnoAnalyzer.Helpers"
              mc:Ignorable="d">
@@ -11,123 +10,109 @@
         <helpers:ProgressWidthConverter x:Key="ProgressWidthConverter" />
     </UserControl.Resources>
 
-    <Grid Grid.Row="1" Grid.Column="1" DataContext="{Binding}">
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        
+
+        <!-- ProgressBar -->
         <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Background="#F1F3FA" Margin="3" CornerRadius="6" BorderBrush="#E5E7EB" BorderThickness="1">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0">
-                <ProgressBar Height="12" Width="720" Value="{Binding MainSampleTimeProgressBar, Mode=OneWay}" Minimum="0" Maximum="100">
-                    <ProgressBar.Template>
-                        <ControlTemplate TargetType="ProgressBar">
-                            <Grid>
-                                <!-- Arka plan -->
-                                <Border CornerRadius="6" Background="#FFE5EAF5" />
-
-                                <!-- İlerleme çubuğu -->
-                                <Border CornerRadius="6" Background="#FFF39B5E" HorizontalAlignment="Left">
-                                    <Border.Width>
-                                        <!-- İlerleme genişliği Value, Minimum ve Maximum değerlerine göre -->
-                                        <MultiBinding Converter="{StaticResource ProgressWidthConverter}">
-                                            <Binding Path="Value" RelativeSource="{RelativeSource TemplatedParent}" />
-                                            <Binding Path="Minimum" RelativeSource="{RelativeSource TemplatedParent}" />
-                                            <Binding Path="Maximum" RelativeSource="{RelativeSource TemplatedParent}" />
-                                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource TemplatedParent}" />
-                                        </MultiBinding>
-                                    </Border.Width>
-                                </Border>
-                            </Grid>
-                        </ControlTemplate>
-                    </ProgressBar.Template>
-                </ProgressBar>
-            </StackPanel>
-        </Border>
-
-        <!-- NDIRGas Coefficients -->
-        <Border Grid.Row="0" Grid.Column="1" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2">
-                <GroupBox Header="Uygulanan Gaz Konsantrasyonu" FontWeight="Bold" FontSize="14" Margin="0,0,0,0" Width="260" Padding="0">
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBox x:Name="AppliedGasConcentration"  IsEnabled="{Binding IsInputEnabled}"
-                                    Text="{Binding AppliedGasConcentration, Mode=TwoWay, StringFormat=F2, UpdateSourceTrigger=PropertyChanged}" 
-                                    Foreground="#FF009E4B" 
-                                    FontSize="24" 
-                                    Height="32" 
-                                    Width="150" 
-                                    FontWeight="Bold" TextChanged="AppliedGasConcentration_TextChanged"/>
-                            <TextBlock 
-                                    Text="%" 
-                                    Foreground="#5C6D8C" 
-                                    Width="30" 
-                                    FontSize="24" 
-                                    Margin="5 0 0 0"/>
-                        </StackPanel>
-                    </StackPanel>
-                </GroupBox>
-            </StackPanel>
-        </Border>
-
-        <Border Grid.Row="0" Grid.Column="2" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
-                <Button Width="260" Height="80" FontWeight="Bold" Command="{Binding AppliedGasCommand}" IsEnabled="{Binding IsInputEnabled}">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border CornerRadius="10" Background="{TemplateBinding Background}" BorderBrush="Black" BorderThickness="1">
-                                <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <faWPF:FontAwesome Icon="Plus" FontSize="24" Margin="0,0,0,0" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Kalibrasyon Testi" FontSize="18" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="Değer Ekle" FontSize="18" HorizontalAlignment="Center"/>     
-                                </StackPanel>
+            <ProgressBar Height="12" Value="{Binding MainSampleTimeProgressBar, Mode=OneWay}" Minimum="0" Maximum="100" Margin="5">
+                <ProgressBar.Template>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <!-- Arka plan -->
+                            <Border CornerRadius="6" Background="#FFE5EAF5" />
+                            <!-- İlerleme çubuğu -->
+                            <Border CornerRadius="6" Background="#FFF39B5E" HorizontalAlignment="Left">
+                                <Border.Width>
+                                    <!-- İlerleme genişliği Value, Minimum ve Maximum değerlerine göre -->
+                                    <MultiBinding Converter="{StaticResource ProgressWidthConverter}">
+                                        <Binding Path="Value" RelativeSource="{RelativeSource TemplatedParent}" />
+                                        <Binding Path="Minimum" RelativeSource="{RelativeSource TemplatedParent}" />
+                                        <Binding Path="Maximum" RelativeSource="{RelativeSource TemplatedParent}" />
+                                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource TemplatedParent}" />
+                                    </MultiBinding>
+                                </Border.Width>
                             </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Background" Value="#FF809FFF"/>
-                            <Setter Property="Foreground" Value="Black"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#FF4D78FD"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-            </StackPanel>
+                        </Grid>
+                    </ControlTemplate>
+                </ProgressBar.Template>
+            </ProgressBar>
         </Border>
 
-        <!-- Mevcut Grid'inizin içine veya yanına uygun bir yere ekleyin -->
+        <!-- Gaz Konsantrasyonu Girişi -->
+        <Border Grid.Row="0" Grid.Column="1" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+            <GroupBox Header="Uygulanan Gaz Konsantrasyonu" FontWeight="Bold" FontSize="14" Padding="5" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <TextBox IsEnabled="{Binding IsInputEnabled}"
+                             Text="{Binding AppliedGasConcentration, Mode=TwoWay, StringFormat=F2, UpdateSourceTrigger=PropertyChanged}" 
+                             Foreground="#FF009E4B" FontSize="24" Height="32" Width="150" FontWeight="Bold"/>
+                    <TextBlock Text="%" Foreground="#5C6D8C" FontSize="24" Margin="5 0 0 0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </GroupBox>
+        </Border>
+
+        <!-- Ana Kalibrasyon Butonu -->
+        <Border Grid.Row="0" Grid.Column="2" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+            <Button Width="260" Height="80" FontWeight="Bold" Command="{Binding AppliedGasCommand}" IsEnabled="{Binding IsInputEnabled}" Margin="10">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="10" Background="{TemplateBinding Background}" BorderBrush="Black" BorderThickness="1">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <faWPF:FontAwesome Icon="Plus" FontSize="24" Margin="0,0,0,0" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Kalibrasyon Testi" FontSize="18" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Değer Ekle" FontSize="18" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#FF809FFF"/>
+                        <Setter Property="Foreground" Value="Black"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FF4D78FD"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="Gray"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Border>
+
+        <!-- Sıcaklık Testi Kontrolleri -->
         <Border Grid.Row="0" Grid.Column="0" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" Orientation="Vertical">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10" Orientation="Vertical" IsEnabled="{Binding IsInputEnabled}">
                 <Button Width="240" Height="24" FontWeight="Bold" Command="{Binding StartNewThermalTestCommand}" Margin="0,0,0,6" Background="#FFF98E66">
                     <StackPanel Orientation="Horizontal">
                         <faWPF:FontAwesome Icon="ThermometerHalf" FontSize="16" Margin="0,2,10,0"/>
                         <TextBlock Text="Yeni Sıcaklık Testi Oluştur" FontSize="14"/>
                     </StackPanel>
                 </Button>
-                <ComboBox Background="#FFD2E291" Height="24">
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock Text="Sıcaklık Testi Seç 1" FontSize="14"/>
-                    </StackPanel>
-                </ComboBox>
-                <Button Width="240" Height="24" FontWeight="Bold" Command="{Binding StartNewThermalTestCommand}" Margin="0,6,0,0" Background="#FFA6CC95">
+
+                <ComboBox Width="240" Background="#FFD2E291" Height="24"
+                          ItemsSource="{Binding ActiveDeviceTable.TemperatureTests}"
+                          SelectedItem="{Binding ActiveDeviceTable.SelectedTest, Mode=TwoWay}"
+                          DisplayMemberPath="Header"/>
+
+                <Button Width="240" Height="24" FontWeight="Bold" Command="{Binding AddValueToSelectedThermalTestCommand}" Margin="0,6,0,0" Background="#FFA6CC95">
                     <StackPanel Orientation="Horizontal">
                         <faWPF:FontAwesome Icon="Plus" FontSize="16" Margin="0,2,10,0"/>
                         <TextBlock Text="Seçili Test İçin Değer Ekle" FontSize="14" />
                     </StackPanel>
                 </Button>
-
             </StackPanel>
         </Border>
-
     </Grid>
 </UserControl>
+    

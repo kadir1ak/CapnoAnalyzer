@@ -74,7 +74,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             // --- YENİ: Varsayılan olarak 3 adet boş test sekmesi oluştur ---
             for (int i = 1; i <= 3; i++)
             {
-                var defaultTest = new TemperatureTestViewModel($"Sıcaklık Kompanzasyon {i}")
+                var defaultTest = new TemperatureTestViewModel($"Sıcaklık Komp. Testi {i}")
                 {
                     // Başlıkta görünecek Test No'yu da atayalım
                     ReferenceTestData = { TestNo = i }
@@ -88,7 +88,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         private void ExecuteCreateNewTest()
         {
             int testCount = TemperatureTests.Count + 1;
-            var newTest = new TemperatureTestViewModel($"Sıcaklık Kompanzasyon {testCount}");
+            var newTest = new TemperatureTestViewModel($"Sıcaklık Komp. Testi {testCount}");
             newTest.ReferenceTestData.TestNo = testCount;
 
             // Ana kalibrasyon daha önce hesaplandıysa, yeni sekmenin referans verilerini doldur

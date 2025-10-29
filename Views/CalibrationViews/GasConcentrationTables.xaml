@@ -10,9 +10,18 @@
              d:DesignHeight="800" d:DesignWidth="1200">
     <Grid Margin="5">
         <Border Background="#F1F3FA" CornerRadius="10" Padding="3" BorderBrush="#D1D5DB" BorderThickness="1">
-            <!-- Cihaz sekmelerini yöneten ana TabControl -->
-            <TabControl ItemsSource="{Binding DeviceTables}" Margin="5" Background="#F1F3FA">
+            <!-- 
+            Cihaz sekmelerini yöneten ana TabControl.
+            SelectedItem, CalibrationViewModel'deki ActiveDeviceTable'a bağlanarak
+            hangi cihazın aktif olduğunun bilgisini ana ViewModel'e iletir.
+            -->
+            <TabControl ItemsSource="{Binding DeviceTables}" 
+                        SelectedItem="{Binding ActiveDeviceTable, Mode=TwoWay}"
+                        Margin="5" 
+                        Background="#F1F3FA">
+
                 <TabControl.ItemTemplate>
+                    <!-- Sekme başlığı (Cihaz Adı) -->
                     <DataTemplate>
                         <TextBlock Text="{Binding DeviceName}" />
                     </DataTemplate>
@@ -25,10 +34,12 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="3*" />
+                                <!-- Ana kalibrasyon tablosu ve grafik -->
                                 <RowDefinition Height="2*" />
+                                <!-- Sıcaklık kompanzasyon tabloları -->
                             </Grid.RowDefinitions>
 
-                            <!-- ÜST BÖLÜM (Mevcut İçerik) -->
+                            <!-- ÜST BÖLÜM (Ana Kalibrasyon İçeriği) -->
                             <Grid Grid.Row="0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="5*" />
@@ -94,7 +105,7 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Tahmini Gaz Konsantrasyonu %" Width="200">
+                                        <DataGridTemplateColumn Header="Tahmini Gaz Konsantrasyonu %" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding PredictedGasConcentration, StringFormat=F3}" Background="#FF8FE87D" />

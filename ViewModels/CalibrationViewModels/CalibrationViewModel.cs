@@ -1,7 +1,6 @@
 ﻿using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Models.Device;
 using CapnoAnalyzer.ViewModels.DeviceViewModels;
-using CapnoAnalyzer.Views.DevicesViews.Devices;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,70 +13,65 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
     public class CalibrationViewModel : BindableBase
     {
+        // Hangi tür kalibrasyon yapıldığını belirtmek için enum
+        private enum CalibrationType { Main, Thermal }
+        private CalibrationType _currentCalibrationType;
+
         public DevicesViewModel DevicesVM { get; private set; }
         public ObservableCollection<GasConcentrationTablesViewModel> DeviceTables { get; set; }
+
+        // --- YENİ: Aktif cihazı ve komutları yönetmek için ---
+
+        private GasConcentrationTablesViewModel _activeDeviceTable;
+        /// <summary>
+        /// Kalibrasyon Tabloları sayfasında şu anda seçili olan cihaz sekmesinin ViewModel'i.
+        /// </summary>
+        public GasConcentrationTablesViewModel ActiveDeviceTable
+        {
+            get => _activeDeviceTable;
+            set => SetProperty(ref _activeDeviceTable, value);
+        }
+
+        /// <summary>
+        /// Yeni bir sıcaklık testi oluşturur.
+        /// </summary>
+        public ICommand StartNewThermalTestCommand { get; private set; }
+
+        /// <summary>
+        /// ComboBox'ta seçili olan sıcaklık testine yeni bir ölçüm değeri ekler.
+        /// </summary>
+        public ICommand AddValueToSelectedThermalTestCommand { get; private set; }
+
+        // --- Mevcut Özellikler ---
 
         public ICommand AppliedGasCommand { get; private set; }
 
         private bool _isInputEnabled = true;
-        public bool IsInputEnabled
-        {
-            get => _isInputEnabled;
-            set => SetProperty(ref _isInputEnabled, value);
-        }
-
-        private int _sample = 0;
-        public int Sample
-        {
-            get => _sample;
-            set => SetProperty(ref _sample, value);
-        }
-
-        private int _mainSampleMaxTimeCount = 0;
-        public int MainSampleMaxTimeCount
-        {
-            get => _mainSampleMaxTimeCount;
-            set => SetProperty(ref _mainSampleMaxTimeCount, value);
-        }
-
-        private int _mainTimeCount = 0;
-        public int MainTimeCount
-        {
-            get => _mainTimeCount;
-            set => SetProperty(ref _mainTimeCount, value);
-        }
-
-        private int _mainSampleTimeCount = 0;
-        public int MainSampleTimeCount
-        {
-            get => _mainSampleTimeCount;
-            set => SetProperty(ref _mainSampleTimeCount, value);
-        }
+        public bool IsInputEnabled { get => _isInputEnabled; set => SetProperty(ref _isInputEnabled, value); }
 
         private int _mainSampleTimeProgressBar = 0;
-        public int MainSampleTimeProgressBar
-        {
-            get => _mainSampleTimeProgressBar;
-            set => SetProperty(ref _mainSampleTimeProgressBar, value);
-        }
+        public int MainSampleTimeProgressBar { get => _mainSampleTimeProgressBar; set => SetProperty(ref _mainSampleTimeProgressBar, value); }
 
         private double? _appliedGasConcentration = null;
-        public double? AppliedGasConcentration
-        {
-            get => _appliedGasConcentration;
-            set => SetProperty(ref _appliedGasConcentration, value);
-        }
+        public double? AppliedGasConcentration { get => _appliedGasConcentration; set => SetProperty(ref _appliedGasConcentration, value); }
 
         private DispatcherTimer _timer;
         private Dictionary<string, List<double>> _refDataBuffer;
         private Dictionary<string, List<double>> _gasDataBuffer;
+        private Dictionary<string, List<double>> _tempDataBuffer;
+        private Dictionary<string, List<double>> _pressureDataBuffer;
+        private Dictionary<string, List<double>> _humidityDataBuffer;
+
 
         public CalibrationViewModel(DevicesViewModel devicesVM)
         {
             DevicesVM = devicesVM;
             DeviceTables = new ObservableCollection<GasConcentrationTablesViewModel>();
 
-            AppliedGasCommand = new RelayCommand(StartSamplingCalculation);
+            // Komutları başlat
+            AppliedGasCommand = new RelayCommand(() => StartSamplingCalculation(CalibrationType.Main));
+            StartNewThermalTestCommand = new RelayCommand(ExecuteStartNewThermalTest, CanExecuteThermalTestCommands);
+            AddValueToSelectedThermalTestCommand = new RelayCommand(ExecuteAddValueToSelectedThermalTest, CanExecuteThermalTestCommands);
 
             DevicesVM.DeviceAdded += OnDeviceAdded;
             DevicesVM.DeviceRemoved += OnDeviceRemoved;
@@ -89,9 +83,38 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
             _refDataBuffer = new Dictionary<string, List<double>>();
             _gasDataBuffer = new Dictionary<string, List<double>>();
+            _tempDataBuffer = new Dictionary<string, List<double>>();
+            _pressureDataBuffer = new Dictionary<string, List<double>>();
+            _humidityDataBuffer = new Dictionary<string, List<double>>();
         }
 
-        private void StartSamplingCalculation()
+        // --- YENİ KOMUT METOTLARI ---
+
+        private void ExecuteStartNewThermalTest()
+        {
+            // Komutu aktif olan cihazın ViewModel'ine yönlendir
+            ActiveDeviceTable?.CreateNewTestCommand.Execute(null);
+        }
+
+        private void ExecuteAddValueToSelectedThermalTest()
+        {
+            if (ActiveDeviceTable?.SelectedTest == null)
+            {
+                MessageBox.Show("Lütfen önce bir sıcaklık testi seçin.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            // Örneklemeyi "Thermal" modunda başlat
+            StartSamplingCalculation(CalibrationType.Thermal);
+        }
+
+        private bool CanExecuteThermalTestCommands()
+        {
+            return ActiveDeviceTable != null && IsInputEnabled;
+        }
+
+        // --- GÜNCELLENMİŞ ÖRNEKLEM ALMA MANTIĞI ---
+
+        private void StartSamplingCalculation(CalibrationType type)
         {
             if (AppliedGasConcentration == null)
             {
@@ -99,109 +122,105 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 return;
             }
 
-            if (AppliedGasConcentration < 0 || AppliedGasConcentration > 100)
-            {
-                MessageBox.Show("Uygulanan gaz konsantrasyonu 0 ile 100 arasında olmalıdır!", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            // Girişleri devre dışı bırak
+            _currentCalibrationType = type; // Hangi modda olduğumuzu kaydet
             IsInputEnabled = false;
-
-            // Sayaç başlangıcı
-            MainSampleTimeCount = 0;
+            MainSampleTimeProgressBar = 0;
 
             // Veri tamponlarını sıfırla
             _refDataBuffer.Clear();
             _gasDataBuffer.Clear();
-            MainSampleMaxTimeCount = 0;
+            _tempDataBuffer.Clear();
+            _pressureDataBuffer.Clear();
+            _humidityDataBuffer.Clear();
+
+            int mainSampleMaxTimeCount = 0;
             foreach (var device in DevicesVM.IdentifiedDevices)
             {
-                _refDataBuffer[device.Properties.ProductId] = new List<double>();
-                _gasDataBuffer[device.Properties.ProductId] = new List<double>();
+                var id = device.Properties.ProductId;
+                _refDataBuffer[id] = new List<double>();
+                _gasDataBuffer[id] = new List<double>();
+                _tempDataBuffer[id] = new List<double>();
+                _pressureDataBuffer[id] = new List<double>();
+                _humidityDataBuffer[id] = new List<double>();
 
-                // Girişleri devre dışı bırak
                 device.Interface.IsInputEnabled = false;
                 device.Interface.SampleTimeCount = 0;
-                if (device.Interface.SampleTime > MainSampleMaxTimeCount) 
+                if (device.Interface.SampleTime > mainSampleMaxTimeCount)
                 {
-                    MainSampleMaxTimeCount = device.Interface.SampleTime;
+                    mainSampleMaxTimeCount = device.Interface.SampleTime;
                 }
             }
 
-            _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromMilliseconds(100);
-            _timer.Tick += TimerTick;
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+            _timer.Tick += (sender, args) => TimerTick(sender, args, mainSampleMaxTimeCount);
             _timer.Start();
         }
 
-        private void TimerTick(object sender, EventArgs e)
+        private void TimerTick(object sender, EventArgs e, int maxTime)
         {
-            // Ana sayaç ilerlet
-            MainTimeCount++;
-            if (MainTimeCount >= 10)
-            {
-                MainTimeCount = 0;
-                MainSampleTimeCount += (int)(100 / MainSampleMaxTimeCount);
+            // 1. Ana ProgressBar'ı doğru ondalıklı hesaplama ile ilerlet.
+            // (100.0 / maxTime) -> 1 saniyedeki ilerleme yüzdesi.
+            // Bunu 10'a bölerek 100ms'deki ilerlemeyi buluyoruz.
+            double increment = (100.0 / maxTime) / 10.0;
+            MainSampleTimeProgressBar += (int)Math.Round(increment); // Yuvarlama ile daha hassas artış
 
-                // MainProgressBar'ı güncelle
-                MainSampleTimeProgressBar = MainSampleTimeCount;
+            // Değerin 100'ü geçmediğinden emin ol
+            if (MainSampleTimeProgressBar > 100)
+            {
+                MainSampleTimeProgressBar = 100;
             }
 
-            // Her cihazın zamanlayıcı mantığını kontrol et
+            // 2. Her cihazın ProgressBar'ını ve veri toplamayı yönet.
             foreach (var device in DevicesVM.IdentifiedDevices)
             {
-                var productId = device.Properties.ProductId;
+                var id = device.Properties.ProductId;
 
-                // Cihazın zamanlayıcı mantığını güncelle
-                if (device.Interface.SampleTimeCount < device.Interface.SampleTime)
+                // Cihazın kendi örnekleme süresi dolana kadar veri topla.
+                // Geçen süreyi ana ilerleme çubuğunun yüzdesinden hesaplayabiliriz.
+                double elapsedSeconds = (MainSampleTimeProgressBar / 100.0) * maxTime;
+
+                if (elapsedSeconds <= device.Interface.SampleTime)
                 {
-                    device.Interface.TimeCount++;
-                    if (device.Interface.TimeCount >= 10)
+                    // Cihazın ProgressBar'ını geçen süreye göre güncelle.
+                    // Bu, ana bar ile tam senkronizasyon sağlar.
+                    device.Interface.SampleTimeProgressBar = (int)((elapsedSeconds / device.Interface.SampleTime) * 100.0);
+
+                    if (device.Interface.SampleTimeProgressBar > 100)
                     {
-                        device.Interface.TimeCount = 0;
-                       
-                        device.Interface.SampleTimeCount++;
-                        device.Interface.SampleTimeProgressBar = (int)((100.0 / device.Interface.SampleTime) * device.Interface.SampleTimeCount);
+                        device.Interface.SampleTimeProgressBar = 100;
                     }
 
                     // Sensör verilerini topla
-                    double refValue = 0;
-                    double gasValue = 0;
-                    if (device.Properties.DataPacketType == "1")
-                    {
-                        refValue = device.DataPacket_1.ReferenceSensor;
-                        gasValue = device.DataPacket_1.GasSensor;
-                    }
-                    else if (device.Properties.DataPacketType == "2")
-                    {
-                        refValue = device.DataPacket_2.GainAdsVoltagesIIR[1];
-                        gasValue = device.DataPacket_2.GainAdsVoltagesIIR[0];
-                    }
-                    else if (device.Properties.DataPacketType == "3")
-                    {
-                        refValue = device.DataPacket_3.Ch1;
-                        gasValue = device.DataPacket_3.Ch0;
-                    }
+                    (double refValue, double gasValue) = GetSensorValues(device);
+                    _refDataBuffer[id].Add(refValue);
+                    _gasDataBuffer[id].Add(gasValue);
 
-                    _refDataBuffer[productId].Add(refValue);
-                    _gasDataBuffer[productId].Add(gasValue);
+                    // Ortam verilerini topla
+                    _tempDataBuffer[id].Add(device.Interface.Data.Temperature);
+                    _pressureDataBuffer[id].Add(device.Interface.Data.Pressure);
+                    _humidityDataBuffer[id].Add(device.Interface.Data.Humidity);
+                }
+                else
+                {
+                    // Eğer bu cihazın süresi dolduysa ama ana süre devam ediyorsa,
+                    // barını 100'de sabit tut.
+                    device.Interface.SampleTimeProgressBar = 100;
                 }
             }
 
-            // Ana sayaç maks süreye ulaştıysa işlemi bitir
-            if (MainSampleTimeCount >= 100)
+            // 3. Ana süre dolduğunda zamanlayıcıyı durdur.
+            if (MainSampleTimeProgressBar >= 100)
             {
                 _timer.Stop();
 
-                // 3 saniyelik bekleme için yeni bir zamanlayıcı başlat
-                var waitTimer = new DispatcherTimer();
-                waitTimer.Interval = TimeSpan.FromSeconds(3);
-                waitTimer.Tick += (s, args) =>
+                // Cihazların barlarının da 100 olduğundan emin ol
+                foreach (var device in DevicesVM.IdentifiedDevices)
                 {
-                    waitTimer.Stop();
-                    CompleteCalibration();
-                };
+                    device.Interface.SampleTimeProgressBar = 100;
+                }
+
+                var waitTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+                waitTimer.Tick += (s, args) => { waitTimer.Stop(); CompleteCalibration(); };
                 waitTimer.Start();
             }
         }
@@ -210,147 +229,113 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         {
             foreach (var device in DevicesVM.IdentifiedDevices)
             {
-                var productId = device.Properties.ProductId;
+                var id = device.Properties.ProductId;
+                double calculatedRefValue = CalculateValue(device.Interface.SampleMode, _refDataBuffer[id]);
+                double calculatedGasValue = CalculateValue(device.Interface.SampleMode, _gasDataBuffer[id]);
 
-                // SampleMode durumuna göre hesaplama yap
-                double calculatedRefValue = 0;
-                double calculatedGasValue = 0;
-
-                switch (device.Interface.SampleMode)
-                {
-                    case SampleMode.AVG:
-                        calculatedRefValue = CalculateAverage(_refDataBuffer[productId]);
-                        calculatedGasValue = CalculateAverage(_gasDataBuffer[productId]);
-                        break;
-
-                    case SampleMode.RMS:
-                        calculatedRefValue = CalculateRMS(_refDataBuffer[productId]);
-                        calculatedGasValue = CalculateRMS(_gasDataBuffer[productId]);
-                        break;
-
-                    case SampleMode.PP:
-                        calculatedRefValue = CalculatePeakToPeak(_refDataBuffer[productId]);
-                        calculatedGasValue = CalculatePeakToPeak(_gasDataBuffer[productId]);
-                        break;
-                }
-
-                // İlgili tabloyu bul
-                var table = DeviceTables.FirstOrDefault(t => t.DeviceName == productId);
+                var table = DeviceTables.FirstOrDefault(t => t.DeviceName == id);
                 if (table == null) continue;
-
-                // Yeni veri oluştur
-                var lastSample = table.DeviceData.LastOrDefault();
-                int newSampleNumber = lastSample != null ? int.Parse(lastSample.Sample) + 1 : 1;
 
                 var newDeviceData = new Data
                 {
-                    Sample = newSampleNumber.ToString(),
                     GasConcentration = (double)AppliedGasConcentration,
                     Ref = Math.Round(calculatedRefValue, 4),
-                    Gas = Math.Round(calculatedGasValue, 4)
+                    Gas = Math.Round(calculatedGasValue, 4),
+                    // Ortalama ortam verilerini ekle
+                    Temperature = CalculateValue(SampleMode.AVG, _tempDataBuffer[id]),
+                    Pressure = CalculateValue(SampleMode.AVG, _pressureDataBuffer[id]),
+                    Humidity = CalculateValue(SampleMode.AVG, _humidityDataBuffer[id])
                 };
 
-                // Yeni veriyi tabloya ekle
-                table.DeviceData.Add(newDeviceData);
+                // VERİYİ DOĞRU YERE EKLE
+                if (_currentCalibrationType == CalibrationType.Main)
+                {
+                    var lastSample = table.DeviceData.LastOrDefault();
+                    newDeviceData.Sample = (lastSample != null ? int.Parse(lastSample.Sample) + 1 : 1).ToString();
+                    table.DeviceData.Add(newDeviceData);
+                }
+                else // Thermal
+                {
+                    if (table.SelectedTest != null)
+                    {
+                        table.SelectedTest.TestData.Add(newDeviceData);
+                    }
+                }
 
-                // SampleTime sıfırla
                 device.Interface.SampleTimeCount = 0;
                 device.Interface.SampleTimeProgressBar = 0;
-
-                // Girişleri tekrar aktif hale getir
                 device.Interface.IsInputEnabled = true;
             }
 
-            // SampleTime sıfırla
-            MainSampleTimeCount = 0;
             MainSampleTimeProgressBar = 0;
-
-            // Girişleri tekrar aktif hale getir
             IsInputEnabled = true;
         }
-        private double CalculateAverage(List<double> data)
-        {
-            if (data == null || data.Count == 0)
-                return 0;
 
-            // Daha performanslı bir ortalama hesaplama
-            double sum = 0;
-            foreach (var value in data)
+        #region Helper Metotları (Değişiklik Yok)
+        private (double, double) GetSensorValues(Device device)
+        {
+            double refValue = 0, gasValue = 0;
+            if (device.Properties.DataPacketType == "2")
             {
-                sum += value;
+                refValue = device.DataPacket_2.GainAdsVoltagesIIR[1];
+                gasValue = device.DataPacket_2.GainAdsVoltagesIIR[0];
             }
-
-            return sum / data.Count;
+            // Diğer paket tipleri için de eklenebilir...
+            return (refValue, gasValue);
         }
-        private double CalculateRMS(List<double> data)
-        {
-            if (data == null || data.Count == 0)
-                return 0;
 
-            // Performansı artırmak için "foreach" döngüsü ile RMS hesaplama
-            double sumOfSquares = 0;
-            foreach (var value in data)
+        private double CalculateValue(SampleMode mode, List<double> data)
+        {
+            if (data == null || !data.Any()) return 0;
+            switch (mode)
             {
-                sumOfSquares += value * value;
+                case SampleMode.AVG: return data.Average();
+                case SampleMode.RMS: return Math.Sqrt(data.Select(d => d * d).Average());
+                case SampleMode.PP: return data.Max() - data.Min();
+                default: return 0;
             }
-
-            return Math.Sqrt(sumOfSquares / data.Count);
-        }
-        private double CalculatePeakToPeak(List<double> data)
-        {
-            if (data == null || data.Count == 0)
-                return 0;
-
-            // Minimum ve maksimum değerleri tek döngüde bul
-            double min = double.MaxValue;
-            double max = double.MinValue;
-
-            foreach (var value in data)
-            {
-                if (value < min) min = value;
-                if (value > max) max = value;
-            }
-
-            return max - min;
         }
 
-        private void OnDeviceAdded(Device newDevice)
-        {
-            AddDeviceTable(newDevice.Properties.ProductId);
-        }
-
-        private void OnDeviceRemoved(Device removedDevice)
-        {
-            RemoveDeviceTable(removedDevice.Properties.ProductId);
-        }
+        private void OnDeviceAdded(Device newDevice) => AddDeviceTable(newDevice.Properties.ProductId);
+        private void OnDeviceRemoved(Device removedDevice) => RemoveDeviceTable(removedDevice.Properties.ProductId);
 
         private void AddDeviceTable(string deviceName)
         {
+            // Cihaz için zaten bir tablo varsa tekrar ekleme.
             if (DeviceTables.Any(t => t.DeviceName == deviceName))
             {
+                // İSTEĞE BAĞLI: Eğer zaten var olan bir cihaz tekrar bağlanırsa,
+                // o sekmeyi tekrar aktif hale getirebilirsiniz.
+                var existingTable = DeviceTables.FirstOrDefault(t => t.DeviceName == deviceName);
+                if (existingTable != null)
+                {
+                    ActiveDeviceTable = existingTable;
+                }
                 return;
             }
 
-            // Cihazı bul (Varsayım: Devices içinde Device nesneleri var)
-            var selectedDevice = DevicesVM.IdentifiedDevices.FirstOrDefault(device => device.Properties.ProductId == deviceName);
+            // İlgili cihaz nesnesini bul.
+            var selectedDevice = DevicesVM.IdentifiedDevices.FirstOrDefault(d => d.Properties.ProductId == deviceName);
             if (selectedDevice != null)
             {
-                var table = new GasConcentrationTablesViewModel(DevicesVM, selectedDevice);
-                DeviceTables.Add(table);
-            }
-            else
-            {
-                Console.WriteLine("❌ Cihaz bulunamadı.");
+                // Cihaz için yeni bir tablo ViewModel'i oluştur.
+                var newDeviceTable = new GasConcentrationTablesViewModel(DevicesVM, selectedDevice);
+
+                // Yeni tabloyu koleksiyona ekle. Bu, UI'da yeni bir sekme oluşturur.
+                DeviceTables.Add(newDeviceTable);
+
+                // --- İSTENEN İŞLEVSELLİK İÇİN EKLENEN SATIR ---
+                // Yeni oluşturulan bu tabloyu "aktif" tablo olarak ayarla.
+                // XAML'deki binding sayesinde UI'daki TabControl bu sekmeyi seçecektir.
+                ActiveDeviceTable = newDeviceTable;
             }
         }
 
         private void RemoveDeviceTable(string deviceName)
         {
             var table = DeviceTables.FirstOrDefault(t => t.DeviceName == deviceName);
-            if (table != null)
-            {
-                DeviceTables.Remove(table);
-            }
+            if (table != null) DeviceTables.Remove(table);
         }
+        #endregion
     }
 }

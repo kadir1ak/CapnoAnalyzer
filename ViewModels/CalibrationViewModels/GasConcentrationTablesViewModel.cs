@@ -15,6 +15,7 @@ using System.Globalization;
 using CapnoAnalyzer.ViewModels.DeviceViewModels;
 using CapnoAnalyzer.Models.Device;
 using System.Windows;
+using System.Diagnostics;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
@@ -42,6 +43,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         public ICommand CalculateCommand { get; }
         public ICommand ExportCommand { get; }
+        public ICommand ImportCommand { get; } // YENİ KOMUT
         public string DeviceName { get; }
 
         public ObservableCollection<TemperatureTestViewModel> TemperatureTests { get; set; }
@@ -66,24 +68,116 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             PlotModel = new PlotModel { Title = $"Cihaz: {DeviceName} - Model: y = a(1 - e^{{-bx^c}})" };
             CalculateCommand = new RelayCommand(_ => CalculateCoefficients(), _ => CanCalculate());
             ExportCommand = new RelayCommand(_ => ExportToFile(), _ => DeviceData.Any());
+            ImportCommand = new RelayCommand(ExecuteImport); // YENİ KOMUTUN BAŞLATILMASI
 
             TemperatureTests = new ObservableCollection<TemperatureTestViewModel>();
             CreateNewTestCommand = new RelayCommand(ExecuteCreateNewTest);
             AddDataToSelectedTestCommand = new RelayCommand(ExecuteAddDataToSelectedTest, () => SelectedTest != null);
 
-            // --- YENİ: Varsayılan olarak 3 adet boş test sekmesi oluştur ---
             for (int i = 1; i <= 3; i++)
             {
                 var defaultTest = new TemperatureTestViewModel($"Sıcaklık Komp. Testi {i}")
                 {
-                    // Başlıkta görünecek Test No'yu da atayalım
                     ReferenceTestData = { TestNo = i }
                 };
                 TemperatureTests.Add(defaultTest);
             }
-            // İlk sekmeyi seçili yap
             SelectedTest = TemperatureTests.FirstOrDefault();
         }
+
+        // --- YENİ METOTLAR: İÇERİ AKTARMA İŞLEVSELLİĞİ ---
+        private void ExecuteImport()
+        {
+            using (var dialog = new CommonOpenFileDialog())
+            {
+                dialog.Title = "İçeri aktarılacak kalibrasyon dosyasını seçin.";
+                dialog.Filters.Add(new CommonFileDialogFilter("Metin Dosyaları", "*.txt"));
+                dialog.Filters.Add(new CommonFileDialogFilter("CSV Dosyaları", "*.csv"));
+                dialog.Filters.Add(new CommonFileDialogFilter("Tüm Dosyalar", "*.*"));
+
+                if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+                {
+                    MessageBox.Show("Dosya seçilmedi. İçeri aktarma işlemi iptal edildi.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                try
+                {
+                    string filePath = dialog.FileName;
+                    ParseCalibrationFile(filePath);
+                    MessageBox.Show($"Veriler başarıyla '{Path.GetFileName(filePath)}' dosyasından içe aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // İçe aktarma sonrası katsayıları otomatik olarak yeniden hesapla
+                    if (CanCalculate())
+                    {
+                        CalculateCoefficients();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Dosya okunurken veya işlenirken bir hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ParseCalibrationFile(string filePath)
+        {
+            var lines = File.ReadAllLines(filePath);
+            // TXT dosyaları sistem kültürünü (örn: Türkçe için virgül), CSV ise InvariantCulture (nokta) kullanır.
+            var culture = filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)
+                          ? CultureInfo.InvariantCulture
+                          : CultureInfo.CurrentCulture;
+
+            char delimiter = filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ? ';' : '\t';
+
+            DeviceData.Clear(); // İçe aktarmadan önce mevcut verileri temizle
+
+            bool isDataSection = false;
+            int sampleCounter = 1;
+
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                var parts = line.Split(delimiter);
+                if (parts.Length < 2 && !line.Contains("Gaz Konsantrasyonu")) continue;
+
+                string key = parts[0].Trim().Replace("\"", "");
+                string value = parts.Length > 1 ? parts[1].Trim().Replace("\"", "") : string.Empty;
+
+                // Katsayıları oku
+                if (key.Equals("A", StringComparison.OrdinalIgnoreCase)) Coefficients.A = double.Parse(value, culture);
+                else if (key.Equals("B", StringComparison.OrdinalIgnoreCase)) Coefficients.B = double.Parse(value, culture);
+                else if (key.Equals("C", StringComparison.OrdinalIgnoreCase)) Coefficients.C = double.Parse(value, culture);
+                else if (key.Equals("R Kare", StringComparison.OrdinalIgnoreCase)) Coefficients.R = double.Parse(value, culture);
+                // Veri tablosunun başlangıcını bul
+                else if (key.Contains("Gaz Konsantrasyonu"))
+                {
+                    isDataSection = true;
+                    continue; // Başlık satırını atla
+                }
+
+                if (isDataSection && parts.Length >= 3)
+                {
+                    try
+                    {
+                        var newData = new Data
+                        {
+                            Sample = sampleCounter++.ToString(),
+                            GasConcentration = double.Parse(parts[0].Replace("\"", "").Trim(), culture),
+                            Gas = double.Parse(parts[1].Replace("\"", "").Trim(), culture),
+                            Ref = double.Parse(parts[2].Replace("\"", "").Trim(), culture)
+                        };
+                        DeviceData.Add(newData);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Veri satırı okunamadı: {line}. Hata: {ex.Message}");
+                    }
+                }
+            }
+        }
+        // --- YENİ METOTLARIN SONU ---
 
         private void ExecuteCreateNewTest()
         {
@@ -91,8 +185,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             var newTest = new TemperatureTestViewModel($"Sıcaklık Komp. Testi {testCount}");
             newTest.ReferenceTestData.TestNo = testCount;
 
-            // Ana kalibrasyon daha önce hesaplandıysa, yeni sekmenin referans verilerini doldur
-            if (Coefficients.R < 1.0 && Coefficients.R != 0) // Basit bir kontrol (hesaplama yapılmış mı?)
+            if (Coefficients.R < 1.0 && Coefficients.R != 0)
             {
                 var zeroData = DeviceData.FirstOrDefault(d => Math.Abs(d.GasConcentration) < 1e-9);
                 double zeroValue = zeroData != null ? (zeroData.Gas / zeroData.Ref) : 0;
@@ -100,7 +193,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             }
 
             TemperatureTests.Add(newTest);
-            SelectedTest = newTest; // Yeni oluşturulan sekmeyi aktif yap
+            SelectedTest = newTest;
         }
 
         private void ExecuteAddDataToSelectedTest()
@@ -187,8 +280,6 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                     device.Interface.DeviceData.CalibrationCoefficients.R = Coefficients.R;
                     device.Interface.DeviceData.CalibrationData.Zero = zero;
                     MessageBox.Show($"Kalibrasyon katsayıları '{DeviceName}' cihazına aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    // --- YENİ: Mevcut tüm sıcaklık testlerinin referans verilerini güncelle ---
                     UpdateAllTestsReferenceData(zero);
                 }
                 else

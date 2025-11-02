@@ -140,6 +140,7 @@
                                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
                                             <buttons:CalculateButton ButtonContent="Hesapla" Command="{Binding CalculateCommand}" />
                                             <buttons:ExportButton ButtonContent="Export" Command="{Binding ExportCommand}" Margin="0,5,0,0" />
+                                            <buttons:ImportButton ButtonContent="Import" Command="{Binding ImportCommand}" Margin="0,5,0,0" />
                                         </StackPanel>
                                     </Border>
                                     <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#F1F3FA" Margin="5" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">

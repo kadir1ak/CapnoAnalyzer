@@ -10,44 +10,35 @@
              d:DesignHeight="800" d:DesignWidth="1200">
     <Grid Margin="5">
         <Border Background="#F1F3FA" CornerRadius="10" Padding="3" BorderBrush="#D1D5DB" BorderThickness="1">
-            <!-- 
-            Cihaz sekmelerini yöneten ana TabControl.
-            SelectedItem, CalibrationViewModel'deki ActiveDeviceTable'a bağlanarak
-            hangi cihazın aktif olduğunun bilgisini ana ViewModel'e iletir.
-            -->
             <TabControl ItemsSource="{Binding DeviceTables}" 
                         SelectedItem="{Binding ActiveDeviceTable, Mode=TwoWay}"
                         Margin="5" 
                         Background="#F1F3FA">
 
                 <TabControl.ItemTemplate>
-                    <!-- Sekme başlığı (Cihaz Adı) -->
                     <DataTemplate>
                         <TextBlock Text="{Binding DeviceName}" />
                     </DataTemplate>
                 </TabControl.ItemTemplate>
 
                 <TabControl.ContentTemplate>
-                    <!-- Her bir cihaz sekmesinin içeriği -->
                     <DataTemplate>
-                        <!-- Ana Layout Grid'i: 2 Satır (üstte ana tablo, altta sıcaklık tabloları) -->
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="3*" />
-                                <!-- Ana kalibrasyon tablosu ve grafik -->
-                                <RowDefinition Height="2*" />
-                                <!-- Sıcaklık kompanzasyon tabloları -->
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
                             <!-- ÜST BÖLÜM (Ana Kalibrasyon İçeriği) -->
                             <Grid Grid.Row="0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="5*" />
-                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Ana Kalibrasyon DataGrid'i -->
-                                <DataGrid Grid.Column="0" ItemsSource="{Binding DeviceData}" AutoGenerateColumns="False" Margin="5" VirtualizingStackPanel.IsVirtualizing="True" EnableRowVirtualization="True" HeadersVisibility="Column" CanUserAddRows="False">
+                                <DataGrid Grid.Column="0" ItemsSource="{Binding DeviceData}" AutoGenerateColumns="False" Margin="5" CanUserAddRows="False" VerticalScrollBarVisibility="Auto">
+                                    <!-- Sütunlar -->
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn Header="Örnek" Width="50">
                                             <DataGridTemplateColumn.CellTemplate>
@@ -115,18 +106,16 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
 
-                                <!-- Sağ Panel (Katsayılar, Butonlar, Grafik) -->
-                                <Grid Grid.Column="1">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Border Grid.Row="0" Grid.Column="0" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                                        <GroupBox Header="Katsayılar" Margin="3,5,3,5">
+                                <!-- GÖRSELDEKİ GİBİ YENİDEN TASARLANMIŞ SAĞ PANEL -->
+                                <Border Grid.Column="1" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <GroupBox Grid.Column="0" Header="Katsayılar" Margin="5" Padding="5">
                                             <StackPanel>
                                                 <TextBlock Text="Model: y = a(1 - e^(-b x^c))" FontWeight="Bold" Margin="0,0,0,5"/>
                                                 <TextBlock Text="{Binding Coefficients.A, StringFormat=a: {0:F9}}"/>
@@ -135,34 +124,33 @@
                                                 <TextBlock Text="{Binding Coefficients.R, StringFormat=R^2: {0:F9}}" FontWeight="Bold" Margin="0,5,0,0"/>
                                             </StackPanel>
                                         </GroupBox>
-                                    </Border>
-                                    <Border Grid.Row="0" Grid.Column="1" Background="#F1F3FA" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="5,10,10,10">
                                             <buttons:CalculateButton ButtonContent="Hesapla" Command="{Binding CalculateCommand}" />
                                             <buttons:ExportButton ButtonContent="Export" Command="{Binding ExportCommand}" Margin="0,5,0,0" />
                                             <buttons:ImportButton ButtonContent="Import" Command="{Binding ImportCommand}" Margin="0,5,0,0" />
                                         </StackPanel>
-                                    </Border>
-                                    <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#F1F3FA" Margin="5" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                                        <oxy:PlotView Model="{Binding PlotModel}" Background="#F1F3FA"/>
-                                    </Border>
-                                </Grid>
+
+                                        <Border Grid.Column="2" Background="#F1F3FA" Margin="5" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                                            <oxy:PlotView Model="{Binding PlotModel}" Background="#F1F3FA" Height="250" Width="250"/>
+                                        </Border>
+                                       
+                                    </Grid>
+                                </Border>           
                             </Grid>
 
                             <!-- ALT BÖLÜM (DİNAMİK SICAKLIK KOMPANZASYON TABLOLARI) -->
                             <TabControl Grid.Row="1" 
                                         ItemsSource="{Binding TemperatureTests}" 
                                         SelectedItem="{Binding SelectedTest}"
-                                        Margin="5">
+                                        Margin="5,15,5,5">
                                 <TabControl.ItemTemplate>
-                                    <!-- Sekme başlığı -->
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Header}" />
                                     </DataTemplate>
                                 </TabControl.ItemTemplate>
 
                                 <TabControl.ContentTemplate>
-                                    <!-- Her sekmenin içeriği -->
                                     <DataTemplate>
                                         <Grid>
                                             <Grid.RowDefinitions>
@@ -170,7 +158,6 @@
                                                 <RowDefinition Height="*" />
                                             </Grid.RowDefinitions>
 
-                                            <!-- Referans Test Verileri Başlığı -->
                                             <Border Grid.Row="0" Background="#E5E7EB" CornerRadius="5" Padding="8" Margin="0,0,0,5">
                                                 <WrapPanel>
                                                     <TextBlock Text="{Binding ReferenceTestData.TestNo, StringFormat=Test_No: {0}}" FontWeight="Bold" Margin="0,0,15,0"/>
@@ -187,8 +174,47 @@
                                                 </WrapPanel>
                                             </Border>
 
-                                            <!-- Sıcaklık Kompanzasyon Tablosu -->
-                                            <local:TemperatureCompensationTable Grid.Row="1" DataContext="{Binding}"/>
+                                            <Grid Grid.Row="1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <local:TemperatureCompensationTable Grid.Column="0" DataContext="{Binding}"/>
+
+                                                <!-- GÖRSELDEKİ GİBİ YENİDEN TASARLANMIŞ KONTROL PANELİ -->
+                                                <Border Grid.Column="1" Background="#F1F3FA" Margin="10,0,0,0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <StackPanel Grid.Column="0" Margin="5">
+                                                            <GroupBox Header="Referans Testi Seçimi" FontWeight="Bold" Padding="5">
+                                                                <ComboBox ItemsSource="{Binding DataContext.TemperatureTests, RelativeSource={RelativeSource AncestorType=TabControl}}" 
+                                                                          SelectedItem="{Binding DataContext.SelectedReferenceTest, RelativeSource={RelativeSource AncestorType=TabControl}, Mode=TwoWay}" 
+                                                                          DisplayMemberPath="Header"/>
+                                                            </GroupBox>
+
+                                                            <GroupBox Header="Kompanzasyon Katsayıları" FontWeight="Bold" Margin="0,10,0,0" Padding="5">
+                                                                <StackPanel>
+                                                                    <TextBlock Text="{Binding DataContext.CompensatedCoefficients.A, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=a: {0:F10}}"/>
+                                                                    <TextBlock Text="{Binding DataContext.CompensatedCoefficients.B, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=b: {0:F10}}"/>
+                                                                    <TextBlock Text="{Binding DataContext.CompensatedCoefficients.C, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=c: {0:F10}}"/>
+                                                                    <TextBlock Text="{Binding DataContext.CompensatedCoefficients.R, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=R^2: {0:F10}}" FontWeight="Bold" Margin="0,5,0,0"/>
+                                                                </StackPanel>
+                                                            </GroupBox>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="5,10,10,10">
+                                                            <buttons:CalculateButton ButtonContent="Hesapla" Command="{Binding DataContext.CalculateCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" />
+                                                            <buttons:ExportButton ButtonContent="Export" Command="{Binding DataContext.ExportCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" Margin="0,5,0,0" />
+                                                            <buttons:ImportButton ButtonContent="Import" Command="{Binding DataContext.ImportCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" Margin="0,5,0,0" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </Grid>
                                         </Grid>
                                     </DataTemplate>
                                 </TabControl.ContentTemplate>

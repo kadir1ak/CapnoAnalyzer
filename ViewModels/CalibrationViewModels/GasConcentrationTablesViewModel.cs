@@ -21,6 +21,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
     public class GasConcentrationTablesViewModel : BindableBase
     {
+        // ... (Mevcut özellikler ve model tanımı aynı kalır) ...
         public DevicesViewModel DevicesVM { get; private set; }
 
         private readonly Func<Vector<double>, double, double> model = (parameters, xVal) =>
@@ -35,28 +36,53 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         public Coefficients Coefficients { get; set; }
 
         private PlotModel _plotModel;
-        public PlotModel PlotModel
-        {
-            get => _plotModel;
-            set => SetProperty(ref _plotModel, value);
-        }
+        public PlotModel PlotModel { get => _plotModel; set => SetProperty(ref _plotModel, value); }
 
         public ICommand CalculateCommand { get; }
         public ICommand ExportCommand { get; }
-        public ICommand ImportCommand { get; } // YENİ KOMUT
+        public ICommand ImportCommand { get; }
         public string DeviceName { get; }
 
         public ObservableCollection<TemperatureTestViewModel> TemperatureTests { get; set; }
 
         private TemperatureTestViewModel _selectedTest;
-        public TemperatureTestViewModel SelectedTest
-        {
-            get => _selectedTest;
-            set => SetProperty(ref _selectedTest, value);
-        }
+        public TemperatureTestViewModel SelectedTest { get => _selectedTest; set => SetProperty(ref _selectedTest, value); }
 
         public ICommand CreateNewTestCommand { get; }
         public ICommand AddDataToSelectedTestCommand { get; }
+
+        // --- YENİ EKLENEN ÖZELLİKLER VE KOMUTLAR ---
+
+        /// <summary>
+        /// Sıcaklık kompanzasyonu hesaplamaları sonrası elde edilen yeni katsayıları tutar.
+        /// </summary>
+        public Coefficients CompensatedCoefficients { get; set; }
+
+        private TemperatureTestViewModel _selectedReferenceTest;
+        /// <summary>
+        /// Kullanıcının referans olarak seçtiği sıcaklık testini tutar.
+        /// </summary>
+        public TemperatureTestViewModel SelectedReferenceTest
+        {
+            get => _selectedReferenceTest;
+            set => SetProperty(ref _selectedReferenceTest, value);
+        }
+
+        /// <summary>
+        /// Sıcaklık kompanzasyon katsayılarını hesaplayan komut.
+        /// </summary>
+        public ICommand CalculateCompensationCommand { get; }
+
+        /// <summary>
+        /// Tüm sıcaklık testi verilerini dışa aktaran komut.
+        /// </summary>
+        public ICommand ExportCompensationCommand { get; }
+
+        /// <summary>
+        /// Sıcaklık testi verilerini içe aktaran komut.
+        /// </summary>
+        public ICommand ImportCompensationCommand { get; }
+
 
         public GasConcentrationTablesViewModel(DevicesViewModel devicesVM, Device selectedDevice)
         {
@@ -65,14 +91,22 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             DeviceData = new ObservableCollection<Data>();
             Coefficients = new Coefficients();
 
-            PlotModel = new PlotModel { Title = $"Cihaz: {DeviceName} - Model: y = a(1 - e^{{-bx^c}})" };
+            PlotModel = new PlotModel { Title = $"{DeviceName} : y = a(1 - e^{{-bx^c}})" };
+            PlotModel.TitleFontSize = 12;
             CalculateCommand = new RelayCommand(_ => CalculateCoefficients(), _ => CanCalculate());
             ExportCommand = new RelayCommand(_ => ExportToFile(), _ => DeviceData.Any());
-            ImportCommand = new RelayCommand(ExecuteImport); // YENİ KOMUTUN BAŞLATILMASI
+            ImportCommand = new RelayCommand(ExecuteImport);
 
             TemperatureTests = new ObservableCollection<TemperatureTestViewModel>();
             CreateNewTestCommand = new RelayCommand(ExecuteCreateNewTest);
             AddDataToSelectedTestCommand = new RelayCommand(ExecuteAddDataToSelectedTest, () => SelectedTest != null);
+
+            // --- YENİ EKLENEN BAŞLATMALAR ---
+            CompensatedCoefficients = new Coefficients();
+            CalculateCompensationCommand = new RelayCommand(ExecuteCalculateCompensation);
+            ExportCompensationCommand = new RelayCommand(ExecuteExportCompensation);
+            ImportCompensationCommand = new RelayCommand(ExecuteImportCompensation);
+            // --- BİTİŞ ---
 
             for (int i = 1; i <= 3; i++)
             {
@@ -85,7 +119,25 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             SelectedTest = TemperatureTests.FirstOrDefault();
         }
 
-        // --- YENİ METOTLAR: İÇERİ AKTARMA İŞLEVSELLİĞİ ---
+        // --- YENİ EKLENEN METOTLAR (ŞİMDİLİK BOŞ) ---
+
+        private void ExecuteCalculateCompensation()
+        {
+            MessageBox.Show("Sıcaklık Kompanzasyon Katsayıları hesaplama mantığı henüz eklenmedi.", "Bilgi");
+        }
+
+        private void ExecuteExportCompensation()
+        {
+            MessageBox.Show("Sıcaklık testi verilerini dışa aktarma mantığı henüz eklenmedi.", "Bilgi");
+        }
+
+        private void ExecuteImportCompensation()
+        {
+            MessageBox.Show("Sıcaklık testi verilerini içe aktarma mantığı henüz eklenmedi.", "Bilgi");
+        }
+
+        // --- MEVCUT METOTLAR (DEĞİŞİKLİK YOK) ---
+
         private void ExecuteImport()
         {
             using (var dialog = new CommonOpenFileDialog())
@@ -107,7 +159,6 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                     ParseCalibrationFile(filePath);
                     MessageBox.Show($"Veriler başarıyla '{Path.GetFileName(filePath)}' dosyasından içe aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                    // İçe aktarma sonrası katsayıları otomatik olarak yeniden hesapla
                     if (CanCalculate())
                     {
                         CalculateCoefficients();
@@ -123,14 +174,13 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         private void ParseCalibrationFile(string filePath)
         {
             var lines = File.ReadAllLines(filePath);
-            // TXT dosyaları sistem kültürünü (örn: Türkçe için virgül), CSV ise InvariantCulture (nokta) kullanır.
             var culture = filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)
                           ? CultureInfo.InvariantCulture
                           : CultureInfo.CurrentCulture;
 
             char delimiter = filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ? ';' : '\t';
 
-            DeviceData.Clear(); // İçe aktarmadan önce mevcut verileri temizle
+            DeviceData.Clear();
 
             bool isDataSection = false;
             int sampleCounter = 1;
@@ -145,16 +195,14 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 string key = parts[0].Trim().Replace("\"", "");
                 string value = parts.Length > 1 ? parts[1].Trim().Replace("\"", "") : string.Empty;
 
-                // Katsayıları oku
                 if (key.Equals("A", StringComparison.OrdinalIgnoreCase)) Coefficients.A = double.Parse(value, culture);
                 else if (key.Equals("B", StringComparison.OrdinalIgnoreCase)) Coefficients.B = double.Parse(value, culture);
                 else if (key.Equals("C", StringComparison.OrdinalIgnoreCase)) Coefficients.C = double.Parse(value, culture);
                 else if (key.Equals("R Kare", StringComparison.OrdinalIgnoreCase)) Coefficients.R = double.Parse(value, culture);
-                // Veri tablosunun başlangıcını bul
                 else if (key.Contains("Gaz Konsantrasyonu"))
                 {
                     isDataSection = true;
-                    continue; // Başlık satırını atla
+                    continue;
                 }
 
                 if (isDataSection && parts.Length >= 3)
@@ -177,7 +225,6 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 }
             }
         }
-        // --- YENİ METOTLARIN SONU ---
 
         private void ExecuteCreateNewTest()
         {
@@ -216,24 +263,13 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         private void UpdateSingleTestReferenceData(TemperatureTestViewModel test, double zeroValue)
         {
-            var zeroData = DeviceData.FirstOrDefault(d => Math.Abs(d.GasConcentration) < 1e-9);
-
             test.ReferenceTestData.Zero = zeroValue;
             test.ReferenceTestData.SpanA = Coefficients.A;
             test.ReferenceTestData.B = Coefficients.B;
             test.ReferenceTestData.C = Coefficients.C;
             test.ReferenceTestData.R = Coefficients.R;
-            test.ReferenceTestData.Alpha = 0.00070; // Varsayılan
-            test.ReferenceTestData.Beta = -0.09850;  // Varsayılan
-
-            /*
-            if (zeroData != null)
-            {
-                test.ReferenceTestData.Temperature = zeroData.Temperature;
-                test.ReferenceTestData.Pressure = zeroData.Pressure;
-                test.ReferenceTestData.Humidity = zeroData.Humidity;
-            }
-            */
+            test.ReferenceTestData.Alpha = 0.00070;
+            test.ReferenceTestData.Beta = -0.09850;
         }
 
         private void CalculateCoefficients()
@@ -295,7 +331,6 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             }
         }
 
-        #region Mevcut Metotlar (Değişiklik Yok)
         private void ExportToFile()
         {
             using (var dialog = new CommonOpenFileDialog())
@@ -411,6 +446,5 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         {
             return DeviceData != null && DeviceData.Any() && DeviceData.All(d => d.Ref > 0 && d.Gas > 0);
         }
-        #endregion
     }
 }

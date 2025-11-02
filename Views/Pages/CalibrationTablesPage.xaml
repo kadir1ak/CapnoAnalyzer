@@ -10,7 +10,7 @@
       Title="CalibrationTablesPage">
 
     <Grid Margin="20">
-        <Border Background="#F1F3FA" CornerRadius="10" Padding="20" BorderBrush="#D1D5DB" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Border Background="#F1F3FA" CornerRadius="10" Padding="0" BorderBrush="#D1D5DB" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -22,7 +22,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Üst Bilgi -->
-                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,20">
+                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,5">
                     <TextBlock Text="🧪 NDIR Gaz Katsayıları Hesaplama Tabloları" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </StackPanel>
 

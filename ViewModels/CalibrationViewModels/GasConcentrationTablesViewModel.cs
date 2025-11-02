@@ -226,12 +226,14 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             test.ReferenceTestData.Alpha = 0.00070; // Varsayılan
             test.ReferenceTestData.Beta = -0.09850;  // Varsayılan
 
+            /*
             if (zeroData != null)
             {
                 test.ReferenceTestData.Temperature = zeroData.Temperature;
                 test.ReferenceTestData.Pressure = zeroData.Pressure;
                 test.ReferenceTestData.Humidity = zeroData.Humidity;
             }
+            */
         }
 
         private void CalculateCoefficients()

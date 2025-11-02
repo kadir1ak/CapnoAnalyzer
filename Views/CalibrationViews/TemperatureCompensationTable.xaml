@@ -20,6 +20,11 @@
                 <DataGridTextColumn Header="Ref" Binding="{Binding Ref, StringFormat=F4}" />
                 <DataGridTextColumn Header="Gaz" Binding="{Binding Gas, StringFormat=F4}" />
 
+                <!-- YENİ SÜTUNLAR: Ortam Verileri -->
+                <DataGridTextColumn Header="Sıcaklık (°C)" Binding="{Binding Temperature, StringFormat=F3}" />
+                <DataGridTextColumn Header="Basınç" Binding="{Binding Pressure, StringFormat=F3}" />
+                <DataGridTextColumn Header="Nem (%)" Binding="{Binding Humidity, StringFormat=F2}" />
+
                 <!-- Pembe Sütunlar (Lokal Kalibrasyon) -->
                 <DataGridTextColumn Header="Gaz/Ref Oran" Binding="{Binding Ratio, StringFormat=F9}" />
                 <DataGridTextColumn Header="Geçirgenlik" Binding="{Binding Transmittance, StringFormat=F9}" />

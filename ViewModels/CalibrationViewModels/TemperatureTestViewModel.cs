@@ -8,36 +8,41 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
     /// </summary>
     public class TemperatureTestViewModel : BindableBase
     {
-        private string _header;
-        /// <summary>
-        /// Sekme başlığında görünecek metin (Örn: "Test 1 - 25°C").
-        /// </summary>
-        public string Header
-        {
-            get => _header;
-            set => SetProperty(ref _header, value);
-        }
-
-        private ReferenceDataViewModel _referenceTestData;
-        /// <summary>
-        /// Bu test için kullanılan referans katsayıları ve ortam verileri.
-        /// </summary>
-        public ReferenceDataViewModel ReferenceTestData
-        {
-            get => _referenceTestData;
-            set => SetProperty(ref _referenceTestData, value);
-        }
-
-        /// <summary>
-        /// Bu sekmeye ait DataGrid'de gösterilecek ölçüm verileri.
-        /// </summary>
+        public string Header { get; }
         public ObservableCollection<Data> TestData { get; set; }
+        public ReferenceDataViewModel ReferenceTestData { get; set; }
 
         public TemperatureTestViewModel(string header)
         {
             Header = header;
             TestData = new ObservableCollection<Data>();
             ReferenceTestData = new ReferenceDataViewModel();
+
+            // TestData koleksiyonuna bir öğe eklendiğinde veya çıkarıldığında
+            // ortalama değerleri yeniden hesapla.
+            TestData.CollectionChanged += (sender, args) => UpdateAverageEnvironmentalData();
+        }
+
+        /// <summary>
+        /// TestData listesindeki Sıcaklık, Basınç ve Nem değerlerinin ortalamasını alarak
+        /// başlıkta gösterilen ReferenceTestData'yı günceller.
+        /// </summary>
+        private void UpdateAverageEnvironmentalData()
+        {
+            if (TestData.Any())
+            {
+                // LINQ kullanarak her bir özelliğin ortalamasını hesapla
+                ReferenceTestData.Temperature = TestData.Average(d => d.Temperature);
+                ReferenceTestData.Pressure = TestData.Average(d => d.Pressure);
+                ReferenceTestData.Humidity = TestData.Average(d => d.Humidity);
+            }
+            else
+            {
+                // Eğer tabloda veri yoksa, değerleri sıfırla
+                ReferenceTestData.Temperature = 0;
+                ReferenceTestData.Pressure = 0;
+                ReferenceTestData.Humidity = 0;
+            }
         }
     }
 

@@ -244,9 +244,17 @@
                                                             <!-- Referans Bilgisi -->
                                                             <GroupBox Header="Referans Bilgisi" FontWeight="Bold" Padding="5">
                                                                 <StackPanel>
-                                                                    <TextBlock Text="Referans: Ana Kalibrasyon Tablosu" Foreground="#2E3B4E" TextWrapping="Wrap" Margin="0,0,0,2"/>
-                                                                    <TextBlock Text="T_ref: Ana Kalibrasyon Ort. Sıcaklığı" Foreground="Gray" FontSize="11"/>
-                                                                    <TextBlock Text="Zero_ref: Ana Kalibrasyon 0.00 Değeri" Foreground="Gray" FontSize="11"/>
+                                                                    <!-- T_ref Binding (DÜZELTİLDİ: SelectedTest. kaldırıldı) -->
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="T_ref: " Foreground="Gray" FontSize="11"/>
+                                                                        <TextBlock Text="{Binding ReferenceTestData.Temperature, StringFormat={}{0:F2} °C}" Foreground="#D35400" FontSize="11" FontWeight="SemiBold"/>
+                                                                    </StackPanel>
+
+                                                                    <!-- Zero_ref Binding (DÜZELTİLDİ: SelectedTest. kaldırıldı) -->
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="Zero_ref: " Foreground="Gray" FontSize="11"/>
+                                                                        <TextBlock Text="{Binding ReferenceTestData.Zero, StringFormat={}{0:F6}}" Foreground="#2980B9" FontSize="11" FontWeight="SemiBold"/>
+                                                                    </StackPanel>
                                                                 </StackPanel>
                                                             </GroupBox>
 
@@ -288,4 +296,4 @@
         </Border>
     </Grid>
 </UserControl>
-    
+ 

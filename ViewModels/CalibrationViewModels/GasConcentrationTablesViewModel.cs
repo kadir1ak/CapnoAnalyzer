@@ -25,6 +25,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         public DevicesViewModel DevicesVM { get; private set; }
         public string DeviceName { get; }
 
+        // Ana model fonksiyonu (Görselleştirme için)
         private readonly Func<Vector<double>, double, double> model = (parameters, xVal) =>
         {
             double a = parameters[0];
@@ -46,7 +47,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         public Coefficients CompensatedCoefficients { get; set; }
 
-        // --- Yeni Eklenen Ortalama Referans Değerleri ---
+        // Ortam Verileri (Ana Kalibrasyon)
         private double _averageTemperature;
         public double AverageTemperature { get => _averageTemperature; set => SetProperty(ref _averageTemperature, value); }
 
@@ -92,6 +93,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
             TemperatureTests = new ObservableCollection<TemperatureTestViewModel>();
 
+            // Varsayılan test sekmeleri
             for (int i = 1; i <= 3; i++)
             {
                 var defaultTest = new TemperatureTestViewModel($"Sıcaklık Komp. Testi {i}")
@@ -173,11 +175,9 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                     device.Interface.DeviceData.CalibrationData.Zero = zero;
 
                     MessageBox.Show($"Kalibrasyon katsayıları '{DeviceName}' cihazına aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Ana kalibrasyon tamamlandığında, mevcut testlerin referanslarını güncelle
                     UpdateAllTestsReferenceData(zero);
-                }
-                else
-                {
-                    MessageBox.Show($"'{DeviceName}' cihazı bulunamadı, kalibrasyon değerleri atanamadı.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
@@ -260,28 +260,22 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         #endregion
 
         #region Main Calibration File Operations
-
+        // (Import/Export metodları aynı kalacak, yer tasarrufu için kısaltıldı)
         private void ExecuteImport()
         {
             using (var dialog = new CommonOpenFileDialog())
             {
                 dialog.Title = "İçeri aktarılacak kalibrasyon dosyasını seçin.";
                 dialog.Filters.Add(new CommonFileDialogFilter("Metin/CSV Dosyaları", "*.txt;*.csv"));
-
                 if (dialog.ShowDialog() != CommonFileDialogResult.Ok) return;
-
                 try
                 {
                     ParseCalibrationFile(dialog.FileName);
-                    UpdateAverageEnvironmentalData(); // Import sonrası ortalamaları güncelle
+                    UpdateAverageEnvironmentalData();
                     MessageBox.Show($"Veriler başarıyla içe aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-
                     if (CanCalculate()) CalculateCoefficients();
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Dosya okuma hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                catch (Exception ex) { MessageBox.Show($"Dosya okuma hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error); }
             }
         }
 
@@ -304,10 +298,8 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 {
                     if (parts[0].Contains("Gaz Konsantrasyonu")) { isDataSection = true; continue; }
                     if (parts.Length < 2) continue;
-
                     string key = parts[0].Trim().Replace("\"", "");
                     string val = parts[1].Trim().Replace("\"", "");
-
                     if (key.Equals("A", StringComparison.OrdinalIgnoreCase)) Coefficients.A = double.Parse(val, culture);
                     else if (key.Equals("B", StringComparison.OrdinalIgnoreCase)) Coefficients.B = double.Parse(val, culture);
                     else if (key.Equals("C", StringComparison.OrdinalIgnoreCase)) Coefficients.C = double.Parse(val, culture);
@@ -324,17 +316,12 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                             Gas = double.Parse(parts[1].Replace("\"", "").Trim(), culture),
                             Ref = double.Parse(parts[2].Replace("\"", "").Trim(), culture)
                         };
-
-                        // Ortam verilerini oku (Sıcaklık, Basınç, Nem)
-                        // Dosya formatı: Conc, Gas, Ref, Ratio, Trans, Abs, PredAbs, PredConc, Temp, Press, Hum
-                        // İndeksler: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
                         if (parts.Length > 8) newData.Temperature = double.Parse(parts[8].Replace("\"", "").Trim(), culture);
                         if (parts.Length > 9) newData.Pressure = double.Parse(parts[9].Replace("\"", "").Trim(), culture);
                         if (parts.Length > 10) newData.Humidity = double.Parse(parts[10].Replace("\"", "").Trim(), culture);
-
                         DeviceData.Add(newData);
                     }
-                    catch { /* Satır hatası yutulur */ }
+                    catch { }
                 }
             }
         }
@@ -346,7 +333,6 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 dialog.Title = "Dosyaların kaydedileceği klasörü seçiniz.";
                 dialog.IsFolderPicker = true;
                 if (dialog.ShowDialog() != CommonFileDialogResult.Ok) return;
-
                 string folderPath = dialog.FileName;
                 try { ExportToTxt(folderPath); } catch (Exception ex) { MessageBox.Show($"Txt hatası: {ex.Message}"); }
                 try { ExportToCsv(folderPath); } catch (Exception ex) { MessageBox.Show($"CSV hatası: {ex.Message}"); }
@@ -379,7 +365,6 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             var sb = new StringBuilder();
             var ci = CultureInfo.InvariantCulture;
             string Csv(object val) => $"\"{(val?.ToString() ?? "").Replace("\"", "\"\"")}\"";
-
             sb.AppendLine("Cihaz Bilgileri ve Katsayılar");
             sb.AppendLine($"Cihaz Adı;{Csv(DeviceName)}");
             sb.AppendLine($"A;{Csv(Coefficients.A.ToString(ci))}");
@@ -395,7 +380,6 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             }
             File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
         }
-
         #endregion
 
         #region Temperature Compensation Methods
@@ -406,45 +390,113 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             {
                 if (SelectedTest == null) return;
 
+                // 1. Ana Kalibrasyon Verilerini Kontrol Et
                 if (Coefficients.A == 0 || Coefficients.B == 0 || Coefficients.C == 0)
                 {
                     MessageBox.Show("Lütfen önce Ana Kalibrasyon tablosunu hesaplayın. Referans katsayılar (A, B, C) eksik.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
+                // 2. Referans Değerleri Ana Tablodan Al
+                // T_ref: Ana Kalibrasyonun Ortalama Sıcaklığı
+                double refTemp = AverageTemperature;
+                if (refTemp == 0) refTemp = 36.5; // Fallback
+
+                // Zero_ref: Ana Kalibrasyondaki 0.00 gaz konsantrasyonuna ait Oran (Gas/Ref)
                 var zeroDataPoints = DeviceData.Where(d => Math.Abs(d.GasConcentration) < 0.01).ToList();
                 if (!zeroDataPoints.Any())
                 {
                     MessageBox.Show("Ana kalibrasyon tablosunda 0.00 gaz konsantrasyonuna sahip veri bulunamadı. Referans Zero hesaplanamıyor.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-
                 double refZero = zeroDataPoints.Average(d => d.Gas / d.Ref);
 
-                // T_ref olarak Ana Kalibrasyonun Ortalama Sıcaklığını kullan
-                double refTemp = AverageTemperature;
-                if (refTemp == 0) refTemp = 36.5;
-
+                // 3. Referans Verilerini Test Modeline İşle
                 SelectedTest.ReferenceTestData.Zero = refZero;
+                SelectedTest.ReferenceTestData.Temperature = refTemp; // T_ref
                 SelectedTest.ReferenceTestData.SpanA = Coefficients.A;
                 SelectedTest.ReferenceTestData.B = Coefficients.B;
                 SelectedTest.ReferenceTestData.C = Coefficients.C;
                 SelectedTest.ReferenceTestData.R = Coefficients.R;
 
-                var thermalParams = new ThermalCompensationEngine.ThermalModelParameters
+                // 4. Optimizasyon: Alfa ve Beta'yı Bul
+                // Hedef: Test verilerindeki "FinalCompensatedConcentration" ile "ActualGasConcentration" arasındaki hatayı minimize et.
+
+                // Optimizasyon için kullanılacak veri seti (Sadece geçerli satırlar)
+                var validData = SelectedTest.TestData.Where(d => d.Ref > 0 && d.Gas > 0).ToList();
+                if (validData.Count < 2)
                 {
-                    Alfa = SelectedTest.ReferenceTestData.Alpha,
-                    Beta = SelectedTest.ReferenceTestData.Beta
+                    MessageBox.Show("Optimizasyon için yeterli veri yok.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Sabit Referans Katsayıları
+                var refCoeffs = new Coefficients { A = Coefficients.A, B = Coefficients.B, C = Coefficients.C, R = Coefficients.R };
+
+                // Objektif Fonksiyonu: f(alpha, beta) = Sum((Calculated - Actual)^2)
+                Func<Vector<double>, double> objectiveFunction = (parameters) =>
+                {
+                    double alpha = parameters[0];
+                    double beta = parameters[1];
+                    double totalError = 0;
+
+                    var tempParams = new ThermalCompensationEngine.ThermalModelParameters { Alfa = alpha, Beta = beta };
+
+                    foreach (var row in validData)
+                    {
+                        // Geçici bir Data nesnesi üzerinde hesaplama yap (orijinal veriyi bozmamak için)
+                        var tempData = new Data
+                        {
+                            GasConcentration = row.GasConcentration,
+                            Gas = row.Gas,
+                            Ref = row.Ref,
+                            Temperature = row.Temperature
+                        };
+
+                        var context = new ThermalCompensationEngine.CalculationContext
+                        {
+                            CurrentDataPoint = tempData,
+                            ReferenceZero = refZero,
+                            ReferenceTemperature = refTemp,
+                            ReferenceCoefficients = refCoeffs,
+                            ModelParameters = tempParams
+                        };
+
+                        ThermalCompensationEngine.ProcessDataPoint(context);
+
+                        if (tempData.FinalCompensatedConcentration.HasValue && !double.IsNaN(tempData.FinalCompensatedConcentration.Value))
+                        {
+                            double error = row.GasConcentration - tempData.FinalCompensatedConcentration.Value;
+                            totalError += error * error;
+                        }
+                        else
+                        {
+                            // Hesaplama başarısızsa (NaN), cezalandır
+                            totalError += 10000;
+                        }
+                    }
+                    return totalError;
                 };
 
-                var refCoeffs = new Coefficients
-                {
-                    A = Coefficients.A,
-                    B = Coefficients.B,
-                    C = Coefficients.C,
-                    R = Coefficients.R
-                };
+                // Başlangıç Tahminleri (Mevcut değerler veya varsayılanlar)
+                double initialAlpha = SelectedTest.ReferenceTestData.Alpha != 0 ? SelectedTest.ReferenceTestData.Alpha : 0.00070;
+                double initialBeta = SelectedTest.ReferenceTestData.Beta != 0 ? SelectedTest.ReferenceTestData.Beta : -0.09850;
+                var initialGuess = Vector<double>.Build.DenseOfArray(new[] { initialAlpha, initialBeta });
 
+                // Optimizasyonu Çalıştır (Nelder-Mead)
+                var optimizer = new NelderMeadSimplex(1e-5, 2000);
+                var result = optimizer.FindMinimum(ObjectiveFunction.Value(objectiveFunction), initialGuess);
+
+                // Sonuçları Al
+                double optimizedAlpha = result.MinimizingPoint[0];
+                double optimizedBeta = result.MinimizingPoint[1];
+
+                // 5. Sonuçları Kaydet ve Tabloyu Güncelle
+                SelectedTest.ReferenceTestData.Alpha = optimizedAlpha;
+                SelectedTest.ReferenceTestData.Beta = optimizedBeta;
+
+                // Tüm satırları yeni katsayılarla tekrar hesapla
+                var finalParams = new ThermalCompensationEngine.ThermalModelParameters { Alfa = optimizedAlpha, Beta = optimizedBeta };
                 foreach (var row in SelectedTest.TestData)
                 {
                     var context = new ThermalCompensationEngine.CalculationContext
@@ -453,13 +505,16 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                         ReferenceZero = refZero,
                         ReferenceTemperature = refTemp,
                         ReferenceCoefficients = refCoeffs,
-                        ModelParameters = thermalParams
+                        ModelParameters = finalParams
                     };
-
                     ThermalCompensationEngine.ProcessDataPoint(context);
                 }
 
-                MessageBox.Show($"'{SelectedTest.Header}' için hesaplama tamamlandı.\nReferans Sıcaklık (T_ref): {refTemp:F2}°C\nReferans Zero: {refZero:F6}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Optimizasyon Tamamlandı.\n" +
+                                $"T_ref: {refTemp:F2}°C, Zero_ref: {refZero:F6}\n" +
+                                $"Hesaplanan Alfa: {optimizedAlpha:F6}\n" +
+                                $"Hesaplanan Beta: {optimizedBeta:F6}",
+                                "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -528,7 +583,28 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                     if (lines.Length < 2) return;
 
                     SelectedTest.TestData.Clear();
+
+                    // Kültür bağımsız okuma için InvariantCulture kullanıyoruz.
                     var ci = CultureInfo.InvariantCulture;
+
+                    // Yardımcı yerel fonksiyon: Hem virgül hem nokta desteği sağlar
+                    double ParseDouble(string input)
+                    {
+                        if (string.IsNullOrWhiteSpace(input)) return 0;
+
+                        // 1. Tırnak işaretlerini temizle
+                        string cleanInput = input.Replace("\"", "").Trim();
+
+                        // 2. Virgülü noktaya çevir (Excel TR formatı uyumu için)
+                        // Böylece "2,514" -> "2.514" olur ve InvariantCulture bunu doğru okur.
+                        cleanInput = cleanInput.Replace(",", ".");
+
+                        if (double.TryParse(cleanInput, NumberStyles.Any, ci, out double result))
+                        {
+                            return result;
+                        }
+                        return 0;
+                    }
 
                     for (int i = 1; i < lines.Length; i++)
                     {
@@ -541,12 +617,13 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                             var d = new Data
                             {
                                 Sample = parts[0].Replace("\"", ""),
-                                GasConcentration = double.Parse(parts[1].Replace("\"", ""), ci),
-                                Ref = double.Parse(parts[2].Replace("\"", ""), ci),
-                                Gas = double.Parse(parts[3].Replace("\"", ""), ci),
-                                Temperature = parts.Length > 4 ? double.Parse(parts[4].Replace("\"", ""), ci) : 0,
-                                Pressure = parts.Length > 5 ? double.Parse(parts[5].Replace("\"", ""), ci) : 0,
-                                Humidity = parts.Length > 6 ? double.Parse(parts[6].Replace("\"", ""), ci) : 0
+                                // ParseDouble fonksiyonunu kullanarak değerleri okuyoruz
+                                GasConcentration = ParseDouble(parts[1]),
+                                Ref = ParseDouble(parts[2]),
+                                Gas = ParseDouble(parts[3]),
+                                Temperature = parts.Length > 4 ? ParseDouble(parts[4]) : 0,
+                                Pressure = parts.Length > 5 ? ParseDouble(parts[5]) : 0,
+                                Humidity = parts.Length > 6 ? ParseDouble(parts[6]) : 0
                             };
                             SelectedTest.TestData.Add(d);
                         }
@@ -568,7 +645,8 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             newTest.ReferenceTestData.Alpha = 0.00070;
             newTest.ReferenceTestData.Beta = -0.09850;
 
-            if (Coefficients.R < 1.0 && Coefficients.R != 0)
+            // Eğer ana kalibrasyon varsa, referansları kopyala
+            if (Coefficients.R != 0)
             {
                 var zeroData = DeviceData.FirstOrDefault(d => Math.Abs(d.GasConcentration) < 1e-9);
                 double zeroValue = zeroData != null ? (zeroData.Gas / zeroData.Ref) : 0;
@@ -599,6 +677,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         private void UpdateSingleTestReferenceData(TemperatureTestViewModel test, double zeroValue)
         {
             test.ReferenceTestData.Zero = zeroValue;
+            test.ReferenceTestData.Temperature = AverageTemperature; // T_ref
             test.ReferenceTestData.SpanA = Coefficients.A;
             test.ReferenceTestData.B = Coefficients.B;
             test.ReferenceTestData.C = Coefficients.C;

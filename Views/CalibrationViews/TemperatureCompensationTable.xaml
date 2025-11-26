@@ -30,6 +30,7 @@
                 <DataGridTextColumn Header="Geçirgenlik" Binding="{Binding Transmittance, StringFormat=F9}" />
                 <DataGridTextColumn Header="Emilim" Binding="{Binding Absorption, StringFormat=F9}" />
                 <DataGridTextColumn Header="Tahmini Emilim" Binding="{Binding PredictedAbsorption, StringFormat=F9}" />
+                <DataGridTextColumn Header="Tahmini Gaz %" Binding="{Binding PredictedGasConcentration, StringFormat=F3}" FontWeight="SemiBold" Foreground="#D35400"/>
 
                 <!-- Yeşil Sütunlar (Sıcaklık Kompanzasyonu) -->
                 <DataGridTextColumn Header="NR" Binding="{Binding NormalizedRatio, StringFormat=F9}">
@@ -74,7 +75,7 @@
                         </Style>
                     </DataGridTextColumn.HeaderStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Dengelenmiş Gaz %" Binding="{Binding FinalCompensatedConcentration, StringFormat=F3}" FontWeight="Bold">
+                <DataGridTextColumn Header="Dengelenmiş Gaz %" Binding="{Binding FinalCompensatedConcentration, StringFormat=F3}" FontWeight="Bold" Foreground="#047857">
                     <DataGridTextColumn.HeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
                             <Setter Property="ToolTip" Value="X = {-1/b * ln[1 - (1-NR_comp)/Span_comp]}^(1/c)"/>

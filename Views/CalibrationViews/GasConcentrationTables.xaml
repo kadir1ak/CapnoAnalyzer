@@ -72,8 +72,6 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-
-                                        <!-- YENİ SÜTUNLAR: Ortam Verileri -->
                                         <DataGridTemplateColumn Header="Sıcaklık (°C)" Width="75">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -154,7 +152,6 @@
                                                 </StackPanel>
                                             </GroupBox>
 
-                                            <!-- YENİ: Referans Ortam Bilgileri -->
                                             <GroupBox Header="Referans Ortam (Ortalama)" Margin="5" Padding="5" BorderBrush="#D35400">
                                                 <StackPanel>
                                                     <StackPanel Orientation="Horizontal">
@@ -211,9 +208,10 @@
                                             <Border Grid.Row="0" Background="#E5E7EB" CornerRadius="5" Padding="8" Margin="0,0,0,5">
                                                 <WrapPanel>
                                                     <TextBlock Text="{Binding ReferenceTestData.TestNo, StringFormat=Test_No: {0}}" FontWeight="Bold" Margin="0,0,15,0"/>
-                                                    <TextBlock Text="{Binding ReferenceTestData.Temperature, StringFormat=Ort. Sıcaklık: {0:F2} °C}" Margin="0,0,15,0"/>
-                                                    <TextBlock Text="{Binding ReferenceTestData.Pressure, StringFormat=Ort. Basınç: {0:F2}}" Margin="0,0,15,0"/>
-                                                    <TextBlock Text="{Binding ReferenceTestData.Humidity, StringFormat=Ort. Nem: {0:F2}}" Margin="0,0,15,0"/>
+                                                    <!-- Testin Kendi Ortalamaları -->
+                                                    <TextBlock Text="{Binding ReferenceTestData.Temperature, StringFormat=Test Ort. Sıcaklık: {0:F2} °C}" Margin="0,0,15,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.Pressure, StringFormat=Test Ort. Basınç: {0:F2}}" Margin="0,0,15,0"/>
+                                                    <TextBlock Text="{Binding ReferenceTestData.Humidity, StringFormat=Test Ort. Nem: {0:F2}}" Margin="0,0,15,0"/>
 
                                                     <TextBlock Text="{Binding ReferenceTestData.Zero, StringFormat=ZERO(ref): {0:F9}}" FontWeight="SemiBold" Foreground="DarkRed" Margin="15,0,10,0"/>
                                                     <TextBlock Text="{Binding ReferenceTestData.SpanA, StringFormat=SPAN(a): {0:F9}}" FontWeight="SemiBold" Foreground="DarkGreen" Margin="0,0,10,0"/>
@@ -241,36 +239,79 @@
                                                         </Grid.ColumnDefinitions>
 
                                                         <StackPanel Grid.Column="0" Margin="5">
-                                                            <!-- Referans Bilgisi -->
-                                                            <GroupBox Header="Referans Bilgisi" FontWeight="Bold" Padding="5">
+                                                            <!-- Referans Bilgisi (Ana Kalibrasyon Değerleri) -->
+                                                            <GroupBox Header="Referans Ortam (Ana Kalibrasyon)" FontWeight="Bold" Padding="5" BorderBrush="#D35400">
                                                                 <StackPanel>
-                                                                    <!-- T_ref Binding (DÜZELTİLDİ: SelectedTest. kaldırıldı) -->
+                                                                    <!-- T_ref Binding (Parent VM'den) -->
                                                                     <StackPanel Orientation="Horizontal">
-                                                                        <TextBlock Text="T_ref: " Foreground="Gray" FontSize="11"/>
-                                                                        <TextBlock Text="{Binding ReferenceTestData.Temperature, StringFormat={}{0:F2} °C}" Foreground="#D35400" FontSize="11" FontWeight="SemiBold"/>
+                                                                        <faWPF:FontAwesome Icon="Thermometer" Foreground="#D35400" Width="15" VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="{Binding DataContext.AverageTemperature, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=T_ref: {0:F2} °C}" 
+                                                                                   FontWeight="Bold" Foreground="#D35400" Margin="5,0,0,0"/>
                                                                     </StackPanel>
 
-                                                                    <!-- Zero_ref Binding (DÜZELTİLDİ: SelectedTest. kaldırıldı) -->
-                                                                    <StackPanel Orientation="Horizontal">
+                                                                    <!-- P_ref Binding (Parent VM'den) -->
+                                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                                        <faWPF:FontAwesome Icon="Dashboard" Foreground="#555" Width="15" VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="{Binding DataContext.AveragePressure, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=P_ref: {0:F1} hPa}" 
+                                                                                   Foreground="#555" Margin="5,0,0,0"/>
+                                                                    </StackPanel>
+
+                                                                    <!-- H_ref Binding (Parent VM'den) -->
+                                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                                        <faWPF:FontAwesome Icon="Tint" Foreground="#2980B9" Width="15" VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="{Binding DataContext.AverageHumidity, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=H_ref: {0:F1} %}" 
+                                                                                   Foreground="#2980B9" Margin="5,0,0,0"/>
+                                                                    </StackPanel>
+
+                                                                    <!-- Zero_ref Binding (Test VM'den) -->
+                                                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                                                         <TextBlock Text="Zero_ref: " Foreground="Gray" FontSize="11"/>
                                                                         <TextBlock Text="{Binding ReferenceTestData.Zero, StringFormat={}{0:F6}}" Foreground="#2980B9" FontSize="11" FontWeight="SemiBold"/>
                                                                     </StackPanel>
                                                                 </StackPanel>
                                                             </GroupBox>
 
-                                                            <!-- Hesaplanan Katsayılar (Opsiyonel Gösterim) -->
-                                                            <GroupBox Header="Kompanzasyon Katsayıları" FontWeight="Bold" Margin="0,10,0,0" Padding="5">
+                                                            <!-- Termal Model Parametreleri (GÜNCELLENEN KISIM) -->
+                                                            <GroupBox Header="Termal Model Parametreleri" FontWeight="Bold" Margin="0,10,0,0" Padding="5" BorderBrush="#8E44AD">
                                                                 <StackPanel>
-                                                                    <TextBlock Text="{Binding DataContext.CompensatedCoefficients.A, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=a: {0:F9}}"/>
-                                                                    <TextBlock Text="{Binding DataContext.CompensatedCoefficients.B, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=b: {0:F9}}"/>
-                                                                    <TextBlock Text="{Binding DataContext.CompensatedCoefficients.C, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=c: {0:F9}}"/>
-                                                                    <TextBlock Text="{Binding DataContext.CompensatedCoefficients.R, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=R^2: {0:F9}}" FontWeight="Bold" Margin="0,5,0,0"/>
+                                                                    <!-- Alpha -->
+                                                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                                                        <TextBlock Text="Alfa (α): " Foreground="Gray" Width="60"/>
+                                                                        <TextBlock Text="{Binding ReferenceTestData.Alpha, StringFormat={}{0:F6}}" 
+                                                                                   Foreground="DarkBlue" FontWeight="Bold"/>
+                                                                    </StackPanel>
+
+                                                                    <!-- Beta -->
+                                                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                                                        <TextBlock Text="Beta (β): " Foreground="Gray" Width="60"/>
+                                                                        <TextBlock Text="{Binding ReferenceTestData.Beta, StringFormat={}{0:F6}}" 
+                                                                                   Foreground="DarkOrchid" FontWeight="Bold"/>
+                                                                    </StackPanel>
+
+                                                                    <Separator Margin="0,5"/>
+
+                                                                    <!-- Baz Model Bilgisi -->
+                                                                    <TextBlock Text="Baz Model (Ana Kalib.)" FontSize="10" Foreground="Gray" Margin="0,0,0,2"/>
+
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="Span (A): " Foreground="Gray" Width="60"/>
+                                                                        <TextBlock Text="{Binding ReferenceTestData.SpanA, StringFormat={}{0:F6}}" Foreground="#2E3B4E"/>
+                                                                    </StackPanel>
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="Exp (B): " Foreground="Gray" Width="60"/>
+                                                                        <TextBlock Text="{Binding ReferenceTestData.B, StringFormat={}{0:F6}}" Foreground="#2E3B4E"/>
+                                                                    </StackPanel>
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="Pow (C): " Foreground="Gray" Width="60"/>
+                                                                        <TextBlock Text="{Binding ReferenceTestData.C, StringFormat={}{0:F6}}" Foreground="#2E3B4E"/>
+                                                                    </StackPanel>
                                                                 </StackPanel>
                                                             </GroupBox>
                                                         </StackPanel>
 
                                                         <!-- İşlem Butonları (Hesapla, Export, Import) -->
                                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="5,10,10,10">
+                                                            <!-- Binding'ler TabControl'ün DataContext'ine (GasConcentrationTablesViewModel) yönlendirildi -->
                                                             <buttons:CalculateButton ButtonContent="Hesapla" 
                                                                                      Command="{Binding DataContext.CalculateCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" />
 
@@ -296,4 +337,4 @@
         </Border>
     </Grid>
 </UserControl>
- 
+    

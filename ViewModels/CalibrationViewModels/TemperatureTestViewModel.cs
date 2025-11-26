@@ -3,9 +3,6 @@ using System.Collections.ObjectModel;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
-    /// <summary>
-    /// Tek bir sıcaklık kompanzasyon testini (bir sekme) temsil eden ViewModel.
-    /// </summary>
     public class TemperatureTestViewModel : BindableBase
     {
         public string Header { get; }
@@ -18,27 +15,19 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             TestData = new ObservableCollection<Data>();
             ReferenceTestData = new ReferenceDataViewModel();
 
-            // TestData koleksiyonuna bir öğe eklendiğinde veya çıkarıldığında
-            // ortalama değerleri yeniden hesapla.
             TestData.CollectionChanged += (sender, args) => UpdateAverageEnvironmentalData();
         }
 
-        /// <summary>
-        /// TestData listesindeki Sıcaklık, Basınç ve Nem değerlerinin ortalamasını alarak
-        /// başlıkta gösterilen ReferenceTestData'yı günceller.
-        /// </summary>
         private void UpdateAverageEnvironmentalData()
         {
             if (TestData.Any())
             {
-                // LINQ kullanarak her bir özelliğin ortalamasını hesapla
                 ReferenceTestData.Temperature = TestData.Average(d => d.Temperature);
                 ReferenceTestData.Pressure = TestData.Average(d => d.Pressure);
                 ReferenceTestData.Humidity = TestData.Average(d => d.Humidity);
             }
             else
             {
-                // Eğer tabloda veri yoksa, değerleri sıfırla
                 ReferenceTestData.Temperature = 0;
                 ReferenceTestData.Pressure = 0;
                 ReferenceTestData.Humidity = 0;
@@ -46,9 +35,6 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         }
     }
 
-    /// <summary>
-    /// Sıcaklık testi başlığında gösterilecek referans verilerini tutan model.
-    /// </summary>
     public class ReferenceDataViewModel : BindableBase
     {
         private int _testNo;

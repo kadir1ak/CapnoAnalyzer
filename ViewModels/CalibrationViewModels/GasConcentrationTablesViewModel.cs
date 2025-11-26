@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using CapnoAnalyzer.Helpers;
-using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.Optimization;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -15,14 +14,16 @@ using System.Globalization;
 using CapnoAnalyzer.ViewModels.DeviceViewModels;
 using CapnoAnalyzer.Models.Device;
 using System.Windows;
-using System.Diagnostics;
+using CapnoAnalyzer.Services;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
     public class GasConcentrationTablesViewModel : BindableBase
     {
-        // ... (Mevcut özellikler ve model tanımı aynı kalır) ...
+        #region Fields & Properties
+
         public DevicesViewModel DevicesVM { get; private set; }
+        public string DeviceName { get; }
 
         private readonly Func<Vector<double>, double, double> model = (parameters, xVal) =>
         {
@@ -38,51 +39,41 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         private PlotModel _plotModel;
         public PlotModel PlotModel { get => _plotModel; set => SetProperty(ref _plotModel, value); }
 
-        public ICommand CalculateCommand { get; }
-        public ICommand ExportCommand { get; }
-        public ICommand ImportCommand { get; }
-        public string DeviceName { get; }
-
         public ObservableCollection<TemperatureTestViewModel> TemperatureTests { get; set; }
 
         private TemperatureTestViewModel _selectedTest;
         public TemperatureTestViewModel SelectedTest { get => _selectedTest; set => SetProperty(ref _selectedTest, value); }
 
+        public Coefficients CompensatedCoefficients { get; set; }
+
+        // --- Yeni Eklenen Ortalama Referans Değerleri ---
+        private double _averageTemperature;
+        public double AverageTemperature { get => _averageTemperature; set => SetProperty(ref _averageTemperature, value); }
+
+        private double _averagePressure;
+        public double AveragePressure { get => _averagePressure; set => SetProperty(ref _averagePressure, value); }
+
+        private double _averageHumidity;
+        public double AverageHumidity { get => _averageHumidity; set => SetProperty(ref _averageHumidity, value); }
+
+        #endregion
+
+        #region Commands
+
+        public ICommand CalculateCommand { get; }
+        public ICommand ExportCommand { get; }
+        public ICommand ImportCommand { get; }
+
         public ICommand CreateNewTestCommand { get; }
         public ICommand AddDataToSelectedTestCommand { get; }
 
-        // --- YENİ EKLENEN ÖZELLİKLER VE KOMUTLAR ---
-
-        /// <summary>
-        /// Sıcaklık kompanzasyonu hesaplamaları sonrası elde edilen yeni katsayıları tutar.
-        /// </summary>
-        public Coefficients CompensatedCoefficients { get; set; }
-
-        private TemperatureTestViewModel _selectedReferenceTest;
-        /// <summary>
-        /// Kullanıcının referans olarak seçtiği sıcaklık testini tutar.
-        /// </summary>
-        public TemperatureTestViewModel SelectedReferenceTest
-        {
-            get => _selectedReferenceTest;
-            set => SetProperty(ref _selectedReferenceTest, value);
-        }
-
-        /// <summary>
-        /// Sıcaklık kompanzasyon katsayılarını hesaplayan komut.
-        /// </summary>
         public ICommand CalculateCompensationCommand { get; }
-
-        /// <summary>
-        /// Tüm sıcaklık testi verilerini dışa aktaran komut.
-        /// </summary>
         public ICommand ExportCompensationCommand { get; }
-
-        /// <summary>
-        /// Sıcaklık testi verilerini içe aktaran komut.
-        /// </summary>
         public ICommand ImportCompensationCommand { get; }
 
+        #endregion
+
+        #region Constructor
 
         public GasConcentrationTablesViewModel(DevicesViewModel devicesVM, Device selectedDevice)
         {
@@ -90,212 +81,73 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             DeviceName = selectedDevice.Properties.ProductId;
             DeviceData = new ObservableCollection<Data>();
             Coefficients = new Coefficients();
+            CompensatedCoefficients = new Coefficients();
 
             PlotModel = new PlotModel { Title = $"{DeviceName} : y = a(1 - e^{{-bx^c}})" };
             PlotModel.TitleFontSize = 12;
+
             CalculateCommand = new RelayCommand(_ => CalculateCoefficients(), _ => CanCalculate());
             ExportCommand = new RelayCommand(_ => ExportToFile(), _ => DeviceData.Any());
             ImportCommand = new RelayCommand(ExecuteImport);
 
             TemperatureTests = new ObservableCollection<TemperatureTestViewModel>();
-            CreateNewTestCommand = new RelayCommand(ExecuteCreateNewTest);
-            AddDataToSelectedTestCommand = new RelayCommand(ExecuteAddDataToSelectedTest, () => SelectedTest != null);
-
-            // --- YENİ EKLENEN BAŞLATMALAR ---
-            CompensatedCoefficients = new Coefficients();
-            CalculateCompensationCommand = new RelayCommand(ExecuteCalculateCompensation);
-            ExportCompensationCommand = new RelayCommand(ExecuteExportCompensation);
-            ImportCompensationCommand = new RelayCommand(ExecuteImportCompensation);
-            // --- BİTİŞ ---
 
             for (int i = 1; i <= 3; i++)
             {
                 var defaultTest = new TemperatureTestViewModel($"Sıcaklık Komp. Testi {i}")
                 {
-                    ReferenceTestData = { TestNo = i }
+                    ReferenceTestData = { TestNo = i, Alpha = 0.00070, Beta = -0.09850 }
                 };
                 TemperatureTests.Add(defaultTest);
             }
             SelectedTest = TemperatureTests.FirstOrDefault();
+
+            CreateNewTestCommand = new RelayCommand(ExecuteCreateNewTest);
+            AddDataToSelectedTestCommand = new RelayCommand(ExecuteAddDataToSelectedTest, () => SelectedTest != null);
+
+            CalculateCompensationCommand = new RelayCommand(ExecuteCalculateCompensation, () => SelectedTest != null && SelectedTest.TestData.Any());
+            ExportCompensationCommand = new RelayCommand(ExecuteExportCompensation, () => SelectedTest != null && SelectedTest.TestData.Any());
+            ImportCompensationCommand = new RelayCommand(ExecuteImportCompensation, () => SelectedTest != null);
         }
 
-        // --- YENİ EKLENEN METOTLAR (ŞİMDİLİK BOŞ) ---
+        #endregion
 
-        private void ExecuteCalculateCompensation()
-        {
-            MessageBox.Show("Sıcaklık Kompanzasyon Katsayıları hesaplama mantığı henüz eklenmedi.", "Bilgi");
-        }
-
-        private void ExecuteExportCompensation()
-        {
-            MessageBox.Show("Sıcaklık testi verilerini dışa aktarma mantığı henüz eklenmedi.", "Bilgi");
-        }
-
-        private void ExecuteImportCompensation()
-        {
-            MessageBox.Show("Sıcaklık testi verilerini içe aktarma mantığı henüz eklenmedi.", "Bilgi");
-        }
-
-        // --- MEVCUT METOTLAR (DEĞİŞİKLİK YOK) ---
-
-        private void ExecuteImport()
-        {
-            using (var dialog = new CommonOpenFileDialog())
-            {
-                dialog.Title = "İçeri aktarılacak kalibrasyon dosyasını seçin.";
-                dialog.Filters.Add(new CommonFileDialogFilter("Metin Dosyaları", "*.txt"));
-                dialog.Filters.Add(new CommonFileDialogFilter("CSV Dosyaları", "*.csv"));
-                dialog.Filters.Add(new CommonFileDialogFilter("Tüm Dosyalar", "*.*"));
-
-                if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
-                {
-                    MessageBox.Show("Dosya seçilmedi. İçeri aktarma işlemi iptal edildi.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                try
-                {
-                    string filePath = dialog.FileName;
-                    ParseCalibrationFile(filePath);
-                    MessageBox.Show($"Veriler başarıyla '{Path.GetFileName(filePath)}' dosyasından içe aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    if (CanCalculate())
-                    {
-                        CalculateCoefficients();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Dosya okunurken veya işlenirken bir hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-
-        private void ParseCalibrationFile(string filePath)
-        {
-            var lines = File.ReadAllLines(filePath);
-            var culture = filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)
-                          ? CultureInfo.InvariantCulture
-                          : CultureInfo.CurrentCulture;
-
-            char delimiter = filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ? ';' : '\t';
-
-            DeviceData.Clear();
-
-            bool isDataSection = false;
-            int sampleCounter = 1;
-
-            foreach (var line in lines)
-            {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                var parts = line.Split(delimiter);
-                if (parts.Length < 2 && !line.Contains("Gaz Konsantrasyonu")) continue;
-
-                string key = parts[0].Trim().Replace("\"", "");
-                string value = parts.Length > 1 ? parts[1].Trim().Replace("\"", "") : string.Empty;
-
-                if (key.Equals("A", StringComparison.OrdinalIgnoreCase)) Coefficients.A = double.Parse(value, culture);
-                else if (key.Equals("B", StringComparison.OrdinalIgnoreCase)) Coefficients.B = double.Parse(value, culture);
-                else if (key.Equals("C", StringComparison.OrdinalIgnoreCase)) Coefficients.C = double.Parse(value, culture);
-                else if (key.Equals("R Kare", StringComparison.OrdinalIgnoreCase)) Coefficients.R = double.Parse(value, culture);
-                else if (key.Contains("Gaz Konsantrasyonu"))
-                {
-                    isDataSection = true;
-                    continue;
-                }
-
-                if (isDataSection && parts.Length >= 3)
-                {
-                    try
-                    {
-                        var newData = new Data
-                        {
-                            Sample = sampleCounter++.ToString(),
-                            GasConcentration = double.Parse(parts[0].Replace("\"", "").Trim(), culture),
-                            Gas = double.Parse(parts[1].Replace("\"", "").Trim(), culture),
-                            Ref = double.Parse(parts[2].Replace("\"", "").Trim(), culture)
-                        };
-                        DeviceData.Add(newData);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"Veri satırı okunamadı: {line}. Hata: {ex.Message}");
-                    }
-                }
-            }
-        }
-
-        private void ExecuteCreateNewTest()
-        {
-            int testCount = TemperatureTests.Count + 1;
-            var newTest = new TemperatureTestViewModel($"Sıcaklık Komp. Testi {testCount}");
-            newTest.ReferenceTestData.TestNo = testCount;
-
-            if (Coefficients.R < 1.0 && Coefficients.R != 0)
-            {
-                var zeroData = DeviceData.FirstOrDefault(d => Math.Abs(d.GasConcentration) < 1e-9);
-                double zeroValue = zeroData != null ? (zeroData.Gas / zeroData.Ref) : 0;
-                UpdateSingleTestReferenceData(newTest, zeroValue);
-            }
-
-            TemperatureTests.Add(newTest);
-            SelectedTest = newTest;
-        }
-
-        private void ExecuteAddDataToSelectedTest()
-        {
-            if (SelectedTest == null)
-            {
-                MessageBox.Show("Veri eklemek için lütfen önce bir test seçin veya 'Yeni Sıcaklık Testi Oluştur' butonuna basın.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            MessageBox.Show($"'{SelectedTest.Header}' testine yeni veri ekleme mantığı tetiklendi.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        private void UpdateAllTestsReferenceData(double zeroValue)
-        {
-            foreach (var test in TemperatureTests)
-            {
-                UpdateSingleTestReferenceData(test, zeroValue);
-            }
-        }
-
-        private void UpdateSingleTestReferenceData(TemperatureTestViewModel test, double zeroValue)
-        {
-            test.ReferenceTestData.Zero = zeroValue;
-            test.ReferenceTestData.SpanA = Coefficients.A;
-            test.ReferenceTestData.B = Coefficients.B;
-            test.ReferenceTestData.C = Coefficients.C;
-            test.ReferenceTestData.R = Coefficients.R;
-            test.ReferenceTestData.Alpha = 0.00070;
-            test.ReferenceTestData.Beta = -0.09850;
-        }
+        #region Main Calibration Methods
 
         private void CalculateCoefficients()
         {
             try
             {
                 SortDeviceDataByGasConcentration();
+
                 var zeroData = DeviceData.FirstOrDefault(d => Math.Abs(d.GasConcentration) < 1e-9);
                 if (zeroData == null)
                 {
-                    MessageBox.Show("0.00 konsantrasyonlu satır bulunamadı!");
+                    MessageBox.Show("0.00 konsantrasyonlu satır bulunamadı! Hesaplama yapılamaz.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+
                 double zero = zeroData.Gas / zeroData.Ref;
+
+                // Ortam verilerinin ortalamasını hesapla
+                UpdateAverageEnvironmentalData();
+
                 foreach (var data in DeviceData)
                 {
                     data.Ratio = data.Gas / data.Ref;
                     data.Transmittance = data.Ratio / zero;
                     data.Absorption = 1 - data.Transmittance;
                 }
+
                 var gasConcentration = DeviceData.Select(d => d.GasConcentration).ToArray();
                 var absorption = DeviceData.Select(d => d.Absorption ?? 0.0).ToArray();
+
                 PlotAndOptimize(gasConcentration, absorption);
+
                 foreach (var data in DeviceData)
                 {
                     data.PredictedAbsorption = model(Vector<double>.Build.DenseOfArray(new[] { Coefficients.A, Coefficients.B, Coefficients.C }), data.GasConcentration);
+
                     if (data.Absorption.HasValue && data.Absorption.Value > 0 && data.Absorption.Value < Coefficients.A)
                     {
                         data.PredictedGasConcentration = Math.Pow(-Math.Log(1 - (data.Absorption.Value / Coefficients.A)) / Coefficients.B, 1 / Coefficients.C);
@@ -305,10 +157,12 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                         data.PredictedGasConcentration = double.NaN;
                     }
                 }
+
                 double meanGasConc = DeviceData.Average(d => d.GasConcentration);
                 double sst = DeviceData.Sum(d => Math.Pow(d.GasConcentration - meanGasConc, 2));
                 double sse = DeviceData.Where(d => !double.IsNaN(d.PredictedGasConcentration ?? double.NaN)).Sum(d => Math.Pow(d.GasConcentration - (d.PredictedGasConcentration ?? 0), 2));
                 Coefficients.R = 1 - (sse / sst);
+
                 var device = DevicesVM?.IdentifiedDevices?.FirstOrDefault(d => d.Properties.ProductId == DeviceName);
                 if (device != null)
                 {
@@ -317,6 +171,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                     device.Interface.DeviceData.CalibrationCoefficients.C = Coefficients.C;
                     device.Interface.DeviceData.CalibrationCoefficients.R = Coefficients.R;
                     device.Interface.DeviceData.CalibrationData.Zero = zero;
+
                     MessageBox.Show($"Kalibrasyon katsayıları '{DeviceName}' cihazına aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
                     UpdateAllTestsReferenceData(zero);
                 }
@@ -327,105 +182,50 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Hesaplama sırasında bir hata oluştu: {ex.Message}");
+                MessageBox.Show($"Hesaplama sırasında bir hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void ExportToFile()
+        private void UpdateAverageEnvironmentalData()
         {
-            using (var dialog = new CommonOpenFileDialog())
+            if (DeviceData != null && DeviceData.Any())
             {
-                dialog.Title = "Dosyaların kaydedileceği klasörü seçiniz.";
-                dialog.IsFolderPicker = true;
-                if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
-                {
-                    MessageBox.Show("Klasör seçilmedi. Kayıt işlemi iptal edildi.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                string folderPath = dialog.FileName;
-                try { ExportToTxt(folderPath); } catch (Exception ex) { MessageBox.Show($"Txt dosyası oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error); }
-                try { ExportToCsv(folderPath); } catch (Exception ex) { MessageBox.Show($"CSV dosyası oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error); }
+                AverageTemperature = DeviceData.Average(d => d.Temperature);
+                AveragePressure = DeviceData.Average(d => d.Pressure);
+                AverageHumidity = DeviceData.Average(d => d.Humidity);
             }
-        }
-
-        private void ExportToTxt(string folderPath)
-        {
-            string filePath = Path.Combine(folderPath, $"{DeviceName}_CalibrationData.txt");
-            var sb = new StringBuilder();
-            sb.AppendLine("Cihaz Bilgileri ve Katsayılar");
-            sb.AppendLine($"Cihaz Adı\t{DeviceName}");
-            sb.AppendLine($"A\t{Coefficients.A}");
-            sb.AppendLine($"B\t{Coefficients.B}");
-            sb.AppendLine($"C\t{Coefficients.C}");
-            sb.AppendLine($"R Kare\t{Coefficients.R}");
-            sb.AppendLine();
-            sb.AppendLine("Ölçüm Verileri");
-            sb.AppendLine("Gaz Konsantrasyonu\tGaz\tReferans\tOran\tTransmittans\tAbsorpsiyon\tTahmin Edilen Absorpsiyon\tTahmin Edilen Gaz Konsantrasyonu");
-            foreach (var data in DeviceData)
+            else
             {
-                sb.AppendLine($"{data.GasConcentration}\t{data.Gas}\t{data.Ref}\t{data.Ratio}\t{data.Transmittance}\t{data.Absorption}\t{data.PredictedAbsorption}\t{data.PredictedGasConcentration}");
-            }
-            File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
-            MessageBox.Show($"Txt dosyası başarıyla oluşturuldu:\n{filePath}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        private void ExportToCsv(string folderPath)
-        {
-            string filePath = Path.Combine(folderPath, $"{DeviceName}_CalibrationData.csv");
-            var sb = new StringBuilder();
-            var ci = CultureInfo.InvariantCulture;
-            string CsvEscape(string val) => $"\"{(val ?? "").Replace("\"", "\"\"")}\"";
-
-            sb.AppendLine("Cihaz Bilgileri ve Katsayılar");
-            sb.AppendLine($"Cihaz Adı;{CsvEscape(DeviceName)}");
-            sb.AppendLine($"A;{CsvEscape(Coefficients.A.ToString(ci))}");
-            sb.AppendLine($"B;{CsvEscape(Coefficients.B.ToString(ci))}");
-            sb.AppendLine($"C;{CsvEscape(Coefficients.C.ToString(ci))}");
-            sb.AppendLine($"R Kare;{CsvEscape(Coefficients.R.ToString(ci))}");
-            sb.AppendLine();
-            sb.AppendLine("Ölçüm Verileri");
-            sb.AppendLine("Gaz Konsantrasyonu;Gaz;Referans;Oran;Transmittans;Absorpsiyon;Tahmin Edilen Absorpsiyon;Tahmin Edilen Gaz Konsantrasyonu");
-            foreach (var data in DeviceData)
-            {
-                sb.AppendLine($"{CsvEscape(data.GasConcentration.ToString(ci))};{CsvEscape(data.Gas.ToString(ci))};{CsvEscape(data.Ref.ToString(ci))};{CsvEscape((data.Ratio ?? 0).ToString(ci))};{CsvEscape((data.Transmittance ?? 0).ToString(ci))};{CsvEscape((data.Absorption ?? 0).ToString(ci))};{CsvEscape((data.PredictedAbsorption ?? 0).ToString(ci))};{CsvEscape((data.PredictedGasConcentration ?? 0).ToString(ci))}");
-            }
-            File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
-            MessageBox.Show($"CSV dosyası başarıyla oluşturuldu:\n{filePath}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        public void AddDeviceData(Data data)
-        {
-            DeviceData.Add(data);
-        }
-
-        private void SortDeviceDataByGasConcentration()
-        {
-            var sortedList = DeviceData.OrderBy(d => d.GasConcentration).ToList();
-            DeviceData.Clear();
-            foreach (var item in sortedList)
-            {
-                DeviceData.Add(item);
+                AverageTemperature = 0;
+                AveragePressure = 0;
+                AverageHumidity = 0;
             }
         }
 
         private void PlotAndOptimize(double[] x, double[] y)
         {
             Func<Vector<double>, double> objFunc = parameters => x.Zip(y, (xx, yy) => Math.Pow(yy - model(parameters, xx), 2)).Sum();
+
             var initialGuess = CalculateInitialGuesses(x, y);
             var optimizer = new NelderMeadSimplex(1e-6, 1000);
             var result = optimizer.FindMinimum(ObjectiveFunction.Value(objFunc), initialGuess);
+
             Coefficients.A = result.MinimizingPoint[0];
             Coefficients.B = result.MinimizingPoint[1];
             Coefficients.C = result.MinimizingPoint[2];
+
             int numPoints = 100;
             double minX = x.Min();
             double maxX = x.Max();
             double[] xFit = Enumerable.Range(0, numPoints).Select(i => minX + i * (maxX - minX) / (numPoints - 1)).ToArray();
             double[] yFit = xFit.Select(xx => model(result.MinimizingPoint, xx)).ToArray();
+
             var scatterSeries = new ScatterSeries { Title = "Ölçüm", MarkerType = MarkerType.Circle };
             for (int i = 0; i < x.Length; i++) { scatterSeries.Points.Add(new ScatterPoint(x[i], y[i])); }
+
             var lineSeries = new LineSeries { Title = "Fit", StrokeThickness = 2 };
             for (int i = 0; i < xFit.Length; i++) { lineSeries.Points.Add(new DataPoint(xFit[i], yFit[i])); }
+
             PlotModel.Series.Clear();
             PlotModel.Series.Add(scatterSeries);
             PlotModel.Series.Add(lineSeries);
@@ -446,5 +246,365 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         {
             return DeviceData != null && DeviceData.Any() && DeviceData.All(d => d.Ref > 0 && d.Gas > 0);
         }
+
+        private void SortDeviceDataByGasConcentration()
+        {
+            var sortedList = DeviceData.OrderBy(d => d.GasConcentration).ToList();
+            DeviceData.Clear();
+            foreach (var item in sortedList)
+            {
+                DeviceData.Add(item);
+            }
+        }
+
+        #endregion
+
+        #region Main Calibration File Operations
+
+        private void ExecuteImport()
+        {
+            using (var dialog = new CommonOpenFileDialog())
+            {
+                dialog.Title = "İçeri aktarılacak kalibrasyon dosyasını seçin.";
+                dialog.Filters.Add(new CommonFileDialogFilter("Metin/CSV Dosyaları", "*.txt;*.csv"));
+
+                if (dialog.ShowDialog() != CommonFileDialogResult.Ok) return;
+
+                try
+                {
+                    ParseCalibrationFile(dialog.FileName);
+                    UpdateAverageEnvironmentalData(); // Import sonrası ortalamaları güncelle
+                    MessageBox.Show($"Veriler başarıyla içe aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    if (CanCalculate()) CalculateCoefficients();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Dosya okuma hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ParseCalibrationFile(string filePath)
+        {
+            var lines = File.ReadAllLines(filePath);
+            var culture = filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture;
+            char delimiter = filePath.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) ? ';' : '\t';
+
+            DeviceData.Clear();
+            bool isDataSection = false;
+            int sampleCounter = 1;
+
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                var parts = line.Split(delimiter);
+
+                if (!isDataSection)
+                {
+                    if (parts[0].Contains("Gaz Konsantrasyonu")) { isDataSection = true; continue; }
+                    if (parts.Length < 2) continue;
+
+                    string key = parts[0].Trim().Replace("\"", "");
+                    string val = parts[1].Trim().Replace("\"", "");
+
+                    if (key.Equals("A", StringComparison.OrdinalIgnoreCase)) Coefficients.A = double.Parse(val, culture);
+                    else if (key.Equals("B", StringComparison.OrdinalIgnoreCase)) Coefficients.B = double.Parse(val, culture);
+                    else if (key.Equals("C", StringComparison.OrdinalIgnoreCase)) Coefficients.C = double.Parse(val, culture);
+                    else if (key.Equals("R Kare", StringComparison.OrdinalIgnoreCase)) Coefficients.R = double.Parse(val, culture);
+                }
+                else if (parts.Length >= 3)
+                {
+                    try
+                    {
+                        var newData = new Data
+                        {
+                            Sample = sampleCounter++.ToString(),
+                            GasConcentration = double.Parse(parts[0].Replace("\"", "").Trim(), culture),
+                            Gas = double.Parse(parts[1].Replace("\"", "").Trim(), culture),
+                            Ref = double.Parse(parts[2].Replace("\"", "").Trim(), culture)
+                        };
+
+                        // Ortam verilerini oku (Sıcaklık, Basınç, Nem)
+                        // Dosya formatı: Conc, Gas, Ref, Ratio, Trans, Abs, PredAbs, PredConc, Temp, Press, Hum
+                        // İndeksler: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+                        if (parts.Length > 8) newData.Temperature = double.Parse(parts[8].Replace("\"", "").Trim(), culture);
+                        if (parts.Length > 9) newData.Pressure = double.Parse(parts[9].Replace("\"", "").Trim(), culture);
+                        if (parts.Length > 10) newData.Humidity = double.Parse(parts[10].Replace("\"", "").Trim(), culture);
+
+                        DeviceData.Add(newData);
+                    }
+                    catch { /* Satır hatası yutulur */ }
+                }
+            }
+        }
+
+        private void ExportToFile()
+        {
+            using (var dialog = new CommonOpenFileDialog())
+            {
+                dialog.Title = "Dosyaların kaydedileceği klasörü seçiniz.";
+                dialog.IsFolderPicker = true;
+                if (dialog.ShowDialog() != CommonFileDialogResult.Ok) return;
+
+                string folderPath = dialog.FileName;
+                try { ExportToTxt(folderPath); } catch (Exception ex) { MessageBox.Show($"Txt hatası: {ex.Message}"); }
+                try { ExportToCsv(folderPath); } catch (Exception ex) { MessageBox.Show($"CSV hatası: {ex.Message}"); }
+            }
+        }
+
+        private void ExportToTxt(string folderPath)
+        {
+            string filePath = Path.Combine(folderPath, $"{DeviceName}_CalibrationData.txt");
+            var sb = new StringBuilder();
+            sb.AppendLine("Cihaz Bilgileri ve Katsayılar");
+            sb.AppendLine($"Cihaz Adı\t{DeviceName}");
+            sb.AppendLine($"A\t{Coefficients.A}");
+            sb.AppendLine($"B\t{Coefficients.B}");
+            sb.AppendLine($"C\t{Coefficients.C}");
+            sb.AppendLine($"R Kare\t{Coefficients.R}");
+            sb.AppendLine();
+            sb.AppendLine("Ölçüm Verileri");
+            sb.AppendLine("Gaz Konsantrasyonu\tGaz\tReferans\tOran\tTransmittans\tAbsorpsiyon\tTahmin Edilen Absorpsiyon\tTahmin Edilen Gaz Konsantrasyonu\tSıcaklık\tBasınç\tNem");
+            foreach (var data in DeviceData)
+            {
+                sb.AppendLine($"{data.GasConcentration}\t{data.Gas}\t{data.Ref}\t{data.Ratio}\t{data.Transmittance}\t{data.Absorption}\t{data.PredictedAbsorption}\t{data.PredictedGasConcentration}\t{data.Temperature}\t{data.Pressure}\t{data.Humidity}");
+            }
+            File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+        }
+
+        private void ExportToCsv(string folderPath)
+        {
+            string filePath = Path.Combine(folderPath, $"{DeviceName}_CalibrationData.csv");
+            var sb = new StringBuilder();
+            var ci = CultureInfo.InvariantCulture;
+            string Csv(object val) => $"\"{(val?.ToString() ?? "").Replace("\"", "\"\"")}\"";
+
+            sb.AppendLine("Cihaz Bilgileri ve Katsayılar");
+            sb.AppendLine($"Cihaz Adı;{Csv(DeviceName)}");
+            sb.AppendLine($"A;{Csv(Coefficients.A.ToString(ci))}");
+            sb.AppendLine($"B;{Csv(Coefficients.B.ToString(ci))}");
+            sb.AppendLine($"C;{Csv(Coefficients.C.ToString(ci))}");
+            sb.AppendLine($"R Kare;{Csv(Coefficients.R.ToString(ci))}");
+            sb.AppendLine();
+            sb.AppendLine("Ölçüm Verileri");
+            sb.AppendLine("Gaz Konsantrasyonu;Gaz;Referans;Oran;Transmittans;Absorpsiyon;Tahmin Edilen Absorpsiyon;Tahmin Edilen Gaz Konsantrasyonu;Sıcaklık;Basınç;Nem");
+            foreach (var d in DeviceData)
+            {
+                sb.AppendLine($"{Csv(d.GasConcentration.ToString(ci))};{Csv(d.Gas.ToString(ci))};{Csv(d.Ref.ToString(ci))};{Csv(d.Ratio?.ToString(ci))};{Csv(d.Transmittance?.ToString(ci))};{Csv(d.Absorption?.ToString(ci))};{Csv(d.PredictedAbsorption?.ToString(ci))};{Csv(d.PredictedGasConcentration?.ToString(ci))};{Csv(d.Temperature.ToString(ci))};{Csv(d.Pressure.ToString(ci))};{Csv(d.Humidity.ToString(ci))}");
+            }
+            File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+        }
+
+        #endregion
+
+        #region Temperature Compensation Methods
+
+        private void ExecuteCalculateCompensation()
+        {
+            try
+            {
+                if (SelectedTest == null) return;
+
+                if (Coefficients.A == 0 || Coefficients.B == 0 || Coefficients.C == 0)
+                {
+                    MessageBox.Show("Lütfen önce Ana Kalibrasyon tablosunu hesaplayın. Referans katsayılar (A, B, C) eksik.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var zeroDataPoints = DeviceData.Where(d => Math.Abs(d.GasConcentration) < 0.01).ToList();
+                if (!zeroDataPoints.Any())
+                {
+                    MessageBox.Show("Ana kalibrasyon tablosunda 0.00 gaz konsantrasyonuna sahip veri bulunamadı. Referans Zero hesaplanamıyor.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                double refZero = zeroDataPoints.Average(d => d.Gas / d.Ref);
+
+                // T_ref olarak Ana Kalibrasyonun Ortalama Sıcaklığını kullan
+                double refTemp = AverageTemperature;
+                if (refTemp == 0) refTemp = 36.5;
+
+                SelectedTest.ReferenceTestData.Zero = refZero;
+                SelectedTest.ReferenceTestData.SpanA = Coefficients.A;
+                SelectedTest.ReferenceTestData.B = Coefficients.B;
+                SelectedTest.ReferenceTestData.C = Coefficients.C;
+                SelectedTest.ReferenceTestData.R = Coefficients.R;
+
+                var thermalParams = new ThermalCompensationEngine.ThermalModelParameters
+                {
+                    Alfa = SelectedTest.ReferenceTestData.Alpha,
+                    Beta = SelectedTest.ReferenceTestData.Beta
+                };
+
+                var refCoeffs = new Coefficients
+                {
+                    A = Coefficients.A,
+                    B = Coefficients.B,
+                    C = Coefficients.C,
+                    R = Coefficients.R
+                };
+
+                foreach (var row in SelectedTest.TestData)
+                {
+                    var context = new ThermalCompensationEngine.CalculationContext
+                    {
+                        CurrentDataPoint = row,
+                        ReferenceZero = refZero,
+                        ReferenceTemperature = refTemp,
+                        ReferenceCoefficients = refCoeffs,
+                        ModelParameters = thermalParams
+                    };
+
+                    ThermalCompensationEngine.ProcessDataPoint(context);
+                }
+
+                MessageBox.Show($"'{SelectedTest.Header}' için hesaplama tamamlandı.\nReferans Sıcaklık (T_ref): {refTemp:F2}°C\nReferans Zero: {refZero:F6}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hesaplama hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteExportCompensation()
+        {
+            if (SelectedTest == null || !SelectedTest.TestData.Any())
+            {
+                MessageBox.Show("Dışa aktarılacak veri yok.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            using (var dialog = new CommonOpenFileDialog())
+            {
+                dialog.Title = "Sıcaklık Testi Kayıt Klasörü Seçin";
+                dialog.IsFolderPicker = true;
+                if (dialog.ShowDialog() != CommonFileDialogResult.Ok) return;
+
+                string folderPath = dialog.FileName;
+                string fileName = $"{DeviceName}_{SelectedTest.Header.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd_HHmm}.csv";
+                string fullPath = Path.Combine(folderPath, fileName);
+
+                try
+                {
+                    var sb = new StringBuilder();
+                    var ci = CultureInfo.InvariantCulture;
+                    string Csv(object val) => $"\"{(val?.ToString() ?? "").Replace("\"", "\"\"")}\"";
+
+                    sb.AppendLine("Sample;GasConcentration;Ref;Gas;Temperature;Pressure;Humidity;Ratio;Transmittance;Absorption;PredictedAbsorption;NR;NA;Span;NR_Comp;Span_Comp;FinalCompensatedConcentration");
+
+                    foreach (var d in SelectedTest.TestData)
+                    {
+                        sb.AppendLine($"{Csv(d.Sample)};{Csv(d.GasConcentration.ToString(ci))};{Csv(d.Ref.ToString(ci))};{Csv(d.Gas.ToString(ci))};" +
+                                      $"{Csv(d.Temperature.ToString(ci))};{Csv(d.Pressure.ToString(ci))};{Csv(d.Humidity.ToString(ci))};" +
+                                      $"{Csv(d.Ratio?.ToString(ci))};{Csv(d.Transmittance?.ToString(ci))};{Csv(d.Absorption?.ToString(ci))};{Csv(d.PredictedAbsorption?.ToString(ci))};" +
+                                      $"{Csv(d.NormalizedRatio?.ToString(ci))};{Csv(d.NormalizedAbsorbance?.ToString(ci))};{Csv(d.Span?.ToString(ci))};" +
+                                      $"{Csv(d.CompensatedNormalizedRatio?.ToString(ci))};{Csv(d.CompensatedSpan?.ToString(ci))};{Csv(d.FinalCompensatedConcentration?.ToString(ci))}");
+                    }
+
+                    File.WriteAllText(fullPath, sb.ToString(), Encoding.UTF8);
+                    MessageBox.Show($"Dosya kaydedildi:\n{fullPath}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Export hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExecuteImportCompensation()
+        {
+            if (SelectedTest == null) return;
+
+            using (var dialog = new CommonOpenFileDialog())
+            {
+                dialog.Title = "Sıcaklık Testi Verisi Seçin (CSV)";
+                dialog.Filters.Add(new CommonFileDialogFilter("CSV Dosyaları", "*.csv"));
+                if (dialog.ShowDialog() != CommonFileDialogResult.Ok) return;
+
+                try
+                {
+                    var lines = File.ReadAllLines(dialog.FileName);
+                    if (lines.Length < 2) return;
+
+                    SelectedTest.TestData.Clear();
+                    var ci = CultureInfo.InvariantCulture;
+
+                    for (int i = 1; i < lines.Length; i++)
+                    {
+                        var line = lines[i];
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+
+                        var parts = line.Split(';');
+                        if (parts.Length >= 4)
+                        {
+                            var d = new Data
+                            {
+                                Sample = parts[0].Replace("\"", ""),
+                                GasConcentration = double.Parse(parts[1].Replace("\"", ""), ci),
+                                Ref = double.Parse(parts[2].Replace("\"", ""), ci),
+                                Gas = double.Parse(parts[3].Replace("\"", ""), ci),
+                                Temperature = parts.Length > 4 ? double.Parse(parts[4].Replace("\"", ""), ci) : 0,
+                                Pressure = parts.Length > 5 ? double.Parse(parts[5].Replace("\"", ""), ci) : 0,
+                                Humidity = parts.Length > 6 ? double.Parse(parts[6].Replace("\"", ""), ci) : 0
+                            };
+                            SelectedTest.TestData.Add(d);
+                        }
+                    }
+                    MessageBox.Show("Veriler başarıyla içe aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Import hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExecuteCreateNewTest()
+        {
+            int testCount = TemperatureTests.Count + 1;
+            var newTest = new TemperatureTestViewModel($"Sıcaklık Komp. Testi {testCount}");
+            newTest.ReferenceTestData.TestNo = testCount;
+            newTest.ReferenceTestData.Alpha = 0.00070;
+            newTest.ReferenceTestData.Beta = -0.09850;
+
+            if (Coefficients.R < 1.0 && Coefficients.R != 0)
+            {
+                var zeroData = DeviceData.FirstOrDefault(d => Math.Abs(d.GasConcentration) < 1e-9);
+                double zeroValue = zeroData != null ? (zeroData.Gas / zeroData.Ref) : 0;
+                UpdateSingleTestReferenceData(newTest, zeroValue);
+            }
+
+            TemperatureTests.Add(newTest);
+            SelectedTest = newTest;
+        }
+
+        private void ExecuteAddDataToSelectedTest()
+        {
+            if (SelectedTest == null)
+            {
+                MessageBox.Show("Veri eklemek için lütfen önce bir test seçin.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+        }
+
+        private void UpdateAllTestsReferenceData(double zeroValue)
+        {
+            foreach (var test in TemperatureTests)
+            {
+                UpdateSingleTestReferenceData(test, zeroValue);
+            }
+        }
+
+        private void UpdateSingleTestReferenceData(TemperatureTestViewModel test, double zeroValue)
+        {
+            test.ReferenceTestData.Zero = zeroValue;
+            test.ReferenceTestData.SpanA = Coefficients.A;
+            test.ReferenceTestData.B = Coefficients.B;
+            test.ReferenceTestData.C = Coefficients.C;
+            test.ReferenceTestData.R = Coefficients.R;
+        }
+
+        #endregion
     }
 }

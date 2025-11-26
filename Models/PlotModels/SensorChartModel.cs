@@ -127,14 +127,16 @@ namespace CapnoAnalyzer.Models.PlotModels
             {
                 Title = "Gas",
                 StrokeThickness = 1.8,
-                TrackerFormatString = "{0}\nTime: {2:0.000}\nValue: {4:0.000}"
+                TrackerFormatString = "{0}\nTime: {2:0.000}\nValue: {4:0.000}",
+                Color = OxyColor.Parse("#4CAF50")
             };
             _refSeries = new LineSeries
             {
                 Title = "Ref",
                 StrokeThickness = 1.4,
                 LineStyle = LineStyle.Solid,
-                TrackerFormatString = "{0}\nTime: {2:0.000}\nValue: {4:0.000}"
+                TrackerFormatString = "{0}\nTime: {2:0.000}\nValue: {4:0.000}",
+                Color = OxyColor.Parse("#FF5722")
             };
 
             PlotModel.Series.Add(_gasSeries);

@@ -67,15 +67,16 @@ namespace CapnoAnalyzer.Services
             return true;
         }
 
-        // Paket Tipi 2 -> "GV t,co2Val,bmeVal0,bmeVal1,bmeVal2,ang1,ang2,raw1,raw2,volt1,volt2,voltF2,voltF3,voltIIR2(ref),voltIIR3(gas),ir"
+        // Paket Tipi 2 -> "GV t,co2Val,bmeVal0,bmeVal1,bmeVal2,ang1,ang2,raw1,raw2,volt1,volt2,voltF2,voltF3,UNK,voltIIR2,voltIIR3,ir"
         private bool ParsePacket2(Device device, string data)
         {
             if (!data.StartsWith("GV")) return false;
 
+            // "GV" kısmını at ve virgüllerle ayır
             string[] parts = data.Substring(2).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            // Verilen formata göre toplam 16 veri alanı var (0'dan 15'e kadar)
-            if (parts.Length != 16) return false;
+            // Gelen veri paketinde 17 eleman var.
+            if (parts.Length != 17) return false;
 
             if (!double.TryParse(parts[0], NumberStyles.Float, Inv, out double time)) return false;
             if (!double.TryParse(parts[1], NumberStyles.Float, Inv, out double co2Val)) return false;
@@ -91,23 +92,24 @@ namespace CapnoAnalyzer.Services
             if (!double.TryParse(parts[11], NumberStyles.Float, Inv, out double voltF2)) return false;
             if (!double.TryParse(parts[12], NumberStyles.Float, Inv, out double voltF3)) return false;
 
-            // --- GÜNCELLEME BURADA ---
+            // parts[13] -> Gelen verideki "01" değeri. Şu an kullanılmıyor veya ara bir değer, atlıyoruz.
 
-            // 13 -> voltIIR2 (Referans olarak belirtilmiş)
-            if (!double.TryParse(parts[13], NumberStyles.Float, Inv, out double voltIIR2_Ref)) return false;
+            // 14 -> voltIIR2 (Referans veya Gaz)
+            if (!double.TryParse(parts[14], NumberStyles.Float, Inv, out double voltIIR2)) return false;
 
-            // 14 -> voltIIR3 (Gaz olarak belirtilmiş)
-            if (!double.TryParse(parts[14], NumberStyles.Float, Inv, out double voltIIR3_Gas)) return false;
+            // 15 -> voltIIR3 (Referans veya Gaz)
+            if (!double.TryParse(parts[15], NumberStyles.Float, Inv, out double voltIIR3)) return false;
 
-            // 15 -> IR Status
-            if (!int.TryParse(parts[15], out int irStatus)) return false;
+            // 16 -> IR Status (Sondaki 01 veya 00)
+            if (!int.TryParse(parts[16], out int irStatus)) return false;
 
             double gainF2 = voltF2 * 1.0;
             double gainF3 = voltF3 * 1.0;
 
-            // Değişken isimlerini netleştirelim
-            double gainIIR_Ref = voltIIR2_Ref * 1.0; // Index 13
-            double gainIIR_Gas = voltIIR3_Gas * 1.0; // Index 14
+            // Hangi kanalın Gaz hangisinin Referans olduğunu buradan ayarlayabilirsin.
+            // Genelde IIR2 ve IIR3 sensör verileridir.
+            double gainIIR_Ref = voltIIR2 * 1.0;
+            double gainIIR_Gas = voltIIR3 * 1.0;
 
             void Update()
             {
@@ -119,22 +121,21 @@ namespace CapnoAnalyzer.Services
                 device.DataPacket_2.AdsVoltages = new[] { volt1, volt2 };
                 device.DataPacket_2.GainAdsVoltagesF = new[] { gainF2, gainF3 };
 
-                // Array sıralaması: [Gaz, Referans] (Genelde grafiklerde Gaz önce istenir)
+                // Array sıralaması: [Gaz, Referans]
                 device.DataPacket_2.GainAdsVoltagesIIR = new[] { gainIIR_Gas, gainIIR_Ref };
                 device.DataPacket_2.IrStatus = irStatus;
 
                 device.DeviceData.SensorData.Time = time;
 
-                // Sensör datasına doğru atamalar
-                device.DeviceData.SensorData.IIR_Gas_Voltage = gainIIR_Gas; // Gaz (Index 14)
-                device.DeviceData.SensorData.IIR_Ref_Voltage = gainIIR_Ref; // Ref (Index 13)
+                // Sensör datasına atamalar
+                device.DeviceData.SensorData.IIR_Gas_Voltage = gainIIR_Gas;
+                device.DeviceData.SensorData.IIR_Ref_Voltage = gainIIR_Ref;
                 device.DeviceData.SensorData.IR_Status = irStatus;
 
-                // --- ÇİZ (IIR’lı değerler) ---
+                // --- ÇİZ ---
                 device.Interface?.CalculatedGasPlot?.AddDeviceCO2Data(device.DataPacket_2.Time, co2Val);
                 var plot = device.Interface?.SensorPlot;
 
-                // Grafiğe gönderirken (Gaz, Ref) sırasıyla
                 if (plot is IHighFreqPlot hf) hf.Enqueue(time, gainIIR_Gas, gainIIR_Ref);
                 else plot?.AddDataPoint(time, gainIIR_Gas, gainIIR_Ref);
             }

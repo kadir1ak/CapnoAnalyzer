@@ -73,8 +73,8 @@ namespace CapnoAnalyzer.Models.PlotModels
             {
                 Position = AxisPosition.Left,
                 Key = "Y1",
-                TitleColor = OxyColors.Blue,
-                TextColor = OxyColors.Blue,
+                TitleColor = OxyColor.Parse("#FF8C449E"),
+                TextColor = OxyColor.Parse("#FF8C449E"),
                 MajorGridlineStyle = LineStyle.Solid,
                 IsZoomEnabled = false,
                 IsPanEnabled = false
@@ -85,15 +85,15 @@ namespace CapnoAnalyzer.Models.PlotModels
             {
                 Position = AxisPosition.Right,
                 Key = "Y2",
-                TitleColor = OxyColors.Red,
-                TextColor = OxyColors.Red,
+                TitleColor = OxyColor.Parse("#FFF56715"),
+                TextColor = OxyColor.Parse("#FFF56715"),                
                 MajorGridlineStyle = LineStyle.None,
                 IsZoomEnabled = false,
                 IsPanEnabled = false
             });
 
-            _series1 = new LineSeries { Title = "Kanal 1", Color = OxyColors.Blue, StrokeThickness = 1.5, YAxisKey = "Y1" };
-            _series2 = new LineSeries { Title = "Kanal 2", Color = OxyColors.Red, StrokeThickness = 1.5, YAxisKey = "Y2" };
+            _series1 = new LineSeries { Title = "Kanal 1", Color = OxyColor.Parse("#FF8C449E"), StrokeThickness = 1.5, YAxisKey = "Y1" };
+            _series2 = new LineSeries { Title = "Kanal 2", Color = OxyColor.Parse("#FFF56715"), StrokeThickness = 1.5, YAxisKey = "Y2" };
 
             Model.Series.Add(_series1);
             Model.Series.Add(_series2);

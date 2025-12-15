@@ -217,6 +217,7 @@ namespace CapnoAnalyzer.Models.Device
         private void SendSettings()
         {
             var s = Interface.ChannelSettings;
+            var f = Interface.FilterSettings;
 
             // 1) IR frekansı (1..20 Hz)
             int irFreq = Math.Clamp((int)Math.Round(s.EmitterSettings), 1, 20);
@@ -228,6 +229,8 @@ namespace CapnoAnalyzer.Models.Device
             string uiLp0 = s.Ch0.LpFilter;
             string uiHp1 = s.Ch1.HpFilter;
             string uiLp1 = s.Ch1.LpFilter;
+            int rws = f.RmsWindowSize;
+            int mfs = f.MavFilterSize;
 
             int gainCode = MapOrDefault(GainCodes, uiGain, 0x08); // 16x
             int spsCode = MapOrDefault(SpsCodes, uiSps, 0x80); // 330SPS
@@ -237,10 +240,10 @@ namespace CapnoAnalyzer.Models.Device
             int lp1Code = MapOrDefault(LpfCodes, uiLp1, 0x60);
 
             // 3) Paket
-            // Donanımın anlayacağı "CFG, irfreq, gain, sps, hpFilter0, lpFilter0, hpFilter1, lpFilter1" formatında komutu oluştur
+            // Format: FV, irFreq, gain, sps, hpFilter0, lpFilter0, hpFilter1, lpFilter1, RWS, MFS
             string cmd = string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                "CFG,{0},{1},{2},{3},{4},{5},{6}",
-                irFreq, gainCode, spsCode, hp0Code, lp0Code, hp1Code, lp1Code);
+                           "FV,{0},{1},{2},{3},{4},{5},{6},{7},{8}",
+                           irFreq, gainCode, spsCode, hp0Code, lp0Code, hp1Code, lp1Code, rws, mfs);
 
             Interface.AddIncomingMessage($"Send: {cmd} // {irFreq}Hz, G={uiGain}, SPS={uiSps}, HP0={uiHp0}, LP0={uiLp0}, HP1={uiHp1}, LP1={uiLp1}");
             _portManager.SendMessage(Properties.PortName, cmd);

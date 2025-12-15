@@ -32,6 +32,7 @@ namespace CapnoAnalyzer.Models.Device
         /// Tüm cihaz ayarlarını tutan ana nesne. XAML bu nesneye bağlanır.
         /// </summary>
         public DeviceChannelSettings ChannelSettings { get; } = new DeviceChannelSettings();
+        public DeviceFilterSettings FilterSettings { get; } = new DeviceFilterSettings();
 
         // ComboBox'ların içini dolduracak seçenek listeleri
         public List<string> GainOptions { get; } = new List<string>
@@ -437,6 +438,29 @@ namespace CapnoAnalyzer.Models.Device
         {
             get => _emitterOffTime;
             set => SetProperty(ref _emitterOffTime, value);
+        }
+    }
+
+    public class DeviceFilterSettings : BindableBase
+    {
+        public DeviceFilterSettings()
+        {
+            // Varsayılanlar
+            RmsWindowSize = 10;
+            MavFilterSize = 10;
+        }
+        private int _rmsWindowSize;
+        public int RmsWindowSize
+        {
+            get => _rmsWindowSize;
+            set => SetProperty(ref _rmsWindowSize, value);
+        }
+
+        private int _mavFilterSize;
+        public int MavFilterSize
+        {
+            get => _mavFilterSize;
+            set => SetProperty(ref _mavFilterSize, value);
         }
     }
 }

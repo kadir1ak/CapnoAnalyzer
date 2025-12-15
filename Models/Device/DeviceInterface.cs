@@ -10,6 +10,61 @@ namespace CapnoAnalyzer.Models.Device
 {
     public class DeviceInterface : BindableBase
     {
+
+        #region Dual Channel Real Time Plot
+        public DualChannelRealTimePlot CustomDualPlot { get; private set; }
+        public List<DataPacket2Source> AvailableSources { get; } = System.Enum.GetValues(typeof(DataPacket2Source)).Cast<DataPacket2Source>().ToList();
+
+        private DataPacket2Source _selectedChannel1 = DataPacket2Source.GainAdsVoltageIIR1;
+        public DataPacket2Source SelectedChannel1
+        {
+            get => _selectedChannel1;
+            set
+            {
+                if (SetProperty(ref _selectedChannel1, value))
+                    UpdateCustomPlotTitles();
+            }
+        }
+
+        private DataPacket2Source _selectedChannel2 = DataPacket2Source.GainAdsVoltageIIR2;
+        public DataPacket2Source SelectedChannel2
+        {
+            get => _selectedChannel2;
+            set
+            {
+                if (SetProperty(ref _selectedChannel2, value))
+                    UpdateCustomPlotTitles();
+            }
+        }
+        private void UpdateCustomPlotTitles()
+        {
+            CustomDualPlot?.SetTitles(SelectedChannel1.ToString(), SelectedChannel2.ToString());
+        }
+
+        public double GetDataValue(DataPacket_2 packet, DataPacket2Source source)
+        {
+            if (packet == null) return 0;
+            switch (source)
+            {
+                case DataPacket2Source.CO2: return packet.CO2Value.Length > 0 ? packet.CO2Value[0] : 0;
+                case DataPacket2Source.Temperature: return packet.BMEValue.Length > 0 ? packet.BMEValue[0] : 0;
+                case DataPacket2Source.Humidity: return packet.BMEValue.Length > 1 ? packet.BMEValue[1] : 0;
+                case DataPacket2Source.Pressure: return packet.BMEValue.Length > 2 ? packet.BMEValue[2] : 0;
+                case DataPacket2Source.AngVoltage1: return packet.AngVoltages.Length > 0 ? packet.AngVoltages[0] : 0;
+                case DataPacket2Source.AngVoltage2: return packet.AngVoltages.Length > 1 ? packet.AngVoltages[1] : 0;
+                case DataPacket2Source.AdsRaw1: return packet.AdsRawValues.Length > 0 ? packet.AdsRawValues[0] : 0;
+                case DataPacket2Source.AdsRaw2: return packet.AdsRawValues.Length > 1 ? packet.AdsRawValues[1] : 0;
+                case DataPacket2Source.AdsVoltage1: return packet.AdsVoltages.Length > 0 ? packet.AdsVoltages[0] : 0;
+                case DataPacket2Source.AdsVoltage2: return packet.AdsVoltages.Length > 1 ? packet.AdsVoltages[1] : 0;
+                case DataPacket2Source.GainAdsVoltageF1: return packet.GainAdsVoltagesF.Length > 0 ? packet.GainAdsVoltagesF[0] : 0;
+                case DataPacket2Source.GainAdsVoltageF2: return packet.GainAdsVoltagesF.Length > 1 ? packet.GainAdsVoltagesF[1] : 0;
+                case DataPacket2Source.GainAdsVoltageIIR1: return packet.GainAdsVoltagesIIR.Length > 0 ? packet.GainAdsVoltagesIIR[0] : 0;
+                case DataPacket2Source.GainAdsVoltageIIR2: return packet.GainAdsVoltagesIIR.Length > 1 ? packet.GainAdsVoltagesIIR[1] : 0;
+                default: return 0;
+            }
+        }
+        #endregion
+
         public DeviceInterface()
         {
             SampleMode = SampleMode.RMS;
@@ -25,6 +80,9 @@ namespace CapnoAnalyzer.Models.Device
             Data = new AllDataPaket();
             DeviceData = new DeviceDataType();
             IncomingMessage = new ObservableCollection<string>();
+
+            CustomDualPlot = new DualChannelRealTimePlot(timeWindowSeconds: 10);
+            UpdateCustomPlotTitles();
         }
 
         #region Cihaz Ayarları Modeli
@@ -463,4 +521,27 @@ namespace CapnoAnalyzer.Models.Device
             set => SetProperty(ref _mavFilterSize, value);
         }
     }
+
+    #region ComboBox'lar için kaynak listesi
+    // Veri kaynaklarını tanımlayan Enum
+    public enum DataPacket2Source
+    {
+        None,
+        CO2,
+        Temperature,
+        Humidity,
+        Pressure,
+        AngVoltage1,
+        AngVoltage2,
+        AdsRaw1,
+        AdsRaw2,
+        AdsVoltage1,
+        AdsVoltage2,
+        GainAdsVoltageF1,
+        GainAdsVoltageF2,
+        GainAdsVoltageIIR1,
+        GainAdsVoltageIIR2
+    }
+
+    #endregion
 }

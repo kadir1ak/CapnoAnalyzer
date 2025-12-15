@@ -13,7 +13,7 @@
         <helpers:ProgressWidthConverter x:Key="ProgressWidthConverter" />
     </UserControl.Resources>
 
-    <Grid Width="810" Margin="5 0 0 0">
+    <Grid Width="1080" Margin="5 0 0 0">
         <!-- Ana Kart -->
         <Border Background="#F1F3FA" CornerRadius="10" Padding="0" BorderBrush="#D1D5DB" BorderThickness="1">
             <Grid>
@@ -22,30 +22,30 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="340" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="350" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Üst Bilgi (Cihaz Kimliği ve Durumu) -->
-                <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0 0">
+                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0 0">
                     <Border Background="#F1F3FA" Margin="0 2 0 0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10 0 0 0">
                                     <TextBlock Text="Port:" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Margin="0" />
                                     <TextBlock Text="{Binding Properties.PortName}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Margin="5 2 0 0" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="10 0 0 0" VerticalAlignment="Center">
-                                    <TextBlock Text="ID:" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Margin="5 0 0 0" />
+                                    <TextBlock Text="ID:" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Margin="0 0 0 0" />
                                     <TextBlock Text="{Binding Properties.ProductId}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Margin="5 2 0 0" />
                                 </StackPanel>
                             </StackPanel>
 
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="5 0 0 0">
                                     <TextBlock Text="Baud Rate:" Foreground="#5C6D8C" FontSize="12" Margin="5 0 0 0" />
                                     <TextBlock Text="{Binding Properties.BaudRate}" Foreground="#5C6D8C" FontSize="11" Margin="5 2 0 0" />
@@ -64,7 +64,7 @@
                 </StackPanel>
 
                 <!-- Sol Panel (Sensör Verileri) -->
-                <StackPanel Grid.Row="0" Grid.RowSpan="4" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <StackPanel Grid.Row="1" Grid.RowSpan="4" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top">
                     <!-- Zaman -->
                     <Border Background="#F1F3FA" Height="80" Margin="2" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
@@ -139,7 +139,7 @@
                 </StackPanel>
 
                 <!-- Veri Örnekleme Ayarları -->
-                <Border  Grid.Row="2" Grid.Column="0" Background="#F1F3FA" Margin="0 12 0 0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
+                <Border  Grid.Row="3" Grid.Column="0" Background="#F1F3FA" Margin="0 50 0 0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                         <TextBlock Text="Örnekleme Ayarları" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold"/>
                         <Grid>
@@ -194,65 +194,20 @@
                 </Border>
 
                 <!-- Birleştirilmiş Cihaz Ayarları Paneli -->
-                <Border Grid.Row="3" Grid.RowSpan="2" Grid.Column="0" Background="#F1F3FA" Margin="0 5 0 0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                    <StackPanel Orientation="Vertical" Margin="3">
+                <Border Grid.Row="2" Grid.RowSpan="2" Grid.Column="3" Background="#F1F3FA" Margin="0 5 0 0"  VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Width="220" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Vertical" Margin="3" Width="220" HorizontalAlignment="Left">
 
                         <!-- 1. BÖLÜM: EMITTER AYARLARI -->
                         <TextBlock Text="Emitter Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 0"/>
 
                         <!-- Emitter Settings -->
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Interface.ChannelSettings.EmitterSettings, StringFormat={}{0:F0} Hz}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Width="100" TextAlignment="Center" Margin="0 0 0 0"/>
-                        <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"  Value="{Binding Interface.ChannelSettings.EmitterSettings, Mode=TwoWay}" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center"/>
+                        <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"  Value="{Binding Interface.ChannelSettings.EmitterSettings, Mode=TwoWay}" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="200" HorizontalAlignment="Left"/>
 
-                        <!-- Emitter ON Time -->
-                        <!--  <Grid Margin="0 0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="ON time (ms):" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Width="120"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1"
-                       Text="{Binding Interface.ChannelSettings.EmitterOnTime, StringFormat={}{0:F0}}" 
-                       Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"
-                       Width="30" TextAlignment="Right" Margin="5 0 0 0"/>
-                            <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                    Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
-                    VerticalAlignment="Center"
-                    Value="{Binding Interface.ChannelSettings.EmitterOnTime, Mode=TwoWay}"/>
-                        </Grid>-->
-
-                        <!-- Emitter OFF Time -->
-                        <!--<Grid Margin="0 0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="OFF time (ms):" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" Width="120"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1"
-        Text="{Binding Interface.ChannelSettings.EmitterOffTime, StringFormat={}{0:F0}}" 
-        Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"
-        Width="30" TextAlignment="Right" Margin="5 0 0 0"/>
-                            <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                    Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
-                    VerticalAlignment="Center"
-                    Value="{Binding Interface.ChannelSettings.EmitterOffTime, Mode=TwoWay}"/>
-               
-                        </Grid> -->
-
-
-
-                        <Separator Margin="0 2"/>
+                        <Separator Margin="2 2" Width="220" HorizontalAlignment="Left"/>
 
                         <!-- 2. BÖLÜM: KANAL AYARLARI -->
-                        <TextBlock Text="Kanal Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 2"/>
+                        <TextBlock Text="Kanal Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 2" Width="220" HorizontalAlignment="Left"/>
 
                         <Grid HorizontalAlignment="Left">
                             <Grid.RowDefinitions>
@@ -296,31 +251,65 @@
                             <ComboBox Grid.Row="5" Grid.Column="2" Width="65" Height="22" Margin="1 2" ItemsSource="{Binding Interface.LpFilterOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch1.LpFilter}"/>
 
 
-                            <!-- Yeni Parametreler -->
+                            <!-- Filtere Parametreleri -->
                             <TextBlock Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Text="RMS Window Size :" Margin="1 4" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                             <TextBlock Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Text="MAV Filter Size :" Margin="1 4" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                             <TextBox Grid.Row="7" Grid.Column="2" Width="80" Height="22" Margin="1 2" HorizontalAlignment="Left" Text="{Binding Interface.FilterSettings.RmsWindowSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBox Grid.Row="8" Grid.Column="2" Width="80" Height="22" Margin="1 2" HorizontalAlignment="Left" Text="{Binding Interface.FilterSettings.MavFilterSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         </Grid>
 
-                        <Separator Margin="0 2"/>
+                        <Separator Margin="2 2" Width="220" HorizontalAlignment="Left"/>
 
                         <!-- 3. BÖLÜM: GÖNDERME BUTONU -->
-                        <Button Content="Tüm Ayarları Gönder" Command="{Binding SendSettingsCommand}" Margin="10 0" />
+                        <Button Content="Tüm Ayarları Gönder" Command="{Binding SendSettingsCommand}" Margin="10 5" Width="200" HorizontalAlignment="Left"/>
 
                     </StackPanel>
                 </Border>
 
                 <!-- Sağ Panel (Grafik) -->
-                <Border Grid.Row="1" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top" Height="300">
-                    <plot:SensorPlot Grid.Column="0" DataContext="{Binding Interface.SensorPlot.PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top" Height="300">
+                    <plot:SensorPlot DataContext="{Binding Interface.SensorPlot.PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                 </Border>
                 <Border Grid.Row="2" Grid.RowSpan="4" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top" Height="300">
-                    <plot:SensorPlot Grid.Column="1" DataContext="{Binding Interface.CalculatedGasPlot.PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    <plot:SensorPlot DataContext="{Binding Interface.CalculatedGasPlot.PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                </Border>
+                <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="3" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top" Height="300">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- Kontroller -->
+                            <RowDefinition Height="*"/>
+                            <!-- Grafik -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Kanal Seçim Kontrolleri -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
+                                <TextBlock Text="CH1:" VerticalAlignment="Center" FontWeight="Bold" Foreground="#2E3B4E" Margin="0,0,5,0"/>
+                                <ComboBox ItemsSource="{Binding Interface.AvailableSources}" 
+                          SelectedItem="{Binding Interface.SelectedChannel1}"
+                          Width="120" FontSize="11"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="CH2:" VerticalAlignment="Center" FontWeight="Bold" Foreground="#2E3B4E" Margin="0,0,5,0"/>
+                                <ComboBox ItemsSource="{Binding Interface.AvailableSources}" 
+                          SelectedItem="{Binding Interface.SelectedChannel2}"
+                          Width="120" FontSize="11"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Yeni Özel Grafik -->
+                        <plot:SensorPlot Grid.Row="1" 
+                         DataContext="{Binding Interface.CustomDualPlot.Model}" 
+                         Background="#F1F3FA" 
+                         HorizontalAlignment="Stretch" 
+                         VerticalAlignment="Stretch"/>
+                    </Grid>
                 </Border>
 
                 <!-- Kalibrasyon Sonuçları -->
-                <Border Grid.Row="2" Grid.RowSpan="5" Grid.Column="5" HorizontalAlignment="Stretch" Background="#F1F3FA" Margin="0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top">
+                <Border Grid.Row="2" Grid.RowSpan="4" Grid.Column="2" HorizontalAlignment="Stretch" Background="#F1F3FA" Margin="0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                         <TextBlock Text="Kalibrasyon Verileri" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold"/>
                         <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
@@ -404,7 +393,7 @@
                 </Border>
 
                 <!-- DataPacket_1 Verileri  -->
-                <Border  Grid.Row="1" Grid.RowSpan="5" Grid.Column="5" HorizontalAlignment="Right" Background="#F1F3FA" Margin="0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_1_Status}">
+                <Border  Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" HorizontalAlignment="Right" Background="#F1F3FA" Margin="0 5 0 0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_1_Status}">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="3">
                         <TextBlock Text="Tüm Cihaz Verileri" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold"/>
                         <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
@@ -443,7 +432,7 @@
                 </Border>
 
                 <!-- DataPacket_2 Verileri  -->
-                <Border Grid.Row="1" Grid.RowSpan="5" Grid.Column="5" HorizontalAlignment="Right" Background="#F1F3FA" Margin="0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_2_Status}">
+                <Border Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" HorizontalAlignment="Right" Background="#F1F3FA" Margin="0 5 0 0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_2_Status}">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3">
                         <TextBlock Text="Tüm Cihaz Verileri" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold"/>
                         <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
@@ -536,7 +525,7 @@
                 </Border>
                 
                 <!-- DataPacket_3 Verileri  -->
-                <Border Grid.Column="2" HorizontalAlignment="Center" Background="#F1F3FA" Margin="0,45,0,0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_3_Status}" Height="91" Grid.RowSpan="2">
+                <Border Grid.Row="0" Grid.RowSpan="4" Grid.Column="2" HorizontalAlignment="Center" Background="#F1F3FA" Margin="0,5,0,0" VerticalAlignment="Top" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" Visibility="{Binding Interface.Data.DataPacket_3_Status}" Height="91">
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Height="84">
                         <TextBlock Text="Cihaz Verileri" Foreground="#2E3B4E" FontSize="14" FontWeight="Bold" Height="18"/>
                         <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1">
@@ -568,7 +557,6 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
-
 
             </Grid>
         </Border>

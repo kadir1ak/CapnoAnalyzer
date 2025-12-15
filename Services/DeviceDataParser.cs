@@ -138,6 +138,14 @@ namespace CapnoAnalyzer.Services
 
                 if (plot is IHighFreqPlot hf) hf.Enqueue(time, gainIIR_Gas, gainIIR_Ref);
                 else plot?.AddDataPoint(time, gainIIR_Gas, gainIIR_Ref);
+
+                if (device.Interface?.CustomDualPlot != null)
+                {
+                    double val1 = device.Interface.GetDataValue(device.DataPacket_2, device.Interface.SelectedChannel1);
+                    double val2 = device.Interface.GetDataValue(device.DataPacket_2, device.Interface.SelectedChannel2);
+
+                    device.Interface.CustomDualPlot.Enqueue(time, val1, val2);
+                }
             }
 
             if (Application.Current?.Dispatcher.CheckAccess() == true) Update();

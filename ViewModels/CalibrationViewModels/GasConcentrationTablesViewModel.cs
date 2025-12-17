@@ -207,7 +207,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             Func<Vector<double>, double> objFunc = parameters => x.Zip(y, (xx, yy) => Math.Pow(yy - model(parameters, xx), 2)).Sum();
 
             var initialGuess = CalculateInitialGuesses(x, y);
-            var optimizer = new NelderMeadSimplex(1e-6, 1000);
+            var optimizer = new NelderMeadSimplex(1e-6, 10000);
             var result = optimizer.FindMinimum(ObjectiveFunction.Value(objFunc), initialGuess);
 
             Coefficients.A = result.MinimizingPoint[0];
@@ -483,7 +483,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                 double initialBeta = SelectedTest.ReferenceTestData.Beta != 0 ? SelectedTest.ReferenceTestData.Beta : -0.09850;
                 var initialGuess = Vector<double>.Build.DenseOfArray(new[] { initialAlpha, initialBeta });
 
-                var optimizer = new NelderMeadSimplex(1e-5, 2000);
+                var optimizer = new NelderMeadSimplex(1e-5, 5000);
                 var result = optimizer.FindMinimum(ObjectiveFunction.Value(objectiveFunction), initialGuess);
 
                 double optimizedAlpha = result.MinimizingPoint[0];

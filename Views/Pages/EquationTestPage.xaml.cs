@@ -70,7 +70,7 @@ namespace CapnoAnalyzer.Views.Pages
             var initialGuess = CalculateInitialGuesses(x, y);
 
             // Optimizasyon ayarları
-            var optimizer = new NelderMeadSimplex(1e-6, 1000)
+            var optimizer = new NelderMeadSimplex(1e-6, 10000)
             {
                 MaximumIterations = 5000,
                 ConvergenceTolerance = 1e-10

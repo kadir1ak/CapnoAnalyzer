@@ -132,7 +132,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
             var initialGuess = CalculateInitialGuesses(x, y);
 
-            var optimizer = new NelderMeadSimplex(1e-6, 1000);
+            var optimizer = new NelderMeadSimplex(1e-6, 10000);
             var result = optimizer.FindMinimum(ObjectiveFunction.Value(objFunc), initialGuess);
 
             Coefficients.A = result.MinimizingPoint[0];

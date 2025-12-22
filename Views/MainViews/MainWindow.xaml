@@ -28,8 +28,8 @@
         </Border>
 
         <!-- Sol Yan Menü (Sidebar) -->
-        <Border DockPanel.Dock="Left" Background="#3E4A5E" Width="240">
-            <StackPanel Margin="10">
+        <Border DockPanel.Dock="Left" Background="#3E4A5E" Width="225">
+            <StackPanel Margin="0 3 3 3">
 
                 <buttons:PageButton ButtonContent="Cihazlar" 
                             ButtonIcon="BarChartOutline"

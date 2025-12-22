@@ -9,7 +9,7 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="CalibrationTablesPage">
 
-    <Grid Margin="20">
+    <Grid Margin="0">
         <Border Background="#F1F3FA" CornerRadius="10" Padding="0" BorderBrush="#D1D5DB" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Grid>
                 <Grid.RowDefinitions>
@@ -23,13 +23,12 @@
 
                 <!-- Üst Bilgi -->
                 <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,5">
-                    <TextBlock Text="🧪 NDIR Gaz Katsayıları Hesaplama Tabloları" FontSize="24" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="🧪 NDIR Gaz Katsayıları Hesaplama Tabloları" FontSize="18" FontWeight="Bold" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Devices UserControl'ü, DataContext => MainViewModel.DevicesVM -->
                 <ScrollViewer Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
-                        <!-- <views:SampleGasConcentrationTable/> -->
                         <views:GasConcentrationTables DataContext="{Binding CalibrationVM}" />
                     </StackPanel>
                 </ScrollViewer>

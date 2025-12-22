@@ -13,6 +13,7 @@ using CapnoAnalyzer.Helpers;
 using CapnoAnalyzer.Models.Device;
 using CapnoAnalyzer.Services;
 using CapnoAnalyzer.ViewModels.DeviceViewModels;
+using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.Optimization;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -71,6 +72,113 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         public ICommand ExportCompensationCommand { get; }
         public ICommand ImportCompensationCommand { get; }
 
+        #endregion
+
+        #region Equation Properties
+        private string _alphaEquation;
+        public string AlphaEquation { get => _alphaEquation; set => SetProperty(ref _alphaEquation, value); }
+
+        private string _betaEquation;
+        public string BetaEquation { get => _betaEquation; set => SetProperty(ref _betaEquation, value); }
+        #endregion
+
+        #region Compensation Plot Models
+        private PlotModel _alphaPlotModel;
+        public PlotModel AlphaPlotModel { get => _alphaPlotModel; set => SetProperty(ref _alphaPlotModel, value); }
+
+        private PlotModel _betaPlotModel;
+        public PlotModel BetaPlotModel { get => _betaPlotModel; set => SetProperty(ref _betaPlotModel, value); }
+
+        private void InitCompensationPlots()
+        {
+            // Alfa Grafiği Ayarları
+            AlphaPlotModel = new PlotModel { Title = "Sıcaklığa Göre Alfa (α) Karakteristiği", TitleFontSize = 12 };
+            AlphaPlotModel.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, Title = "Sıcaklık (°C)", MajorGridlineStyle = LineStyle.Solid });
+            AlphaPlotModel.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, Title = "Alfa Değeri", MajorGridlineStyle = LineStyle.Dot });
+
+            // Beta Grafiği Ayarları
+            BetaPlotModel = new PlotModel { Title = "Sıcaklığa Göre Beta (β) Karakteristiği", TitleFontSize = 12 };
+            BetaPlotModel.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, Title = "Sıcaklık (°C)", MajorGridlineStyle = LineStyle.Solid });
+            BetaPlotModel.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, Title = "Beta Değeri", MajorGridlineStyle = LineStyle.Dot });
+        }
+
+        public void UpdateCompensationCharts()
+        {
+            AlphaEquation = "Hesaplanıyor...";
+            BetaEquation = "Hesaplanıyor...";
+
+            // Sadece hesaplanmış Alfa/Beta değerine sahip ve verisi olan testleri filtrele
+            var validTests = TemperatureTests
+                .Where(t => t.TestData.Any() && (t.ReferenceTestData.Alpha != 0 || t.ReferenceTestData.Beta != 0))
+                .OrderBy(t => t.ReferenceTestData.Temperature)
+                .ToList();
+
+            if (validTests.Count < 2) return; // Denklem çıkarmak için en az 2 nokta şart
+
+            // Verileri dizilere aktar
+            double[] xData = validTests.Select(t => t.ReferenceTestData.Temperature).ToArray();
+            double[] alphaY = validTests.Select(t => t.ReferenceTestData.Alpha).ToArray();
+            double[] betaY = validTests.Select(t => t.ReferenceTestData.Beta).ToArray();
+
+            // --- ALFA İÇİN FİT VE DENKLEM ---
+            // ProcessTrend metodu hem noktaları hem de kırmızı kesikli trend çizgisini ekler.
+            ProcessTrend(AlphaPlotModel, xData, alphaY, "Alfa", OxyColors.DodgerBlue, out string alphaEq);
+            AlphaEquation = alphaEq;
+
+            // --- BETA İÇİN FİT VE DENKLEM ---
+            ProcessTrend(BetaPlotModel, xData, betaY, "Beta", OxyColors.DarkOrchid, out string betaEq);
+            BetaEquation = betaEq;
+        }
+
+        private void ProcessTrend(PlotModel model, double[] x, double[] y, string label, OxyColor pointColor, out string equation)
+        {
+            model.Series.Clear();
+
+            // 1. Gerçek Ölçüm Noktaları (Scatter) - Mavi/Mor Noktalar
+            var scatterSeries = new ScatterSeries
+            {
+                Title = $"{label} Ölçüm",
+                MarkerType = MarkerType.Circle,
+                MarkerFill = pointColor,
+                MarkerSize = 5
+            };
+            for (int i = 0; i < x.Length; i++) scatterSeries.Points.Add(new ScatterPoint(x[i], y[i]));
+            model.Series.Add(scatterSeries);
+
+            // 2. Polinom Fit (Eğri Uydurma)
+            // Veri sayısı 3'ten azsa lineer (1. derece), 3 ve üzeriyse quadratic (2. derece) fit
+            int degree = x.Length >= 3 ? 2 : 1;
+            double[] p = Fit.Polynomial(x, y, degree);
+
+            // Denklem Metnini Oluştur (y = Ax^2 + Bx + C)
+            // MathNet p[0] sabit, p[1] x, p[2] x^2 sırasıyla verir.
+            if (degree == 2)
+                equation = $"f(T) = ({p[2]:E3})T² + ({p[1]:E3})T + ({p[0]:E3})";
+            else
+                equation = $"f(T) = ({p[1]:E3})T + ({p[0]:E3})";
+
+            // 3. Trend Çizgisini Oluştur (Kırmızı Kesikli Çizgi)
+            var trendSeries = new LineSeries
+            {
+                Title = $"{label} Trend (Fit)",
+                Color = OxyColors.Red,
+                StrokeThickness = 2,
+                LineStyle = LineStyle.Dash
+            };
+
+            double minX = x.Min() - 2;
+            double maxX = x.Max() + 2;
+
+            // Eğriyi pürüzsüz çizmek için 0.5 derecelik adımlarla noktalar oluştur
+            for (double tx = minX; tx <= maxX; tx += 0.5)
+            {
+                double ty = (degree == 2) ? (p[2] * tx * tx + p[1] * tx + p[0]) : (p[1] * tx + p[0]);
+                trendSeries.Points.Add(new DataPoint(tx, ty));
+            }
+
+            model.Series.Add(trendSeries);
+            model.InvalidatePlot(true);
+        }
         #endregion
 
         #region Confirm Edit Command
@@ -149,6 +257,9 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
             // Düzenleme Onay Komutu
             ConfirmEditCommand = new RelayCommand(param => ExecuteConfirmEdit(param));
+
+            // Sıcaklık Komp. Grafiklerini Başlat
+            InitCompensationPlots();
         }
 
         #endregion
@@ -547,6 +658,8 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
                     };
                     ThermalCompensationEngine.ProcessDataPoint(context);
                 }
+
+                UpdateCompensationCharts();
 
                 MessageBox.Show($"Optimizasyon Tamamlandı.\n" +
                                 $"T_ref (Ana Kalibrasyon): {refTemp:F2}°C\n" +

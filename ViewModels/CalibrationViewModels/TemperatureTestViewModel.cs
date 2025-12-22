@@ -1,5 +1,7 @@
 ﻿using CapnoAnalyzer.Helpers;
 using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Input;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
@@ -9,11 +11,26 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         public ObservableCollection<Data> TestData { get; set; }
         public ReferenceDataViewModel ReferenceTestData { get; set; }
 
+        // Silme Komutu
+        public ICommand DeleteDataCommand { get; }
+
         public TemperatureTestViewModel(string header)
         {
             Header = header;
             TestData = new ObservableCollection<Data>();
             ReferenceTestData = new ReferenceDataViewModel();
+
+            // Silme mantığı
+            DeleteDataCommand = new RelayCommand(param => {
+                if (param is Data row)
+                {
+                    var result = MessageBox.Show("Bu test verisini silmek istediğinize emin misiniz?", "Onay", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        TestData.Remove(row);
+                    }
+                }
+            });
 
             TestData.CollectionChanged += (sender, args) => UpdateAverageEnvironmentalData();
         }

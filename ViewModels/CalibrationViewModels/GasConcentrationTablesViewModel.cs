@@ -1,20 +1,21 @@
-﻿using System;
+﻿using OxyPlot;
+using OxyPlot.Series;
+using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using CapnoAnalyzer.Helpers;
+using CapnoAnalyzer.Models.Device;
+using CapnoAnalyzer.Services;
+using CapnoAnalyzer.ViewModels.DeviceViewModels;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.Optimization;
 using Microsoft.WindowsAPICodePack.Dialogs;
-using System.IO;
-using OxyPlot;
-using OxyPlot.Series;
-using System.Text;
-using System.Globalization;
-using CapnoAnalyzer.ViewModels.DeviceViewModels;
-using CapnoAnalyzer.Models.Device;
-using System.Windows;
-using CapnoAnalyzer.Services;
 
 namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 {
@@ -72,6 +73,41 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         #endregion
 
+        #region Confirm Edit Command
+        public ICommand DeleteRowCommand { get; }
+        public ICommand ConfirmEditCommand { get; }
+
+        private void ExecuteDeleteRow(object param)
+        {
+            if (param is Data row)
+            {
+                var result = MessageBox.Show("Bu satırı silmek istediğinize emin misiniz?", "Onay", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (result == MessageBoxResult.Yes)
+                {
+                    DeviceData.Remove(row);
+
+                    // Veri silindiği için ortalamaları yeniden hesapla ---
+                    UpdateAverageEnvironmentalData();
+
+                    // Katsayıların artık güncel olmadığını belirtmek için R2'yi sıfırla ---
+                    Coefficients.R = 0;
+                }
+            }
+        }
+
+        private void ExecuteConfirmEdit(object param)
+        {
+            if (param is DataGridBeginningEditEventArgs e)
+            {
+                var result = MessageBox.Show("Bu veriyi düzenlemek istiyor musunuz?", "Düzenleme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.No)
+                {
+                    e.Cancel = true; // Düzenlemeyi iptal et
+                }
+            }
+        }
+        #endregion
+
         #region Constructor
 
         public GasConcentrationTablesViewModel(DevicesViewModel devicesVM, Device selectedDevice)
@@ -107,6 +143,12 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             CalculateCompensationCommand = new RelayCommand(ExecuteCalculateCompensation, () => SelectedTest != null && SelectedTest.TestData.Any());
             ExportCompensationCommand = new RelayCommand(ExecuteExportCompensation, () => SelectedTest != null && SelectedTest.TestData.Any());
             ImportCompensationCommand = new RelayCommand(ExecuteImportCompensation, () => SelectedTest != null);
+
+            // Silme Komutu
+            DeleteRowCommand = new RelayCommand(param => ExecuteDeleteRow(param));
+
+            // Düzenleme Onay Komutu
+            ConfirmEditCommand = new RelayCommand(param => ExecuteConfirmEdit(param));
         }
 
         #endregion

@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"        
              xmlns:buttons="clr-namespace:CapnoAnalyzer.Views.Components.Buttons"
              xmlns:faWPF="clr-namespace:FontAwesome.WPF;assembly=FontAwesome.WPF"
+             xmlns:helpers="clr-namespace:CapnoAnalyzer.Helpers"
              xmlns:oxy="http://oxyplot.org/wpf"
              xmlns:local="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"
              mc:Ignorable="d" 
@@ -42,93 +43,134 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Ana Kalibrasyon DataGrid'i -->
-                                <DataGrid Grid.Column="0" ItemsSource="{Binding DeviceData}" AutoGenerateColumns="False" Margin="5" CanUserAddRows="False" VerticalScrollBarVisibility="Auto">
+                                <DataGrid ItemsSource="{Binding DeviceData}" 
+                                          AutoGenerateColumns="False" 
+                                          CanUserAddRows="False"
+                                          helpers:DataGridHelper.BeginningEditCommand="{Binding ConfirmEditCommand}">
                                     <DataGrid.Columns>
-                                        <DataGridTemplateColumn Header="Örnek" Width="45">
+                                        <!-- 1. Sütun: Silme Butonu -->
+                                        <DataGridTemplateColumn Width="35">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding Sample}" Background="LightBlue" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Gaz Konst. %" Width="80">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding GasConcentration, StringFormat=F2}" Background="#FF8FE87D" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Ref" Width="60">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Ref, StringFormat=F4}" Background="#DFFFD6" Foreground="#FFDE3B3B" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Gaz" Width="60">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Gas, StringFormat=F4}" Background="#DFFFD6" Foreground="#FF1D58CC" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Sıcaklık (°C)" Width="75">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Temperature, StringFormat=F2}" Background="#FFF4E6" Foreground="#D35400" FontWeight="SemiBold"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Basınç" Width="60">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Pressure, StringFormat=F1}" Background="#FFF4E6" Foreground="#555"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Nem (%)" Width="60">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Humidity, StringFormat=F1}" Background="#FFF4E6" Foreground="#555"/>
+                                                    <Button Content="X" 
+                                                            Background="#E63946" 
+                                                            Foreground="White" 
+                                                            FontWeight="Bold"
+                                                            Command="{Binding DataContext.DeleteRowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
-                                        <DataGridTemplateColumn Header="Gaz/Ref Oran" Width="80">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Ratio, StringFormat=F9}" Background="#FF7DDCAA" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Geçirgenlik" Width="80">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Transmittance, StringFormat=F9}" Background="#FF96C0ED" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Emilim" Width="80">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Absorption, StringFormat=F9}" Background="#FF96C0ED" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Tahmin Edilen Emilim" Width="130">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding PredictedAbsorption, StringFormat=F9}" Background="#FFD87EE2" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Tahmini Gaz Konsantrasyonu %" Width="*">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding PredictedGasConcentration, StringFormat=F3}" Background="#FF8FE87D" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
+                                        <!-- Örnek Sütunu -->
+                                        <DataGridTextColumn Header="Örnek" Binding="{Binding Sample}" Width="45">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="LightBlue"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <!-- Gaz Konst. % -->
+                                        <DataGridTextColumn Header="Gaz Konst. %" Binding="{Binding GasConcentration, StringFormat=F2}" Width="80">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#FF8FE87D"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <!-- Ref -->
+                                        <DataGridTextColumn Header="Ref" Binding="{Binding Ref, StringFormat=F4}" Width="60">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#DFFFD6"/>
+                                                    <Setter Property="Foreground" Value="#FFDE3B3B"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <!-- Gaz -->
+                                        <DataGridTextColumn Header="Gaz" Binding="{Binding Gas, StringFormat=F4}" Width="60">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#DFFFD6"/>
+                                                    <Setter Property="Foreground" Value="#FF1D58CC"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <!-- Sıcaklık -->
+                                        <DataGridTextColumn Header="Sıcaklık (°C)" Binding="{Binding Temperature, StringFormat=F2}" Width="75">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#FFF4E6"/>
+                                                    <Setter Property="Foreground" Value="#D35400"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <!-- Basınç -->
+                                        <DataGridTextColumn Header="Basınç" Binding="{Binding Pressure, StringFormat=F1}" Width="60">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#FFF4E6"/>
+                                                    <Setter Property="Foreground" Value="#555"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <!-- Nem -->
+                                        <DataGridTextColumn Header="Nem (%)" Binding="{Binding Humidity, StringFormat=F1}" Width="60">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#FFF4E6"/>
+                                                    <Setter Property="Foreground" Value="#555"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <!-- HESAPLANAN SÜTUNLAR (IsReadOnly="True") -->
+                                        <DataGridTextColumn Header="Gaz/Ref Oran" Binding="{Binding Ratio, StringFormat=F9}" Width="80" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#FF7DDCAA"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <DataGridTextColumn Header="Geçirgenlik" Binding="{Binding Transmittance, StringFormat=F9}" Width="80" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#FF96C0ED"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <DataGridTextColumn Header="Emilim" Binding="{Binding Absorption, StringFormat=F9}" Width="80" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#FF96C0ED"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <DataGridTextColumn Header="Tahmin Edilen Emilim" Binding="{Binding PredictedAbsorption, StringFormat=F9}" Width="130" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#FFD87EE2"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
+                                        <DataGridTextColumn Header="Tahmini Gaz %" Binding="{Binding PredictedGasConcentration, StringFormat=F3}" Width="*" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Background" Value="#FF8FE87D"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
 
@@ -208,14 +250,11 @@
                                             <Border Grid.Row="0" Background="#E5E7EB" CornerRadius="5" Padding="8" Margin="0,0,0,5">
                                                 <WrapPanel>
                                                     <TextBlock Text="{Binding ReferenceTestData.TestNo, StringFormat=Test_No: {0}}" FontWeight="Bold" Margin="0,0,15,0"/>
-                                                    <!-- Testin Kendi Ortalamaları -->
                                                     <TextBlock Text="{Binding ReferenceTestData.Temperature, StringFormat=Test Ort. Sıcaklık: {0:F2} °C}" Margin="0,0,15,0"/>
                                                     <TextBlock Text="{Binding ReferenceTestData.Pressure, StringFormat=Test Ort. Basınç: {0:F2}}" Margin="0,0,15,0"/>
                                                     <TextBlock Text="{Binding ReferenceTestData.Humidity, StringFormat=Test Ort. Nem: {0:F2}}" Margin="0,0,15,0"/>
-
                                                     <TextBlock Text="{Binding ReferenceTestData.Zero, StringFormat=ZERO(ref): {0:F9}}" FontWeight="SemiBold" Foreground="DarkRed" Margin="15,0,10,0"/>
                                                     <TextBlock Text="{Binding ReferenceTestData.SpanA, StringFormat=SPAN(a): {0:F9}}" FontWeight="SemiBold" Foreground="DarkGreen" Margin="0,0,10,0"/>
-
                                                     <TextBlock Text="{Binding ReferenceTestData.Alpha, StringFormat=Alfa: {0:F5}}" FontWeight="SemiBold" Foreground="DarkBlue" Margin="10,0,10,0"/>
                                                     <TextBlock Text="{Binding ReferenceTestData.Beta, StringFormat=Beta: {0:F5}}" FontWeight="SemiBold" Foreground="DarkOrchid" Margin="0,0,10,0"/>
                                                 </WrapPanel>
@@ -227,10 +266,8 @@
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
 
-                                                <!-- Sıcaklık Tablosu UserControl -->
                                                 <local:TemperatureCompensationTable Grid.Column="0" DataContext="{Binding}"/>
 
-                                                <!-- Sıcaklık Kompanzasyon Kontrol Paneli -->
                                                 <Border Grid.Column="1" Background="#F1F3FA" Margin="10,0,0,0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
@@ -239,31 +276,23 @@
                                                         </Grid.ColumnDefinitions>
 
                                                         <StackPanel Grid.Column="0" Margin="5">
-                                                            <!-- Referans Bilgisi (Ana Kalibrasyon Değerleri) -->
                                                             <GroupBox Header="Referans Ortam (Ana Kalibrasyon)" FontWeight="Bold" Padding="5" BorderBrush="#D35400">
                                                                 <StackPanel>
-                                                                    <!-- T_ref Binding (Parent VM'den) -->
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <faWPF:FontAwesome Icon="Thermometer" Foreground="#D35400" Width="15" VerticalAlignment="Center"/>
                                                                         <TextBlock Text="{Binding DataContext.AverageTemperature, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=T_ref: {0:F2} °C}" 
                                                                                    FontWeight="Bold" Foreground="#D35400" Margin="5,0,0,0"/>
                                                                     </StackPanel>
-
-                                                                    <!-- P_ref Binding (Parent VM'den) -->
                                                                     <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                                                                         <faWPF:FontAwesome Icon="Dashboard" Foreground="#555" Width="15" VerticalAlignment="Center"/>
                                                                         <TextBlock Text="{Binding DataContext.AveragePressure, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=P_ref: {0:F1} hPa}" 
                                                                                    Foreground="#555" Margin="5,0,0,0"/>
                                                                     </StackPanel>
-
-                                                                    <!-- H_ref Binding (Parent VM'den) -->
                                                                     <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                                                                         <faWPF:FontAwesome Icon="Tint" Foreground="#2980B9" Width="15" VerticalAlignment="Center"/>
                                                                         <TextBlock Text="{Binding DataContext.AverageHumidity, RelativeSource={RelativeSource AncestorType=TabControl}, StringFormat=H_ref: {0:F1} %}" 
                                                                                    Foreground="#2980B9" Margin="5,0,0,0"/>
                                                                     </StackPanel>
-
-                                                                    <!-- Zero_ref Binding (Test VM'den) -->
                                                                     <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                                                         <TextBlock Text="Zero_ref: " Foreground="Gray" FontSize="11"/>
                                                                         <TextBlock Text="{Binding ReferenceTestData.Zero, StringFormat={}{0:F6}}" Foreground="#2980B9" FontSize="11" FontWeight="SemiBold"/>
@@ -271,28 +300,18 @@
                                                                 </StackPanel>
                                                             </GroupBox>
 
-                                                            <!-- Termal Model Parametreleri (GÜNCELLENEN KISIM) -->
                                                             <GroupBox Header="Termal Model Parametreleri" FontWeight="Bold" Margin="0,10,0,0" Padding="5" BorderBrush="#8E44AD">
                                                                 <StackPanel>
-                                                                    <!-- Alpha -->
                                                                     <StackPanel Orientation="Horizontal" Margin="0,2">
                                                                         <TextBlock Text="Alfa (α): " Foreground="Gray" Width="60"/>
-                                                                        <TextBlock Text="{Binding ReferenceTestData.Alpha, StringFormat={}{0:F6}}" 
-                                                                                   Foreground="DarkBlue" FontWeight="Bold"/>
+                                                                        <TextBlock Text="{Binding ReferenceTestData.Alpha, StringFormat={}{0:F6}}" Foreground="DarkBlue" FontWeight="Bold"/>
                                                                     </StackPanel>
-
-                                                                    <!-- Beta -->
                                                                     <StackPanel Orientation="Horizontal" Margin="0,2">
                                                                         <TextBlock Text="Beta (β): " Foreground="Gray" Width="60"/>
-                                                                        <TextBlock Text="{Binding ReferenceTestData.Beta, StringFormat={}{0:F6}}" 
-                                                                                   Foreground="DarkOrchid" FontWeight="Bold"/>
+                                                                        <TextBlock Text="{Binding ReferenceTestData.Beta, StringFormat={}{0:F6}}" Foreground="DarkOrchid" FontWeight="Bold"/>
                                                                     </StackPanel>
-
                                                                     <Separator Margin="0,5"/>
-
-                                                                    <!-- Baz Model Bilgisi -->
                                                                     <TextBlock Text="Baz Model (Ana Kalib.)" FontSize="10" Foreground="Gray" Margin="0,0,0,2"/>
-
                                                                     <StackPanel Orientation="Horizontal">
                                                                         <TextBlock Text="Span (A): " Foreground="Gray" Width="60"/>
                                                                         <TextBlock Text="{Binding ReferenceTestData.SpanA, StringFormat={}{0:F6}}" Foreground="#2E3B4E"/>
@@ -309,19 +328,10 @@
                                                             </GroupBox>
                                                         </StackPanel>
 
-                                                        <!-- İşlem Butonları (Hesapla, Export, Import) -->
                                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="5,10,10,10">
-                                                            <!-- Binding'ler TabControl'ün DataContext'ine (GasConcentrationTablesViewModel) yönlendirildi -->
-                                                            <buttons:CalculateButton ButtonContent="Hesapla" 
-                                                                                     Command="{Binding DataContext.CalculateCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" />
-
-                                                            <buttons:ExportButton ButtonContent="Export" 
-                                                                                  Command="{Binding DataContext.ExportCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" 
-                                                                                  Margin="0,5,0,0" />
-
-                                                            <buttons:ImportButton ButtonContent="Import" 
-                                                                                  Command="{Binding DataContext.ImportCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" 
-                                                                                  Margin="0,5,0,0" />
+                                                            <buttons:CalculateButton ButtonContent="Hesapla" Command="{Binding DataContext.CalculateCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" />
+                                                            <buttons:ExportButton ButtonContent="Export" Command="{Binding DataContext.ExportCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" Margin="0,5,0,0" />
+                                                            <buttons:ImportButton ButtonContent="Import" Command="{Binding DataContext.ImportCompensationCommand, RelativeSource={RelativeSource AncestorType=TabControl}}" Margin="0,5,0,0" />
                                                         </StackPanel>
                                                     </Grid>
                                                 </Border>

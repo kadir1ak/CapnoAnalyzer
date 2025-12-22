@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:helpers="clr-namespace:CapnoAnalyzer.Helpers"
              xmlns:local="clr-namespace:CapnoAnalyzer.Views.CalibrationViews"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="1200">
@@ -10,11 +11,23 @@
         <DataGrid ItemsSource="{Binding TestData}" 
                   AutoGenerateColumns="False" 
                   CanUserAddRows="False"
-                  IsReadOnly="True"
                   GridLinesVisibility="All"
                   HorizontalGridLinesBrush="#D1D5DB"
-                  VerticalGridLinesBrush="#D1D5DB">
+                  VerticalGridLinesBrush="#D1D5DB"
+                  helpers:DataGridHelper.BeginningEditCommand="{Binding DataContext.ConfirmEditCommand, RelativeSource={RelativeSource AncestorType=TabControl}}">
             <DataGrid.Columns>
+
+                <!-- SİLME BUTONU -->
+                <DataGridTemplateColumn Width="35">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="X" Foreground="White" Background="#E63946" FontWeight="Bold"
+                                    Command="{Binding DataContext.DeleteDataCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <!-- Temel Veriler -->
                 <DataGridTextColumn Header="Gaz Konst. %" Binding="{Binding GasConcentration, StringFormat=F2}" />
                 <DataGridTextColumn Header="Ref" Binding="{Binding Ref, StringFormat=F4}" />

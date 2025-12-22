@@ -50,16 +50,16 @@ namespace CapnoAnalyzer.Models.Device
                 case DataPacket2Source.Temperature: return packet.BMEValue.Length > 0 ? packet.BMEValue[0] : 0;
                 case DataPacket2Source.Humidity: return packet.BMEValue.Length > 1 ? packet.BMEValue[1] : 0;
                 case DataPacket2Source.Pressure: return packet.BMEValue.Length > 2 ? packet.BMEValue[2] : 0;
-                case DataPacket2Source.AngVoltage1: return packet.AngVoltages.Length > 0 ? packet.AngVoltages[0] : 0;
-                case DataPacket2Source.AngVoltage2: return packet.AngVoltages.Length > 1 ? packet.AngVoltages[1] : 0;
-                case DataPacket2Source.AdsRaw1: return packet.AdsRawValues.Length > 0 ? packet.AdsRawValues[0] : 0;
-                case DataPacket2Source.AdsRaw2: return packet.AdsRawValues.Length > 1 ? packet.AdsRawValues[1] : 0;
-                case DataPacket2Source.AdsVoltage1: return packet.AdsVoltages.Length > 0 ? packet.AdsVoltages[0] : 0;
-                case DataPacket2Source.AdsVoltage2: return packet.AdsVoltages.Length > 1 ? packet.AdsVoltages[1] : 0;
-                case DataPacket2Source.GainAdsVoltageF1: return packet.GainAdsVoltagesF.Length > 0 ? packet.GainAdsVoltagesF[0] : 0;
-                case DataPacket2Source.GainAdsVoltageF2: return packet.GainAdsVoltagesF.Length > 1 ? packet.GainAdsVoltagesF[1] : 0;
-                case DataPacket2Source.GainAdsVoltageIIR1: return packet.GainAdsVoltagesIIR.Length > 0 ? packet.GainAdsVoltagesIIR[0] : 0;
-                case DataPacket2Source.GainAdsVoltageIIR2: return packet.GainAdsVoltagesIIR.Length > 1 ? packet.GainAdsVoltagesIIR[1] : 0;
+                case DataPacket2Source.AngVoltage1: return packet.AngVoltages.Length > 0 ? packet.AngVoltages[1] : 0;
+                case DataPacket2Source.AngVoltage2: return packet.AngVoltages.Length > 1 ? packet.AngVoltages[0] : 0;
+                case DataPacket2Source.AdsRaw1: return packet.AdsRawValues.Length > 0 ? packet.AdsRawValues[1] : 0;
+                case DataPacket2Source.AdsRaw2: return packet.AdsRawValues.Length > 1 ? packet.AdsRawValues[0] : 0;
+                case DataPacket2Source.AdsVoltage1: return packet.AdsVoltages.Length > 0 ? packet.AdsVoltages[1] : 0;
+                case DataPacket2Source.AdsVoltage2: return packet.AdsVoltages.Length > 1 ? packet.AdsVoltages[0] : 0;
+                case DataPacket2Source.GainAdsVoltageF1: return packet.GainAdsVoltagesF.Length > 0 ? packet.GainAdsVoltagesF[1] : 0;
+                case DataPacket2Source.GainAdsVoltageF2: return packet.GainAdsVoltagesF.Length > 1 ? packet.GainAdsVoltagesF[0] : 0;
+                case DataPacket2Source.GainAdsVoltageIIR1: return packet.GainAdsVoltagesIIR.Length > 0 ? packet.GainAdsVoltagesIIR[1] : 0;
+                case DataPacket2Source.GainAdsVoltageIIR2: return packet.GainAdsVoltagesIIR.Length > 1 ? packet.GainAdsVoltagesIIR[0] : 0;
                 default: return 0;
             }
         }

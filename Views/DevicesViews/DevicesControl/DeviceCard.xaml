@@ -5,15 +5,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CapnoAnalyzer.Views.DevicesViews.DevicesControl"           
              xmlns:plot="clr-namespace:CapnoAnalyzer.Views.DevicesViews.PlotViews"  
-             xmlns:helpers="clr-namespace:CapnoAnalyzer.Helpers"         
+             xmlns:helpers="clr-namespace:CapnoAnalyzer.Helpers"
              xmlns:oxy="http://oxyplot.org/wpf"
+             xmlns:ctrl="clr-namespace:CapnoAnalyzer.Views.Components"
              mc:Ignorable="d">
 
     <UserControl.Resources>
         <helpers:ProgressWidthConverter x:Key="ProgressWidthConverter" />
     </UserControl.Resources>
 
-    <Grid Width="1080" Margin="5 0 0 0">
+    <Grid Margin="5 0 0 0" MinWidth="1080" HorizontalAlignment="Stretch">
         <!-- Ana Kart -->
         <Border Background="#F1F3FA" CornerRadius="10" Padding="0" BorderBrush="#D1D5DB" BorderThickness="1">
             <Grid>
@@ -21,13 +22,13 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="340" />
+                    <ColumnDefinition Width="*" MinWidth="340" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="350" />
+                    <ColumnDefinition Width="*" MinWidth="350" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Üst Bilgi (Cihaz Kimliği ve Durumu) -->
@@ -198,82 +199,98 @@
                     <StackPanel Orientation="Vertical" Margin="3" Width="220" HorizontalAlignment="Left">
 
                         <!-- 1. BÖLÜM: EMITTER AYARLARI -->
-                        <TextBlock Text="Emitter Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 0"/>
+                        <TextBlock Text="Emitter Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 4"/>
+                        <StackPanel Orientation="Horizontal" Margin="0 0 0 2">
+                            <TextBlock Text="IR Frekans :" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold"
+                                       VerticalAlignment="Center" Margin="0 0 6 0"/>
+                            <ctrl:NumericUpDown Value="{Binding Interface.ChannelSettings.EmitterSettings, Mode=TwoWay}"
+                                               Minimum="1" Maximum="20" Step="1" StringFormat="{}{0:F0}"
+                                               BoxWidth="50"/>
+                            <TextBlock Text="Hz" Foreground="#2E3B4E" FontSize="11" VerticalAlignment="Center" Margin="4 0 0 0"/>
+                        </StackPanel>
 
-                        <!-- Emitter Settings -->
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Interface.ChannelSettings.EmitterSettings, StringFormat={}{0:F0} Hz}" Foreground="#2E3B4E" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Width="100" TextAlignment="Center" Margin="0 0 0 0"/>
-                        <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"  Value="{Binding Interface.ChannelSettings.EmitterSettings, Mode=TwoWay}" Minimum="1" Maximum="20" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" Width="200" HorizontalAlignment="Left"/>
-
-                        <Separator Margin="2 2" Width="220" HorizontalAlignment="Left"/>
+                        <Separator Margin="2 4" Width="220" HorizontalAlignment="Left"/>
 
                         <!-- 2. BÖLÜM: KANAL AYARLARI -->
-                        <TextBlock Text="Kanal Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 2" Width="220" HorizontalAlignment="Left"/>
+                        <TextBlock Text="Kanal Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 2"/>
+                        <Grid HorizontalAlignment="Left">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="70"/>
+                                <ColumnDefinition Width="70"/>
+                            </Grid.ColumnDefinitions>
 
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Gain" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="1 1"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="SPS" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="1 1"/>
+                            <ComboBox Grid.Row="1" Grid.Column="0" Width="65" Height="22" Margin="1 2"
+                                      ItemsSource="{Binding Interface.GainOptions}"
+                                      SelectedItem="{Binding Interface.ChannelSettings.Ch0.Gain}"/>
+                            <ComboBox Grid.Row="1" Grid.Column="1" Width="65" Height="22" Margin="1 2"
+                                      ItemsSource="{Binding Interface.SPSOptions}"
+                                      SelectedItem="{Binding Interface.ChannelSettings.Ch0.SPS}"/>
+                        </Grid>
+
+                        <Separator Margin="2 4" Width="220" HorizontalAlignment="Left"/>
+
+                        <!-- 3. BÖLÜM: FİLTRE AYARLARI -->
+                        <TextBlock Text="Filtre Ayarları" Foreground="#1A2849" FontSize="13" FontWeight="Bold" Margin="0 0 0 2"/>
                         <Grid HorizontalAlignment="Left">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="110"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Başlıklar -->
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Gain" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="1 1"/>
-                            <TextBlock Grid.Row="0" Grid.Column="2" Text="HP Filter" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="1 1"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="SPS" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="1 1"/>
-                            <TextBlock Grid.Row="3" Grid.Column="2" Text="LP Filter" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center" Margin="1 1"/>
-                            <TextBlock Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="2" Text="Size" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" Margin="1 1" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="HP Filtre :" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0 2"/>
+                            <ctrl:NumericUpDown Grid.Row="0" Grid.Column="1"
+                                               Value="{Binding Interface.FilterSettings.HpFilter, Mode=TwoWay}"
+                                               Minimum="0" Maximum="20" Step="0.5" StringFormat="{}{0:F1}"
+                                               BoxWidth="55"/>
 
-                            <!-- Channel 0 -->
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Ch0 :" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ch1 :" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                            <ComboBox Grid.Row="1" Grid.Column="1" Width="65" Height="22" Margin="1 2" ItemsSource="{Binding Interface.GainOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch0.Gain}"/>
-                            <ComboBox Grid.Row="1" Grid.Column="2" Width="65" Height="22" Margin="1 2" ItemsSource="{Binding Interface.HpFilterOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch0.HpFilter}"/>
-                            <ComboBox Grid.Row="4" Grid.Column="1" Width="65" Height="22" Margin="1 2" ItemsSource="{Binding Interface.SPSOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch0.SPS}"/>
-                            <ComboBox Grid.Row="4" Grid.Column="2" Width="65" Height="22" Margin="1 2" ItemsSource="{Binding Interface.LpFilterOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch0.LpFilter}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="LP Filtre :" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0 2"/>
+                            <ctrl:NumericUpDown Grid.Row="1" Grid.Column="1"
+                                               Value="{Binding Interface.FilterSettings.LpFilter, Mode=TwoWay}"
+                                               Minimum="0" Maximum="20" Step="0.5" StringFormat="{}{0:F1}"
+                                               BoxWidth="55"/>
 
-                            <!-- Channel 1 -->
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Ch0 :" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Ch1 :" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                            <ComboBox Grid.Row="2" Grid.Column="1" Width="65" Height="22" Margin="1 2" ItemsSource="{Binding Interface.GainOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch1.Gain}"/>
-                            <ComboBox Grid.Row="2" Grid.Column="2" Width="65" Height="22" Margin="1 2" ItemsSource="{Binding Interface.HpFilterOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch1.HpFilter}"/>
-                            <ComboBox Grid.Row="5" Grid.Column="1" Width="65" Height="22" Margin="1 2" ItemsSource="{Binding Interface.SPSOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch1.SPS}"/>
-                            <ComboBox Grid.Row="5" Grid.Column="2" Width="65" Height="22" Margin="1 2" ItemsSource="{Binding Interface.LpFilterOptions}" SelectedItem="{Binding Interface.ChannelSettings.Ch1.LpFilter}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="RMS Window Size :" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0 2"/>
+                            <ctrl:NumericUpDown Grid.Row="2" Grid.Column="1"
+                                               Value="{Binding Interface.FilterSettings.RmsWindowSize, Mode=TwoWay}"
+                                               Minimum="1" Maximum="1000" Step="1" StringFormat="{}{0:F0}"
+                                               BoxWidth="55"/>
 
-
-                            <!-- Filtere Parametreleri -->
-                            <TextBlock Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Text="RMS Window Size :" Margin="1 4" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
-                            <TextBlock Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Text="MAV Filter Size :" Margin="1 4" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
-                            <TextBox Grid.Row="7" Grid.Column="2" Width="80" Height="22" Margin="1 2" HorizontalAlignment="Left" Text="{Binding Interface.FilterSettings.RmsWindowSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                            <TextBox Grid.Row="8" Grid.Column="2" Width="80" Height="22" Margin="1 2" HorizontalAlignment="Left" Text="{Binding Interface.FilterSettings.MavFilterSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="MAV Filter Size :" Foreground="#2E3B4E" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Margin="0 2"/>
+                            <ctrl:NumericUpDown Grid.Row="3" Grid.Column="1"
+                                               Value="{Binding Interface.FilterSettings.MavFilterSize, Mode=TwoWay}"
+                                               Minimum="1" Maximum="1000" Step="1" StringFormat="{}{0:F0}"
+                                               BoxWidth="55"/>
                         </Grid>
 
-                        <Separator Margin="2 2" Width="220" HorizontalAlignment="Left"/>
+                        <Separator Margin="2 4" Width="220" HorizontalAlignment="Left"/>
 
-                        <!-- 3. BÖLÜM: GÖNDERME BUTONU -->
+                        <!-- GÖNDERME BUTONU -->
                         <Button Content="Tüm Ayarları Gönder" Command="{Binding SendSettingsCommand}" Margin="10 5" Width="200" HorizontalAlignment="Left"/>
 
                     </StackPanel>
                 </Border>
 
                 <!-- Sağ Panel (Grafik) -->
-                <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top" Height="300">
-                    <plot:SensorPlot DataContext="{Binding Interface.SensorPlot.PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Stretch" MinHeight="300">
+                    <plot:SensorPlot DataContext="{Binding Interface.SensorPlot}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                 </Border>
-                <Border Grid.Row="2" Grid.RowSpan="4" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top" Height="300">
-                    <plot:SensorPlot DataContext="{Binding Interface.CalculatedGasPlot.PlotModel}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                <Border Grid.Row="2" Grid.RowSpan="2" Grid.Column="1" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Stretch" MinHeight="300" Margin="0 5 0 0">
+                    <plot:SensorPlot DataContext="{Binding Interface.CalculatedGasPlot}" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                 </Border>
-                <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="3" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Top" Height="300">
+                <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="3" Background="#F1F3FA" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Stretch" MinHeight="300">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -300,10 +317,10 @@
                         </StackPanel>
 
                         <!-- Yeni Özel Grafik -->
-                        <plot:SensorPlot Grid.Row="1" 
-                         DataContext="{Binding Interface.CustomDualPlot.Model}" 
-                         Background="#F1F3FA" 
-                         HorizontalAlignment="Stretch" 
+                        <plot:SensorPlot Grid.Row="1"
+                         DataContext="{Binding Interface.CustomDualPlot}"
+                         Background="#F1F3FA"
+                         HorizontalAlignment="Stretch"
                          VerticalAlignment="Stretch"/>
                     </Grid>
                 </Border>

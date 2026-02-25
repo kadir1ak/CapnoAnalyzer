@@ -46,6 +46,21 @@ namespace CapnoAnalyzer.Models.PlotModels
             }
         }
 
+        private double _yRange = 0;
+        public double YRange
+        {
+            get => _yRange;
+            set
+            {
+                if (_yRange != value)
+                {
+                    _yRange = value;
+                    OnPropertyChanged();
+                    PlotModel?.InvalidatePlot(false);
+                }
+            }
+        }
+
         /// <summary>UI refresh FPS (5–120)</summary>
         public int MaxFps
         {
@@ -231,17 +246,27 @@ namespace CapnoAnalyzer.Models.PlotModels
             // Geçerli bir aralık bulunamadıysa çık
             if (double.IsInfinity(minY) || double.IsInfinity(maxY)) return;
 
-            // Sinyalin daha rahat görünmesi için %10'luk bir pay (padding) ekle
-            double range = maxY - minY;
-            // Eğer sinyal düz bir çizgiyse (range=0), çökmemesi için sabit bir pay ver
-            if (range < 1e-9)
+            if (YRange > 0)
             {
-                range = 1.0; // Varsayılan aralık
+                // Osiloskop mantığı: Merkeze göre aç
+                double centerY = (minY + maxY) / 2.0;
+                _yAxis.Minimum = centerY - (YRange / 2.0);
+                _yAxis.Maximum = centerY + (YRange / 2.0);
             }
-            double padding = range * 0.1;
+            else
+            {
+                // Sinyalin daha rahat görünmesi için %10'luk bir pay (padding) ekle
+                double range = maxY - minY;
+                // Eğer sinyal düz bir çizgiyse (range=0), çökmemesi için sabit bir pay ver
+                if (range < 1e-9)
+                {
+                    range = 1.0; // Varsayılan aralık
+                }
+                double padding = range * 0.1;
 
-            _yAxis.Minimum = minY - padding;
-            _yAxis.Maximum = maxY + padding;
+                _yAxis.Minimum = minY - padding;
+                _yAxis.Maximum = maxY + padding;
+            }
         }
 
         private static int LowerBound(List<DataPoint> list, double cutoff)

@@ -146,67 +146,31 @@ namespace CapnoAnalyzer.Models.Device
 
         #region Cihaz Ayarları ve Kalibrasyon Komutları
 
-        #region Mapping helpers (UI -> device register codes)
+        #region Mapping helpers (UI -> device codes)
 
-        // ŞEKİL 3: ADS1220 pga gain register kodları
+        // ADS1220 gain: sıfır tabanlı indeks (0..7)
         private static readonly Dictionary<string, int> GainCodes = new()
         {
-            ["1"] = 0x00,
-            ["2"] = 0x02,
-            ["4"] = 0x04,
-            ["8"] = 0x06,
-            ["16"] = 0x08,
-            ["32"] = 0x0A,
-            ["64"] = 0x0C,
-            ["128"] = 0x0E,
+            ["1"]   = 0,
+            ["2"]   = 1,
+            ["4"]   = 2,
+            ["8"]   = 3,
+            ["16"]  = 4,
+            ["32"]  = 5,
+            ["64"]  = 6,
+            ["128"] = 7,
         };
 
-        // ŞEKİL 3: ADS1220 sample rate register kodları
+        // ADS1220 SPS: sıfır tabanlı indeks (0..6)
         private static readonly Dictionary<string, int> SpsCodes = new()
         {
-            ["20"] = 0x00,
-            ["45"] = 0x20,
-            ["90"] = 0x40,
-            ["175"] = 0x60,
-            ["330"] = 0x80,
-            ["600"] = 0xA0,
-            ["1000"] = 0xC0,
-        };
-
-        // ŞEKİL 2: HPF register kodları (Disable dahil)
-        private static readonly Dictionary<string, int> HpfCodes = new()
-        {
-            ["0.0"] = 0x01,  // HPF_DISABLE - istersen UI'ya ekleyebilirsin
-            ["0.1"] = 0x02,
-            ["0.2"] = 0x04,
-            ["0.5"] = 0x06,
-            ["1.0"] = 0x08,
-            ["2.0"] = 0x0A,
-            ["2.5"] = 0x0C,
-        };
-
-        // ŞEKİL 2: LPF register kodları (Disable ve 1..20 Hz; bizim UI 6..20 veriyor)
-        private static readonly Dictionary<string, int> LpfCodes = new()
-        {
-            ["0"] = 0x00, // LPF_DISABLE - istersen UI'ya ekleyebilirsin
-            ["1"] = 0x10,
-            ["2"] = 0x20,
-            ["4"] = 0x40,
-            ["5"] = 0x50,
-            ["6"] = 0x60,
-            ["7"] = 0x75,
-            ["8"] = 0x80,
-            ["10"] = 0xA0,
-            ["11"] = 0xA5,
-            ["12"] = 0xB0,
-            ["13"] = 0xB5,
-            ["14"] = 0xC0,
-            ["15"] = 0xC5,
-            ["16"] = 0xD0,
-            ["17"] = 0xD5,
-            ["18"] = 0xE0,
-            ["19"] = 0xE5,
-            ["20"] = 0xF0,
+            ["20"]   = 0,
+            ["45"]   = 1,
+            ["90"]   = 2,
+            ["175"]  = 3,
+            ["330"]  = 4,
+            ["600"]  = 5,
+            ["1000"] = 6,
         };
 
         private static int MapOrDefault(Dictionary<string, int> map, string uiValue, int @default)
@@ -220,32 +184,24 @@ namespace CapnoAnalyzer.Models.Device
             var f = Interface.FilterSettings;
 
             // 1) IR frekansı (1..20 Hz)
-            int irFreq = Math.Clamp((int)Math.Round(s.EmitterSettings), 1, 20);
+            int irFreq  = Math.Clamp((int)Math.Round(s.EmitterSettings), 1, 20);
 
-            // 2) UI → kod
-            string uiGain = s.Ch0.Gain;      // ch0 ve ch1 senkron
-            string uiSps = s.Ch0.SPS;
-            string uiHp0 = s.Ch0.HpFilter;
-            string uiLp0 = s.Ch0.LpFilter;
-            string uiHp1 = s.Ch1.HpFilter;
-            string uiLp1 = s.Ch1.LpFilter;
-            int rws = f.RmsWindowSize;
-            int mfs = f.MavFilterSize;
+            // 2) Gain / SPS → indeks
+            int gainIdx = MapOrDefault(GainCodes, s.Ch0.Gain, 4); // varsayılan 16x
+            int spsIdx  = MapOrDefault(SpsCodes,  s.Ch0.SPS,  4); // varsayılan 330SPS
 
-            int gainCode = MapOrDefault(GainCodes, uiGain, 0x08); // 16x
-            int spsCode = MapOrDefault(SpsCodes, uiSps, 0x80); // 330SPS
-            int hp0Code = MapOrDefault(HpfCodes, uiHp0, 0x02); // 0.1Hz
-            int lp0Code = MapOrDefault(LpfCodes, uiLp0, 0x60); // 6Hz
-            int hp1Code = MapOrDefault(HpfCodes, uiHp1, 0x02);
-            int lp1Code = MapOrDefault(LpfCodes, uiLp1, 0x60);
+            // 3) Filtre değerleri doğrudan (0.0–20.0)
+            double hpf = Math.Clamp(f.HpFilter, 0.0, 20.0);
+            double lpf = Math.Clamp(f.LpFilter, 0.0, 20.0);
+            int    rms = (int)Math.Round(f.RmsWindowSize);
+            int    mav = (int)Math.Round(f.MavFilterSize);
 
-            // 3) Paket
-            // Format: FV, irFreq, gain, sps, hpFilter0, lpFilter0, hpFilter1, lpFilter1, RWS, MFS
+            // 4) Paket: FV,IRFreq,gain,sps,hpf,lpf,RMS_size,MAV_size
             string cmd = string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                           "FV,{0},{1},{2},{3},{4},{5},{6},{7},{8}",
-                           irFreq, gainCode, spsCode, hp0Code, lp0Code, hp1Code, lp1Code, rws, mfs);
+                           "FV,{0},{1},{2},{3:F1},{4:F1},{5},{6}",
+                           irFreq, gainIdx, spsIdx, hpf, lpf, rms, mav);
 
-            Interface.AddIncomingMessage($"Send: {cmd} // {irFreq}Hz, G={uiGain}, SPS={uiSps}, HP0={uiHp0}, LP0={uiLp0}, HP1={uiHp1}, LP1={uiLp1}");
+            Interface.AddIncomingMessage($"Send: {cmd}");
             _portManager.SendMessage(Properties.PortName, cmd);
         }
 

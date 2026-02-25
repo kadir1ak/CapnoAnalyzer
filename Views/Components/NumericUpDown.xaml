@@ -1,0 +1,34 @@
+<UserControl x:Class="CapnoAnalyzer.Views.Components.NumericUpDown"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             x:Name="root">
+
+    <StackPanel Orientation="Horizontal">
+        <TextBox x:Name="ValueBox"
+                 Width="{Binding BoxWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                 Height="22"
+                 VerticalContentAlignment="Center"
+                 HorizontalContentAlignment="Center"
+                 Text="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=Explicit}"
+                 PreviewTextInput="ValueBox_PreviewTextInput"
+                 LostFocus="ValueBox_LostFocus"
+                 KeyDown="ValueBox_KeyDown"/>
+        <StackPanel Width="18">
+            <RepeatButton Content="▲"
+                          Height="11"
+                          FontSize="7"
+                          Padding="0"
+                          Focusable="False"
+                          Click="Increment_Click"/>
+            <RepeatButton Content="▼"
+                          Height="11"
+                          FontSize="7"
+                          Padding="0"
+                          Focusable="False"
+                          Click="Decrement_Click"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

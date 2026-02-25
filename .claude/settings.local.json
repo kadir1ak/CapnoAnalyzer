@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"d:\\\\PC Dosyalarım\\\\Capnography\" -name \"*.xaml\" -type f -exec grep -l \"EmitterSettings\\\\|RmsWindowSize\\\\|MavFilterSize\" {} ;)",
+      "Bash(dotnet build)",
+      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" CapnoAnalyzer.sln /t:Build /p:Configuration=Debug /v:minimal)",
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/MSBuild.exe\" CapnoAnalyzer.sln /t:Build /p:Configuration=Debug /v:minimal)",
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/MSBuild.exe\" \"CapnoAnalyzer.sln\" \"/t:Build\" \"/p:Configuration=Debug\" \"/v:minimal\")",
+      "Bash(cmd.exe /c '\"\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\"\" \"\"CapnoAnalyzer.sln\"\" /t:Build /p:Configuration=Debug /v:minimal')",
+      "Bash(cmd.exe /c \"cd /d \"\"D:\\\\PC Dosyalarım\\\\Capnography\"\" && \"\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\"\" CapnoAnalyzer.sln /t:Build /p:Configuration=Debug /v:minimal 2>&1\")",
+      "Bash(cmd.exe /c \"\"\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\"\" \"\"D:\\\\PC Dosyalarım\\\\Capnography\\\\CapnoAnalyzer.sln\"\" /t:Build /p:Configuration=Debug /v:minimal\")",
+      "Bash(powershell.exe -Command \"cd ''D:\\\\PC Dosyalarım\\\\Capnography''; & ''C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe'' ''CapnoAnalyzer.sln'' ''/t:Build'' ''/p:Configuration=Debug'' ''/v:minimal'' 2>&1\")",
+      "Bash(powershell.exe -Command \"cd ''D:\\\\PC Dosyalarım\\\\Capnography''; & ''C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe'' ''CapnoAnalyzer.sln'' ''/t:Build'' ''/p:Configuration=Debug'' ''/v:minimal'' 2>&1 | Select-String -Pattern ''error|hata|Error|başarılı|successful|BAŞARILI|FAILED|BAŞARISIZ'' -CaseSensitive:$false\")",
+      "Bash(powershell.exe -Command \"& ''C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe'' ''D:\\\\PC Dosyalarım\\\\Capnography\\\\CapnoAnalyzer.sln'' ''/t:Build'' ''/p:Configuration=Debug'' ''/v:minimal'' 2>&1 | Where-Object { $_-match ''error|Error|FAILED|dll'' }\")",
+      "Bash(powershell.exe -Command \"& ''C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe'' ''D:\\\\PC Dosyalarım\\\\Capnography\\\\CapnoAnalyzer.sln'' /t:Build /p:Configuration=Debug /v:minimal 2>&1\")",
+      "Bash(powershell.exe -Command \"& ''C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe'' ''D:\\\\PC Dosyalarım\\\\Capnography\\\\CapnoAnalyzer.sln'' /t:Build /p:Configuration=Debug /v:minimal 2>&1 | Select-String ''BAŞARILI|BAŞARISIZ|CapnoAnalyzer ->'' \")",
+      "Bash(powershell.exe -Command \"& ''C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe'' ''D:\\\\PC Dosyalarım\\\\Capnography\\\\CapnoAnalyzer.sln'' /t:Build /p:Configuration=Debug /v:minimal 2>&1 | Select-String ''dll|FAILED|error CS''\")",
+      "Bash(powershell.exe -Command \"& ''C:\\\\Program Files\\\\Microsoft Visual Studio\\\\18\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe'' ''D:\\\\PC Dosyalarım\\\\Capnography\\\\CapnoAnalyzer.sln'' /t:Build /p:Configuration=Debug /v:minimal 2>&1 | Select-String ''dll|error CS''\")"
+    ]
+  }
+}

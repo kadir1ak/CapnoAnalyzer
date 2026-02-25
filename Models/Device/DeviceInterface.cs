@@ -103,17 +103,6 @@ namespace CapnoAnalyzer.Models.Device
             "20", "45", "90", "175", "330", "600", "1000"
         };
 
-        public List<string> HpFilterOptions { get; } = new List<string>
-        {
-            "0.1", "0.2", "0.5", "1.0", "2.0", "2.5"
-        };
-
-        public List<string> LpFilterOptions { get; } = new List<string>
-        {
-            "6", "7", "8", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"
-        };
-
-
         #endregion
 
         public ObservableCollection<string> IncomingMessage
@@ -359,51 +348,22 @@ namespace CapnoAnalyzer.Models.Device
     {
         public ChannelSettings()
         {
-            // UI kontrolleri için varsayılan değerleri ayarla
             Gain = "16";
-            HpFilter = "2.0";
             SPS = "90";
-            LpFilter = "10";
         }
 
         private string _gain;
-        /// <summary>
-        /// Kanalın kazanç (Gain) ayarı.
-        /// </summary>
         public string Gain
         {
             get => _gain;
             set => SetProperty(ref _gain, value);
         }
 
-        private string _hpFilter;
-        /// <summary>
-        /// Kanalın Yüksek Geçiren Filtre (High-Pass Filter) ayarı.
-        /// </summary>
-        public string HpFilter
-        {
-            get => _hpFilter;
-            set => SetProperty(ref _hpFilter, value);
-        }
-
         private string _sps;
-        /// <summary>
-        /// Kanalın Geçirgenlik (SPS) ayarı.
-        /// </summary>
         public string SPS
         {
             get => _sps;
             set => SetProperty(ref _sps, value);
-        }
-
-        private string _lpFilter;
-        /// <summary>
-        /// Kanalın Alçak Geçiren Filtre (Low-Pass Filter) ayarı.
-        /// </summary>
-        public string LpFilter
-        {
-            get => _lpFilter;
-            set => SetProperty(ref _lpFilter, value);
         }
     }
 
@@ -415,67 +375,13 @@ namespace CapnoAnalyzer.Models.Device
     {
         public DeviceChannelSettings()
         {
-            // Varsayılanlar
             EmitterOnTime = 50;
             EmitterOffTime = 50;
             EmitterSettings = 10;
-
-            // Kanallar
             Ch0 = new ChannelSettings();
-            Ch1 = new ChannelSettings();
-
-            // Değişiklikleri dinle ve eşitle
-            Ch0.PropertyChanged += OnCh0Changed;
-            Ch1.PropertyChanged += OnCh1Changed;
         }
 
-        private bool _syncing;
-
-        // EŞİTLEME: Ch0 → Ch1
-        private void OnCh0Changed(object? sender, PropertyChangedEventArgs e)
-        {
-            if (_syncing) return;
-            _syncing = true;
-            try
-            {
-                if (e.PropertyName == nameof(ChannelSettings.Gain))
-                {
-                    if (Ch1.Gain != Ch0.Gain)
-                        Ch1.Gain = Ch0.Gain;
-                }
-                else if (e.PropertyName == nameof(ChannelSettings.SPS)) // SPS
-                {
-                    if (Ch1.SPS != Ch0.SPS)
-                        Ch1.SPS = Ch0.SPS;
-                }
-            }
-            finally { _syncing = false; }
-        }
-
-        // EŞİTLEME: Ch1 → Ch0
-        private void OnCh1Changed(object? sender, PropertyChangedEventArgs e)
-        {
-            if (_syncing) return;
-            _syncing = true;
-            try
-            {
-                if (e.PropertyName == nameof(ChannelSettings.Gain))
-                {
-                    if (Ch0.Gain != Ch1.Gain)
-                        Ch0.Gain = Ch1.Gain;
-                }
-                else if (e.PropertyName == nameof(ChannelSettings.SPS)) // SPS
-                {
-                    if (Ch0.SPS != Ch1.SPS)
-                        Ch0.SPS = Ch1.SPS;
-                }
-            }
-            finally { _syncing = false; }
-        }
-
-        // --- mevcut alanlar ---
         public ChannelSettings Ch0 { get; set; }
-        public ChannelSettings Ch1 { get; set; }
 
         private double _emitterSetting;
         public double EmitterSettings
@@ -503,19 +409,35 @@ namespace CapnoAnalyzer.Models.Device
     {
         public DeviceFilterSettings()
         {
-            // Varsayılanlar
+            HpFilter = 2.0;
+            LpFilter = 10.0;
             RmsWindowSize = 10;
             MavFilterSize = 10;
         }
-        private int _rmsWindowSize;
-        public int RmsWindowSize
+
+        private double _hpFilter;
+        public double HpFilter
+        {
+            get => _hpFilter;
+            set => SetProperty(ref _hpFilter, value);
+        }
+
+        private double _lpFilter;
+        public double LpFilter
+        {
+            get => _lpFilter;
+            set => SetProperty(ref _lpFilter, value);
+        }
+
+        private double _rmsWindowSize;
+        public double RmsWindowSize
         {
             get => _rmsWindowSize;
             set => SetProperty(ref _rmsWindowSize, value);
         }
 
-        private int _mavFilterSize;
-        public int MavFilterSize
+        private double _mavFilterSize;
+        public double MavFilterSize
         {
             get => _mavFilterSize;
             set => SetProperty(ref _mavFilterSize, value);

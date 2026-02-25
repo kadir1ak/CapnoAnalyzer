@@ -21,7 +21,20 @@ namespace CapnoAnalyzer.Models.PlotModels
             set { var v = Math.Clamp(value, 5, 120); if (_maxFps != v) { _maxFps = v; RestartTimer(); OnPropertyChanged(); } }
         }
 
-        // --- YENİ: Eksenleri dışarıdan güncellemek için public metot ---
+        private double _yRange = 0;
+        public double YRange
+        {
+            get => _yRange;
+            set
+            {
+                if (_yRange != value)
+                {
+                    _yRange = value;
+                    OnPropertyChanged();
+                    ApplyY();
+                }
+            }
+        }
         /// <summary>
         /// Ana grafikten gelen zaman bilgisiyle X eksenini günceller.
         /// </summary>
@@ -157,8 +170,27 @@ namespace CapnoAnalyzer.Models.PlotModels
         private void ApplyY()
         {
             if (_yAxis == null) return;
-            if (_useFixedY) { _yAxis.Minimum = _yMin; _yAxis.Maximum = _yMax; }
-            else { _yAxis.Reset(); }
+            
+            if (_yRange > 0)
+            {
+                // YRange > 0: Osiloskop Merkezi Sabit (0-6 fixed için 3 baz alındı vs, veya AutoCenter)
+                // Mevcut verilerin merkezini bulalım
+                double minY = double.PositiveInfinity;
+                double maxY = double.NegativeInfinity;
+                foreach(var p in _pcBuf) { if(p.Y < minY) minY = p.Y; if(p.Y > maxY) maxY = p.Y; }
+                foreach(var p in _devBuf) { if(p.Y < minY) minY = p.Y; if(p.Y > maxY) maxY = p.Y; }
+
+                if (double.IsInfinity(minY)) { minY = 0; maxY = 6; }
+                double centerY = (minY + maxY) / 2.0;
+
+                _yAxis.Minimum = centerY - (_yRange / 2.0);
+                _yAxis.Maximum = centerY + (_yRange / 2.0);
+            }
+            else
+            {
+                if (_useFixedY) { _yAxis.Minimum = _yMin; _yAxis.Maximum = _yMax; }
+                else { _yAxis.Reset(); }
+            }
             PlotModel?.InvalidatePlot(true);
         }
 

@@ -5,12 +5,36 @@ using OxyPlot.Series;
 using System;
 using System.Collections.Generic;
 using System.Windows.Threading;
+using CapnoAnalyzer.Helpers;
 
 namespace CapnoAnalyzer.Models.PlotModels
 {
-    public sealed class DualChannelRealTimePlot : IDisposable
+    public sealed class DualChannelRealTimePlot : BindableBase, IDisposable
     {
         public PlotModel Model { get; private set; }
+        public PlotModel PlotModel => Model;
+
+        public double TimeWindowSeconds
+        {
+            get => _timeWindowSec;
+            set { if (_timeWindowSec != value) { _timeWindowSec = Math.Max(1, value); OnPropertyChanged(); } }
+        }
+
+        private double _yRange = 0;
+        public double YRange
+        {
+            get => _yRange;
+            set { if (_yRange != value) { _yRange = value; OnPropertyChanged(); Model?.InvalidatePlot(false); } }
+        }
+
+        public bool HasDualYAxis => true;
+
+        private double _y2Range = 0;
+        public double Y2Range
+        {
+            get => _y2Range;
+            set { if (_y2Range != value) { _y2Range = value; OnPropertyChanged(); Model?.InvalidatePlot(false); } }
+        }
 
         private readonly LineSeries _series1;
         private readonly LineSeries _series2;
@@ -159,8 +183,8 @@ namespace CapnoAnalyzer.Models.PlotModels
             xAxis.Minimum = tmin;
             xAxis.Maximum = tmax;
 
-            AutoScaleAxis((LinearAxis)Model.Axes[1], _series1);
-            AutoScaleAxis((LinearAxis)Model.Axes[2], _series2);
+            AutoScaleAxis((LinearAxis)Model.Axes[1], _series1, YRange);
+            AutoScaleAxis((LinearAxis)Model.Axes[2], _series2, Y2Range);
 
             Model.InvalidatePlot(false);
         }
@@ -172,17 +196,27 @@ namespace CapnoAnalyzer.Models.PlotModels
             for (int i = 0; i < count; i++) series.Points.Add(new DataPoint(x[i], y[i]));
         }
 
-        private void AutoScaleAxis(LinearAxis axis, LineSeries series)
+        private void AutoScaleAxis(LinearAxis axis, LineSeries series, double rangeSetting)
         {
             if (series.Points.Count == 0) return;
             double min = double.MaxValue, max = double.MinValue;
             foreach (var p in series.Points) { if (p.Y < min) min = p.Y; if (p.Y > max) max = p.Y; }
 
             if (min == double.MaxValue) return;
-            double range = max - min;
-            if (range < 1e-6) range = 1.0;
-            axis.Minimum = min - (range * 0.1);
-            axis.Maximum = max + (range * 0.1);
+            
+            if (rangeSetting > 0)
+            {
+                double centerY = (min + max) / 2.0;
+                axis.Minimum = centerY - (rangeSetting / 2.0);
+                axis.Maximum = centerY + (rangeSetting / 2.0);
+            }
+            else
+            {
+                double range = max - min;
+                if (range < 1e-6) range = 1.0;
+                axis.Minimum = min - (range * 0.1);
+                axis.Maximum = max + (range * 0.1);
+            }
         }
 
         private void AppendToRing(List<double> t, List<double> y1, List<double> y2)

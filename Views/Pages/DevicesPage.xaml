@@ -36,11 +36,7 @@
                     </Grid.RowDefinitions>
                     <!-- Cihazlar -->
                     <Border Grid.Row="0" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">
-                        <ScrollViewer>
-                            <WrapPanel Margin="0">
-                                <views:IdentifiedDevices Grid.Row="1" DataContext="{Binding DevicesVM}" />
-                            </WrapPanel>
-                        </ScrollViewer>
+                        <views:IdentifiedDevices DataContext="{Binding DevicesVM}" Margin="0" />
                     </Border>
                     <!-- Değer Ekleme-->
                     <Border  Grid.Row="1" Background="#F1F3FA" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="0" CornerRadius="10" BorderBrush="#E5E7EB" BorderThickness="1">

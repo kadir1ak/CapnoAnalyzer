@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,6 +16,8 @@ using CapnoAnalyzer.ViewModels.CalibrationViewModels;
 using CapnoAnalyzer.Views.DevicesViews.Devices;
 using System.Threading.Tasks;
 using CapnoAnalyzer.Models.PlotModels;  // IHighFreqPlot için
+using CapnoAnalyzer.ViewModels.PatientViewModels;
+using CapnoAnalyzer.Services;
 
 namespace CapnoAnalyzer.ViewModels.MainViewModels
 {
@@ -24,6 +26,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
         public DevicesViewModel DevicesVM { get; private set; }
         public SettingViewModel SettingVM { get; private set; }
         public CalibrationViewModel CalibrationVM { get; private set; }
+        public PatientRegistrationViewModel PatientRegistrationVM { get; private set; }
         public ICommand NavigateCommand { get; }
 
         // Sayfa önbelleği
@@ -42,6 +45,10 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
             DevicesVM = new DevicesViewModel();
             CalibrationVM = new CalibrationViewModel(DevicesVM);
             SettingVM = new SettingViewModel();
+
+            var patientService = new PatientService();
+            var deviceCommunicator = new DeviceCommunicator();
+            PatientRegistrationVM = new PatientRegistrationViewModel(DevicesVM, patientService, deviceCommunicator);
             NavigateCommand = new RelayCommand(Navigate);
 
             // Ayar değişikliklerine abone olunması
@@ -153,12 +160,18 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
             {
                 Page targetPage = pageName switch
                 {
-                    "Devices" => new DevicesPage { DataContext = DevicesVM },
-                    "CalibrationTables" => new CalibrationTablesPage { DataContext = CalibrationVM },
-                    "Equation" => new EquationTestPage(),
-                    "DeviceConnections" => new DeviceConnectionsPage { DataContext = DevicesVM },
-                    "Settings" => new SettingsPage(),
-                    "Notes" => new NotesPage(),
+                    // Bu sayfalar MainViewModel'e (DevicesVM, CalibrationVM vb.) ihtiyaç duyuyor.
+                    // DataContext ataması MainWindow.OnFrameNavigated içinde yapılacak.
+                    "Devices"            => new DevicesPage(),
+                    "DeviceConnections"  => new DeviceConnectionsPage(),
+
+                    // Özel ViewModel'lerle çalışan sayfalar kendi DataContext'ini alır.
+                    "CalibrationTables"  => new CalibrationTablesPage { DataContext = CalibrationVM },
+                    "PatientRegistration"=> new PatientRegistrationPage { DataContext = PatientRegistrationVM },
+
+                    "Equation"           => new EquationTestPage(),
+                    "Settings"           => new SettingsPage(),
+                    "Notes"              => new NotesPage(),
                     _ => throw new ArgumentException($"Geçersiz sayfa adı: {pageName}", nameof(pageName))
                 };
 

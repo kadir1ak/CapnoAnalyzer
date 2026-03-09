@@ -1,0 +1,510 @@
+<Page x:Class="CapnoAnalyzer.Views.Pages.PatientRegistrationPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:faWPF="clr-namespace:FontAwesome.WPF;assembly=FontAwesome.WPF"
+      xmlns:helpers="clr-namespace:CapnoAnalyzer.Helpers"
+      mc:Ignorable="d"
+      d:DesignHeight="700" d:DesignWidth="1100"
+      Title="Hasta Kayıt">
+
+    <Page.Resources>
+        <helpers:StatusSeverityToBrushConverter x:Key="StatusBrushConverter"/>
+        <helpers:StatusSeverityToIconConverter x:Key="StatusIconConverter"/>
+
+        <!-- ─── Modern TextBox Stili ─── -->
+        <Style x:Key="ModernTextBox" TargetType="TextBox">
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="0" Padding="{TemplateBinding Padding}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#94A3B8"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#3B82F6"/>
+                            </Trigger>
+                            <Trigger Property="Validation.HasError" Value="True">
+                                <Setter Property="BorderBrush" Value="#DC2626"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ─── Modern ComboBox Stili ─── -->
+        <Style x:Key="ModernComboBox" TargetType="ComboBox">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+        </Style>
+
+        <!-- ─── Modern Button Stili (Parametrik) ─── -->
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ─── Field Label Stili ─── -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="Margin" Value="0,10,0,4"/>
+        </Style>
+
+        <!-- ─── DataGrid Row Stili ─── -->
+        <Style x:Key="ModernDataGridRow" TargetType="DataGridRow">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0,2"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#EFF6FF"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#DBEAFE"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ─── DataGrid Cell Stili ─── -->
+        <Style x:Key="ModernDataGridCell" TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Foreground" Value="#334155"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="#1E40AF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Page.Resources>
+
+    <Grid Margin="6">
+        <Border Background="#F8FAFC" CornerRadius="3"
+                BorderBrush="#E2E8F0" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="12" ShadowDepth="1"
+                                  Opacity="0.12" Color="Black"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- ══════════════════════════════════════════════════════ -->
+                <!-- ── Başlık Bar + Özet ── -->
+                <!-- ══════════════════════════════════════════════════════ -->
+                <Border Grid.Row="0" CornerRadius="3,3,0,0" Padding="20,12">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#111827" Offset="0"/>
+                            <GradientStop Color="#1F2937" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                    VerticalAlignment="Center" Margin="0,0,16,0">
+                            <Border Width="36" Height="36" CornerRadius="16"
+                                    Background="#FFFFD4B7"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="🏥" FontSize="18"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Margin="10 0 0 0">
+                                <TextBlock Text="Hasta Kayıt ve Yönetim Paneli"
+                                           FontSize="18" FontWeight="Bold"
+                                           Foreground="White"/>
+                                <TextBlock Text="Hastalarınızı kaydedin, yönetin ve uygun cihaza gönderin"
+                                           FontSize="11" Foreground="#9CA3AF"
+                                           Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                    VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,4,0">
+                            <Button Content="📥  İçe Aktar"
+                                    Style="{StaticResource ModernButton}"
+                                    Background="#4B5563"
+                                    Margin="0,0,6,0"
+                                    Command="{Binding ImportExcelCommand}"/>
+                            <Button Content="📤  Dışa Aktar"
+                                    Style="{StaticResource ModernButton}"
+                                    Background="#6B7280"
+                                    Command="{Binding ExportExcelCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- ══════════════════════════════════════════════════════ -->
+                <!-- ── Ana İçerik ── -->
+                <!-- ══════════════════════════════════════════════════════ -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="360"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ─────────────────────────────────────────────── -->
+                    <!-- SOL: Hasta Formu -->
+                    <!-- ─────────────────────────────────────────────── -->
+                    <Border Grid.Column="0"
+                            BorderBrush="#E2E8F0" BorderThickness="0,0,1,0"
+                            Background="#FFFFFF">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="20,16" Orientation="Vertical">
+
+                                <!-- Bölüm Başlığı + küçük özet -->
+                                <StackPanel>
+                                    <Border Background="#EEF2FF" CornerRadius="10"
+                                            Padding="12,8" Margin="0,0,0,4">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="📝" FontSize="16" VerticalAlignment="Center"/>
+                                            <StackPanel>
+                                                <TextBlock Text="Hasta Bilgileri"
+                                                           FontSize="14" FontWeight="Bold"
+                                                           Foreground="#1E293B"/>
+                                                <TextBlock Text="Zorunlu alanlar: Ad / Soyad, TC Kimlik (11 hane)"
+                                                           FontSize="11" Foreground="#64748B"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Ad / Soyad -->
+                                <TextBlock Text="Ad / Soyad" Style="{StaticResource FieldLabel}"/>
+                                <TextBox Text="{Binding CurrentPatient.AdSoyad, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                                         Style="{StaticResource ModernTextBox}"/>
+
+                                <!-- TC Kimlik -->
+                                <TextBlock Text="TC Kimlik Numarası" Style="{StaticResource FieldLabel}"/>
+                                <TextBox Text="{Binding CurrentPatient.TcKimlik, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                                         MaxLength="11"
+                                         Style="{StaticResource ModernTextBox}"/>
+
+                                <!-- Kayıt No -->
+                                <TextBlock Text="Hasta Kayıt Numarası" Style="{StaticResource FieldLabel}"/>
+                                <TextBox Text="{Binding CurrentPatient.KayitNo, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource ModernTextBox}"/>
+
+                                <!-- Ambulans No -->
+                                <TextBlock Text="Ambulans Numarası" Style="{StaticResource FieldLabel}"/>
+                                <TextBox Text="{Binding CurrentPatient.AmbulansNo, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource ModernTextBox}"/>
+
+                                <!-- Cinsiyet + Yaş -->
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="100"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Cinsiyet" Style="{StaticResource FieldLabel}"/>
+                                        <ComboBox SelectedValue="{Binding CurrentPatient.Cinsiyet, Mode=TwoWay}"
+                                                  SelectedValuePath="Content"
+                                                  Style="{StaticResource ModernComboBox}">
+                                            <ComboBoxItem Content="Erkek"  Foreground="Black"/>
+                                            <ComboBoxItem Content="Kadın"  Foreground="Black"/>
+                                            <ComboBoxItem Content="Diğer"  Foreground="Black"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Yaş" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding CurrentPatient.Yas, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                                                 Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Boy + Kilo -->
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Boy (cm)" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding CurrentPatient.Boy, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                                                 Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Kilo (kg)" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding CurrentPatient.Kilo, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                                                 Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- ── Aksiyon Butonları ── -->
+                                <Border Margin="0,20,0,0" BorderBrush="#E2E8F0"
+                                        BorderThickness="0,1,0,0" Padding="0,14,0,0">
+                                    <StackPanel>
+                                        <Button Content="✚  Yeni Hasta Kaydet"
+                                                Style="{StaticResource ModernButton}"
+                                                Background="#16A34A"
+                                                Padding="0,10"
+                                                Command="{Binding AddPatientCommand}"
+                                                Margin="0,0,0,8"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Button Grid.Column="0"
+                                                    Content="✏  Güncelle"
+                                                    Style="{StaticResource ModernButton}"
+                                                    Background="#EA580C"
+                                                    Padding="0,8"
+                                                    Command="{Binding UpdatePatientCommand}"/>
+                                            <Button Grid.Column="2"
+                                                    Content="🗑  Formu Temizle"
+                                                    Style="{StaticResource ModernButton}"
+                                                    Background="#64748B"
+                                                    Padding="0,8"
+                                                    Command="{Binding ClearFormCommand}"/>
+                                        </Grid>
+                                        <Button Content="📋  Seçili Hastayı Forma Yükle"
+                                                Style="{StaticResource ModernButton}"
+                                                Background="#6366F1"
+                                                Padding="0,8"
+                                                Command="{Binding LoadToFormCommand}"
+                                                Margin="0,8,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- ─────────────────────────────────────────────── -->
+                    <!-- SAĞ: Hasta Listesi -->
+                    <!-- ─────────────────────────────────────────────── -->
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Arama + Cihaz seçimi -->
+                        <Border Grid.Row="0" Background="#F1F5F9"
+                                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1"
+                                Padding="16,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="240"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+                                            <Style.Resources>
+                                                <VisualBrush x:Key="HintBrush" TileMode="None"
+                                                             Stretch="None"
+                                                             AlignmentX="Left" AlignmentY="Center">
+                                                    <VisualBrush.Visual>
+                                                        <TextBlock Text="🔍  Hasta ara (ad, TC, kayıt no...)"
+                                                                   Foreground="#94A3B8"
+                                                                   FontSize="12"
+                                                                   Margin="10,0,0,0"/>
+                                                    </VisualBrush.Visual>
+                                                </VisualBrush>
+                                            </Style.Resources>
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value="">
+                                                    <Setter Property="Background"
+                                                            Value="{StaticResource HintBrush}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Hedef Cihaz" FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="#64748B" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding AvailableDevices}"
+                                              SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
+                                              DisplayMemberPath="Properties.ProductId"
+                                              Style="{StaticResource ModernComboBox}">
+                                        <ComboBox.ToolTip>
+                                            <TextBlock Text="Herhangi bir cihaz bağlı olmasa da hasta kayıtlarını yönetebilirsiniz. Cihaza gönderme için bağlı ve tanımlı bir cihaz seçin."
+                                                       FontSize="11" Foreground="#0F172A" TextWrapping="Wrap" Width="220"/>
+                                        </ComboBox.ToolTip>
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding FilteredPatients}"
+                                  SelectedItem="{Binding SelectedPatient, Mode=TwoWay}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  RowHeaderWidth="0"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#F1F5F9"
+                                  Background="White"
+                                  BorderThickness="0"
+                                  FontSize="12.5"
+                                  RowStyle="{StaticResource ModernDataGridRow}"
+                                  CellStyle="{StaticResource ModernDataGridCell}">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#F8FAFC"/>
+                                    <Setter Property="Foreground" Value="#475569"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Padding" Value="10,8"/>
+                                    <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Ad Soyad"      Binding="{Binding AdSoyad}"    Width="2*"/>
+                                <DataGridTextColumn Header="TC Kimlik"     Binding="{Binding TcKimlik}"   Width="120"/>
+                                <DataGridTextColumn Header="Kayıt No"      Binding="{Binding KayitNo}"    Width="110"/>
+                                <DataGridTextColumn Header="Ambulans"      Binding="{Binding AmbulansNo}" Width="90"/>
+                                <DataGridTextColumn Header="Cinsiyet"      Binding="{Binding Cinsiyet}"   Width="80"/>
+                                <DataGridTextColumn Header="Yaş"           Binding="{Binding Yas}"        Width="60"/>
+                                <DataGridTextColumn Header="Boy (cm)"      Binding="{Binding Boy}"        Width="70"/>
+                                <DataGridTextColumn Header="Kilo (kg)"     Binding="{Binding Kilo}"       Width="70"/>
+                                <DataGridTextColumn Header="Kayıt Tarihi"
+                                                    Binding="{Binding KayitTarihi, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"
+                                                    Width="130"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Grid>
+
+                <!-- ══════════════════════════════════════════════════════ -->
+                <!-- ── Alt Aksiyon Çubuğu ── -->
+                <!-- ══════════════════════════════════════════════════════ -->
+                <Border Grid.Row="2" CornerRadius="0,0,16,16" Padding="20,10">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#F1F5F9" Offset="0"/>
+                            <GradientStop Color="#E2E8F0" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Durum + Seçili Hasta -->
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock FontSize="13" Foreground="#334155">
+                                <Run Text="Seçili Hasta: " FontWeight="SemiBold"/>
+                                <Run Text="{Binding SelectedPatient.AdSoyad}"
+                                     Foreground="#1E40AF" FontWeight="Bold"/>
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="0,2,0,0" VerticalAlignment="Center">
+                                <faWPF:FontAwesome Icon="{Binding StatusSeverity, Converter={StaticResource StatusIconConverter}}"
+                                                   Foreground="{Binding StatusSeverity, Converter={StaticResource StatusBrushConverter}}"
+                                                   Width="14" Height="14" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding StatusMessage}"
+                                           FontSize="11.5"
+                                           Foreground="#64748B"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- İşlem Butonları -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="🗑  Seçili Hastayı Sil"
+                                    Style="{StaticResource ModernButton}"
+                                    Background="#DC2626"
+                                    Margin="0,0,10,0"
+                                    Command="{Binding DeletePatientCommand}"/>
+                            <Button Content="📡  Seçili Hastayı Cihaza Gönder"
+                                    Style="{StaticResource ModernButton}"
+                                    Padding="20,8"
+                                    Command="{Binding SendToDeviceCommand}">
+                                <Button.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Color="#2563EB" Offset="0"/>
+                                        <GradientStop Color="#1D4ED8" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

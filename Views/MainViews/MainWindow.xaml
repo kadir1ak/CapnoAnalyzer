@@ -33,21 +33,29 @@
 
                 <buttons:PageButton ButtonContent="Cihazlar" 
                             ButtonIcon="BarChartOutline"
-                            ButtonBackground="#5C6D8C" 
-                            ButtonForeground="#FFEA6550"
+                            ButtonBackground="#FFEF9587" 
+                            ButtonForeground="Black"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
                             CommandParameter="Devices"/>
 
                 <buttons:PageButton ButtonContent="Kalibrasyon Tabloları" 
                             ButtonIcon="Tachometer"
-                            ButtonBackground="#5C6D8C" 
-                            ButtonForeground="#FFECED49"
+                            ButtonBackground="#FFF9F9A5" 
+                            ButtonForeground="Black"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
                             CommandParameter="CalibrationTables"/>
-
-                <buttons:PageButton ButtonContent="Katsayı Hesaplama" 
+                
+                <buttons:PageButton ButtonContent="Hasta Kayıt Sistemi" 
+                            ButtonIcon="HospitalOutline"
+                            ButtonBackground="#FF09FFC3" 
+                            ButtonForeground="Black"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Command="{Binding NavigateCommand}"
+                            CommandParameter="PatientRegistration"/>
+                
+                <buttons:PageButton ButtonContent="Katsayı Hesaplama" Visibility="Collapsed"
                             ButtonIcon="Calculator"
                             ButtonBackground="#5C6D8C" 
                             ButtonForeground="White"
@@ -57,21 +65,21 @@
                 
                 <buttons:PageButton ButtonContent="Cihaz Bağlantıları" 
                             ButtonIcon="Usb"
-                            ButtonBackground="#5C6D8C" 
-                            ButtonForeground="#FF60ED90"
+                            ButtonBackground="#FF4DFF89" 
+                            ButtonForeground="Black"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
                             CommandParameter="DeviceConnections"/>
                 
                 <buttons:PageButton ButtonContent="Ayarlar" 
                             ButtonIcon="Cogs"
-                            ButtonBackground="#5C6D8C" 
-                            ButtonForeground="White"
+                            ButtonBackground="#FFAFAEAE" 
+                            ButtonForeground="Black"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Command="{Binding NavigateCommand}"
                             CommandParameter="Settings"/>
 
-                <buttons:PageButton ButtonContent="Notlar" 
+                <buttons:PageButton ButtonContent="Notlar" Visibility="Collapsed"
                             ButtonIcon="StickyNote"
                             ButtonBackground="#5C6D8C" 
                             ButtonForeground="White"

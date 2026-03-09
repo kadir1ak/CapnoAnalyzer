@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using CapnoAnalyzer.Helpers;
+using CapnoAnalyzer.Services;
+using PatientModel = CapnoAnalyzer.Models.Patient.Patient;
 using CapnoAnalyzer.Services;
 
 namespace CapnoAnalyzer.Models.Device
@@ -71,6 +73,23 @@ namespace CapnoAnalyzer.Models.Device
             return (Properties.Status == DeviceStatus.Connected || Properties.Status == DeviceStatus.Identified) &&
                    !string.IsNullOrWhiteSpace(Interface.OutgoingMessage);
         }
+        #endregion
+
+        #region Hasta Bilgisi Gönderme
+
+        /// <summary>
+        /// Seçili hastayı cihazın anladığı "PV,..." formatında seri porta yollar.
+        /// </summary>
+        /// <param name="patient">Gönderilecek hasta modeli.</param>
+        public void SendPatient(PatientModel patient)
+        {
+            if (patient == null) throw new ArgumentNullException(nameof(patient));
+
+            var cmd = PatientDeviceCommandBuilder.Build(patient);
+            _portManager.SendMessage(Properties.PortName, cmd);
+            Interface.AddIncomingMessage($"Send PV: {cmd}");
+        }
+
         #endregion
 
         #region Otomatik Veri Kaydetme

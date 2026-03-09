@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Navigation;
 using System.Windows.Controls;
@@ -14,15 +14,13 @@ namespace CapnoAnalyzer.Views.MainViews
             try
             {
                 InitializeComponent();
-
-                // MainViewModel'i DataContext olarak ayarla
-                DataContext = new MainViewModel();
-
-                // İlk sayfa olarak DevicesPage yüklüyoruz
-                MainContentArea.Navigate(new DevicesPage());
-
+                
                 // Frame'in içindeki Page'lere DataContext aktarımı için event ekle
                 MainContentArea.Navigated += OnFrameNavigated;
+
+                // İlk sayfa olarak DevicesPage yüklüyoruz
+                // DataContext, OnFrameNavigated içinde MainViewModel olarak atanacak.
+                MainContentArea.Navigate(new DevicesPage());
             }
             catch (Exception ex)
             {
@@ -37,8 +35,13 @@ namespace CapnoAnalyzer.Views.MainViews
         {
             if (e.Content is Page page)
             {
-                // Sayfanın DataContext'ini MainViewModel olarak ayarla
-                page.DataContext = this.DataContext;
+                // Sadece DataContext'i henüz atanmadıysa MainViewModel'i ver.
+                // PatientRegistrationPage gibi özel ViewModel'lere sahip sayfaların
+                // kendi DataContext'i korunur, buton komutları çalışır.
+                if (page.DataContext == null)
+                {
+                    page.DataContext = this.DataContext;
+                }
             }
         }
 

@@ -166,7 +166,7 @@ namespace CapnoAnalyzer.ViewModels.MainViewModels
                     "DeviceConnections"  => new DeviceConnectionsPage(),
 
                     // Özel ViewModel'lerle çalışan sayfalar kendi DataContext'ini alır.
-                    "CalibrationTables"  => new CalibrationTablesPage { DataContext = CalibrationVM },
+                    "CalibrationTables"  => new CalibrationTablesPage(),
                     "PatientRegistration"=> new PatientRegistrationPage { DataContext = PatientRegistrationVM },
 
                     "Equation"           => new EquationTestPage(),

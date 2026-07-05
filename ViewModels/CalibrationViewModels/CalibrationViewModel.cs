@@ -20,6 +20,11 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         public DevicesViewModel DevicesVM { get; private set; }
         public ObservableCollection<GasConcentrationTablesViewModel> DeviceTables { get; set; }
 
+        /// <summary>
+        /// Cihaz bağlantısı olmadan dışarıdan import edilen verilerin incelendiği sabit alan.
+        /// </summary>
+        public GasConcentrationTablesViewModel ManualImportTable { get; private set; }
+
         // --- YENİ: Aktif cihazı ve komutları yönetmek için ---
 
         private GasConcentrationTablesViewModel _activeDeviceTable;
@@ -67,6 +72,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         {
             DevicesVM = devicesVM;
             DeviceTables = new ObservableCollection<GasConcentrationTablesViewModel>();
+            ManualImportTable = GasConcentrationTablesViewModel.CreateManualImportTable();
 
             // Komutları başlat
             AppliedGasCommand = new RelayCommand(() => StartSamplingCalculation(CalibrationType.Main));

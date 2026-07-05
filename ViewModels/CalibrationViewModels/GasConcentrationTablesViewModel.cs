@@ -26,6 +26,9 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         public DevicesViewModel DevicesVM { get; private set; }
         public string DeviceName { get; }
+        public bool IsStandalone { get; }
+
+        public const string ManualImportSectionName = "Dış Veri İnceleme";
 
         private readonly Func<Vector<double>, double, double> model = (parameters, xVal) =>
         {
@@ -61,16 +64,17 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         #region Commands
 
-        public ICommand CalculateCommand { get; }
-        public ICommand ExportCommand { get; }
-        public ICommand ImportCommand { get; }
+        public ICommand CalculateCommand { get; private set; }
+        public ICommand ExportCommand { get; private set; }
+        public ICommand ImportCommand { get; private set; }
 
-        public ICommand CreateNewTestCommand { get; }
-        public ICommand AddDataToSelectedTestCommand { get; }
+        public ICommand CreateNewTestCommand { get; private set; }
+        public ICommand AddDataToSelectedTestCommand { get; private set; }
 
-        public ICommand CalculateCompensationCommand { get; }
-        public ICommand ExportCompensationCommand { get; }
-        public ICommand ImportCompensationCommand { get; }
+        public ICommand CalculateCompensationCommand { get; private set; }
+        public ICommand CalculateAllCompensationCommand { get; private set; }
+        public ICommand ExportCompensationCommand { get; private set; }
+        public ICommand ImportCompensationCommand { get; private set; }
 
         #endregion
 
@@ -182,8 +186,8 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
         #endregion
 
         #region Confirm Edit Command
-        public ICommand DeleteRowCommand { get; }
-        public ICommand ConfirmEditCommand { get; }
+        public ICommand DeleteRowCommand { get; private set; }
+        public ICommand ConfirmEditCommand { get; private set; }
 
         private void ExecuteDeleteRow(object param)
         {
@@ -218,10 +222,24 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         #region Constructor
 
+        public static GasConcentrationTablesViewModel CreateManualImportTable()
+            => new GasConcentrationTablesViewModel(null, ManualImportSectionName, isStandalone: true);
+
         public GasConcentrationTablesViewModel(DevicesViewModel devicesVM, Device selectedDevice)
+            : this(devicesVM, selectedDevice.Properties.ProductId, isStandalone: false)
+        {
+        }
+
+        private GasConcentrationTablesViewModel(DevicesViewModel devicesVM, string deviceName, bool isStandalone)
         {
             DevicesVM = devicesVM;
-            DeviceName = selectedDevice.Properties.ProductId;
+            DeviceName = deviceName;
+            IsStandalone = isStandalone;
+            InitializeTable();
+        }
+
+        private void InitializeTable()
+        {
             DeviceData = new ObservableCollection<Data>();
             Coefficients = new Coefficients();
             CompensatedCoefficients = new Coefficients();
@@ -249,6 +267,7 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
             AddDataToSelectedTestCommand = new RelayCommand(ExecuteAddDataToSelectedTest, () => SelectedTest != null);
 
             CalculateCompensationCommand = new RelayCommand(ExecuteCalculateCompensation, () => SelectedTest != null && SelectedTest.TestData.Any());
+            CalculateAllCompensationCommand = new RelayCommand(ExecuteCalculateAllCompensation, CanCalculateAllCompensation);
             ExportCompensationCommand = new RelayCommand(ExecuteExportCompensation, () => SelectedTest != null && SelectedTest.TestData.Any());
             ImportCompensationCommand = new RelayCommand(ExecuteImportCompensation, () => SelectedTest != null);
 
@@ -316,6 +335,10 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
                     MessageBox.Show($"Kalibrasyon katsayıları '{DeviceName}' cihazına aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
 
+                    UpdateAllTestsReferenceData(zero);
+                }
+                else if (IsStandalone)
+                {
                     UpdateAllTestsReferenceData(zero);
                 }
             }
@@ -538,140 +561,223 @@ namespace CapnoAnalyzer.ViewModels.CalibrationViewModels
 
         #region Temperature Compensation Methods
 
+        private bool CanCalculateAllCompensation()
+            => TemperatureTests.Any(t => t.TestData.Any());
+
+        private bool ValidateCompensationPrerequisites(out string message)
+        {
+            if (Coefficients.A == 0 || Coefficients.B == 0 || Coefficients.C == 0)
+            {
+                message = "Lütfen önce Ana Kalibrasyon tablosunu hesaplayın. Referans katsayılar (A, B, C) eksik.";
+                return false;
+            }
+
+            if (!DeviceData.Any(d => Math.Abs(d.GasConcentration) < 0.01))
+            {
+                message = "Ana kalibrasyon tablosunda 0.00 gaz konsantrasyonuna sahip veri bulunamadı. Referans Zero hesaplanamıyor.";
+                return false;
+            }
+
+            message = string.Empty;
+            return true;
+        }
+
         private void ExecuteCalculateCompensation()
         {
+            if (SelectedTest == null) return;
+
+            if (!ValidateCompensationPrerequisites(out string validationMessage))
+            {
+                MessageBox.Show(validationMessage, "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
-                if (SelectedTest == null) return;
-
-                if (Coefficients.A == 0 || Coefficients.B == 0 || Coefficients.C == 0)
+                if (!CalculateCompensationForTest(SelectedTest, out string errorMessage))
                 {
-                    MessageBox.Show("Lütfen önce Ana Kalibrasyon tablosunu hesaplayın. Referans katsayılar (A, B, C) eksik.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show(errorMessage, "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
-                }
-
-                // T_ref: Ana Kalibrasyonun Ortalama Sıcaklığı
-                double refTemp = AverageTemperature;
-                if (refTemp == 0) refTemp = 36.5;
-
-                var zeroDataPoints = DeviceData.Where(d => Math.Abs(d.GasConcentration) < 0.01).ToList();
-                if (!zeroDataPoints.Any())
-                {
-                    MessageBox.Show("Ana kalibrasyon tablosunda 0.00 gaz konsantrasyonuna sahip veri bulunamadı. Referans Zero hesaplanamıyor.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                double refZero = zeroDataPoints.Average(d => d.Gas / d.Ref);
-
-                // Referans verilerini güncelle (Sıcaklık hariç)
-                SelectedTest.ReferenceTestData.Zero = refZero;
-                SelectedTest.ReferenceTestData.SpanA = Coefficients.A;
-                SelectedTest.ReferenceTestData.B = Coefficients.B;
-                SelectedTest.ReferenceTestData.C = Coefficients.C;
-                SelectedTest.ReferenceTestData.R = Coefficients.R;
-
-                // Standart değerleri hesapla
-                foreach (var row in SelectedTest.TestData)
-                {
-                    if (row.Ref != 0)
-                    {
-                        row.Ratio = row.Gas / row.Ref;
-                        row.Transmittance = row.Ratio / refZero;
-                        row.Absorption = 1 - row.Transmittance;
-                        CalculateStandardPrediction(row, Coefficients);
-                    }
-                }
-
-                var validData = SelectedTest.TestData.Where(d => d.Ref > 0 && d.Gas > 0).ToList();
-                if (validData.Count < 2)
-                {
-                    MessageBox.Show("Optimizasyon için yeterli veri yok.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var refCoeffs = new Coefficients { A = Coefficients.A, B = Coefficients.B, C = Coefficients.C, R = Coefficients.R };
-
-                Func<Vector<double>, double> objectiveFunction = (parameters) =>
-                {
-                    double alpha = parameters[0];
-                    double beta = parameters[1];
-                    double totalError = 0;
-
-                    var tempParams = new ThermalCompensationEngine.ThermalModelParameters { Alfa = alpha, Beta = beta };
-
-                    foreach (var row in validData)
-                    {
-                        var tempData = new Data
-                        {
-                            GasConcentration = row.GasConcentration,
-                            Gas = row.Gas,
-                            Ref = row.Ref,
-                            Temperature = row.Temperature
-                        };
-
-                        var context = new ThermalCompensationEngine.CalculationContext
-                        {
-                            CurrentDataPoint = tempData,
-                            ReferenceZero = refZero,
-                            ReferenceTemperature = refTemp, // T_ref
-                            ReferenceCoefficients = refCoeffs,
-                            ModelParameters = tempParams
-                        };
-
-                        ThermalCompensationEngine.ProcessDataPoint(context);
-
-                        if (tempData.FinalCompensatedConcentration.HasValue && !double.IsNaN(tempData.FinalCompensatedConcentration.Value))
-                        {
-                            double error = row.GasConcentration - tempData.FinalCompensatedConcentration.Value;
-                            totalError += error * error;
-                        }
-                        else
-                        {
-                            totalError += 10000;
-                        }
-                    }
-                    return totalError;
-                };
-
-                double initialAlpha = SelectedTest.ReferenceTestData.Alpha != 0 ? SelectedTest.ReferenceTestData.Alpha : 0.00070;
-                double initialBeta = SelectedTest.ReferenceTestData.Beta != 0 ? SelectedTest.ReferenceTestData.Beta : -0.09850;
-                var initialGuess = Vector<double>.Build.DenseOfArray(new[] { initialAlpha, initialBeta });
-
-                var optimizer = new NelderMeadSimplex(1e-5, 5000);
-                var result = optimizer.FindMinimum(ObjectiveFunction.Value(objectiveFunction), initialGuess);
-
-                double optimizedAlpha = result.MinimizingPoint[0];
-                double optimizedBeta = result.MinimizingPoint[1];
-
-                SelectedTest.ReferenceTestData.Alpha = optimizedAlpha;
-                SelectedTest.ReferenceTestData.Beta = optimizedBeta;
-
-                var finalParams = new ThermalCompensationEngine.ThermalModelParameters { Alfa = optimizedAlpha, Beta = optimizedBeta };
-                foreach (var row in SelectedTest.TestData)
-                {
-                    var context = new ThermalCompensationEngine.CalculationContext
-                    {
-                        CurrentDataPoint = row,
-                        ReferenceZero = refZero,
-                        ReferenceTemperature = refTemp, // T_ref
-                        ReferenceCoefficients = refCoeffs,
-                        ModelParameters = finalParams
-                    };
-                    ThermalCompensationEngine.ProcessDataPoint(context);
                 }
 
                 UpdateCompensationCharts();
 
                 MessageBox.Show($"Optimizasyon Tamamlandı.\n" +
-                                $"T_ref (Ana Kalibrasyon): {refTemp:F2}°C\n" +
+                                $"T_ref (Ana Kalibrasyon): {AverageTemperature:F2}°C\n" +
                                 $"Test Ort. Sıcaklık: {SelectedTest.ReferenceTestData.Temperature:F2}°C\n" +
-                                $"Hesaplanan Alfa: {optimizedAlpha:F6}\n" +
-                                $"Hesaplanan Beta: {optimizedBeta:F6}",
+                                $"Hesaplanan Alfa: {SelectedTest.ReferenceTestData.Alpha:F6}\n" +
+                                $"Hesaplanan Beta: {SelectedTest.ReferenceTestData.Beta:F6}",
                                 "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Hesaplama hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void ExecuteCalculateAllCompensation()
+        {
+            if (!ValidateCompensationPrerequisites(out string validationMessage))
+            {
+                MessageBox.Show(validationMessage, "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var testsWithData = TemperatureTests.Where(t => t.TestData.Any()).ToList();
+            if (!testsWithData.Any())
+            {
+                MessageBox.Show("Hesaplanacak sıcaklık testi verisi bulunamadı.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            int successCount = 0;
+            int skippedCount = 0;
+            var skippedMessages = new List<string>();
+
+            try
+            {
+                foreach (var test in testsWithData)
+                {
+                    if (CalculateCompensationForTest(test, out string errorMessage))
+                    {
+                        successCount++;
+                    }
+                    else
+                    {
+                        skippedCount++;
+                        skippedMessages.Add($"{test.Header}: {errorMessage}");
+                    }
+                }
+
+                UpdateCompensationCharts();
+
+                var summary = $"Toplam {successCount} test hesaplandı.";
+                if (skippedCount > 0)
+                {
+                    summary += $"\n{skippedCount} test atlandı.";
+                    if (skippedMessages.Count <= 3)
+                    {
+                        summary += "\n\n" + string.Join("\n", skippedMessages);
+                    }
+                }
+
+                MessageBox.Show(summary, successCount > 0 ? "Başarılı" : "Uyarı",
+                    MessageBoxButton.OK,
+                    successCount > 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Hesaplama hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CalculateCompensationForTest(TemperatureTestViewModel test, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            double refTemp = AverageTemperature;
+            if (refTemp == 0) refTemp = 36.5;
+
+            var zeroDataPoints = DeviceData.Where(d => Math.Abs(d.GasConcentration) < 0.01).ToList();
+            double refZero = zeroDataPoints.Average(d => d.Gas / d.Ref);
+
+            test.ReferenceTestData.Zero = refZero;
+            test.ReferenceTestData.SpanA = Coefficients.A;
+            test.ReferenceTestData.B = Coefficients.B;
+            test.ReferenceTestData.C = Coefficients.C;
+            test.ReferenceTestData.R = Coefficients.R;
+
+            foreach (var row in test.TestData)
+            {
+                if (row.Ref != 0)
+                {
+                    row.Ratio = row.Gas / row.Ref;
+                    row.Transmittance = row.Ratio / refZero;
+                    row.Absorption = 1 - row.Transmittance;
+                    CalculateStandardPrediction(row, Coefficients);
+                }
+            }
+
+            var validData = test.TestData.Where(d => d.Ref > 0 && d.Gas > 0).ToList();
+            if (validData.Count < 2)
+            {
+                errorMessage = "Optimizasyon için yeterli veri yok.";
+                return false;
+            }
+
+            var refCoeffs = new Coefficients { A = Coefficients.A, B = Coefficients.B, C = Coefficients.C, R = Coefficients.R };
+
+            Func<Vector<double>, double> objectiveFunction = (parameters) =>
+            {
+                double alpha = parameters[0];
+                double beta = parameters[1];
+                double totalError = 0;
+
+                var tempParams = new ThermalCompensationEngine.ThermalModelParameters { Alfa = alpha, Beta = beta };
+
+                foreach (var row in validData)
+                {
+                    var tempData = new Data
+                    {
+                        GasConcentration = row.GasConcentration,
+                        Gas = row.Gas,
+                        Ref = row.Ref,
+                        Temperature = row.Temperature
+                    };
+
+                    var context = new ThermalCompensationEngine.CalculationContext
+                    {
+                        CurrentDataPoint = tempData,
+                        ReferenceZero = refZero,
+                        ReferenceTemperature = refTemp,
+                        ReferenceCoefficients = refCoeffs,
+                        ModelParameters = tempParams
+                    };
+
+                    ThermalCompensationEngine.ProcessDataPoint(context);
+
+                    if (tempData.FinalCompensatedConcentration.HasValue && !double.IsNaN(tempData.FinalCompensatedConcentration.Value))
+                    {
+                        double error = row.GasConcentration - tempData.FinalCompensatedConcentration.Value;
+                        totalError += error * error;
+                    }
+                    else
+                    {
+                        totalError += 10000;
+                    }
+                }
+
+                return totalError;
+            };
+
+            double initialAlpha = test.ReferenceTestData.Alpha != 0 ? test.ReferenceTestData.Alpha : 0.00070;
+            double initialBeta = test.ReferenceTestData.Beta != 0 ? test.ReferenceTestData.Beta : -0.09850;
+            var initialGuess = Vector<double>.Build.DenseOfArray(new[] { initialAlpha, initialBeta });
+
+            var optimizer = new NelderMeadSimplex(1e-5, 5000);
+            var result = optimizer.FindMinimum(ObjectiveFunction.Value(objectiveFunction), initialGuess);
+
+            double optimizedAlpha = result.MinimizingPoint[0];
+            double optimizedBeta = result.MinimizingPoint[1];
+
+            test.ReferenceTestData.Alpha = optimizedAlpha;
+            test.ReferenceTestData.Beta = optimizedBeta;
+
+            var finalParams = new ThermalCompensationEngine.ThermalModelParameters { Alfa = optimizedAlpha, Beta = optimizedBeta };
+            foreach (var row in test.TestData)
+            {
+                var context = new ThermalCompensationEngine.CalculationContext
+                {
+                    CurrentDataPoint = row,
+                    ReferenceZero = refZero,
+                    ReferenceTemperature = refTemp,
+                    ReferenceCoefficients = refCoeffs,
+                    ModelParameters = finalParams
+                };
+                ThermalCompensationEngine.ProcessDataPoint(context);
+            }
+
+            return true;
         }
 
         private void ExecuteExportCompensation()
